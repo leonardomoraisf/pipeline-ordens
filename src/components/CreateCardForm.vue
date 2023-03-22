@@ -1,18 +1,19 @@
 <template>
     <div>
         <button type="button" @click="showModal()"
-            class="mt-6 w-full flex justify-center items-center py-6 border-2 rounded-md border-dashed hover:cursor-pointer border-black/50 hover:border-black/80 text-black/50 hover:text-black/80">
+            class="mt-6 w-full flex justify-center items-center py-6 border-2 rounded-md border-dashed hover:cursor-pointer border-black/30 hover:border-black/50 text-black/30 hover:text-black/50 hover:scale-105 add-card">
             <font-awesome-icon class="w-5 h-5" :icon="['fas', 'fa-plus']" />
-            <span class="font-semibold ml-1">Nova venda</span>
+            <span class="font-semibold ml-1">Adicionar</span>
         </button>
 
-        <div v-if="toggleCardFormModal" 
+        <div v-if="toggleCardFormModal"
             class="z-50 fixed overflow-x-hidden overflow-y-auto inset-0 flex justify-center items-center">
             <div class="relative mx-auto w-auto max-w-2xl">
                 <div class="bg-white w-full rounded-md">
                     <div
                         class="flex flex-shrink-0 items-center justify-between rounded-t-md border-b-2 border-neutral-100 border-opacity-100 p-4 dark:border-opacity-50">
-                        <h5 class="font-semibold text-xl text-gray-900/70 mr-32">Nova venda para "{{ list.nomeStatus }}"</h5>
+                        <h5 class="font-semibold text-xl text-gray-900/70 mr-32">Nova venda para "{{ list.nomeStatus }}"
+                        </h5>
                         <button type="button"
                             class="box-content rounded-none border-none hover:no-underline hover:opacity-75 focus:opacity-100 focus:shadow-none focus:outline-none"
                             @click="toggleCardFormModal = !toggleCardFormModal">
@@ -21,7 +22,8 @@
                         </button>
                     </div>
                     <div class="relative p-4">
-                        <form class="p-3 rounded-md mt-2" @submit.prevent="onSubmit" @keydown.esc="toggleCardFormModal = !toggleCardFormModal">
+                        <form class="p-3 rounded-md mt-2" @submit.prevent="onSubmit"
+                            @keydown.esc="toggleCardFormModal = !toggleCardFormModal">
                             <input ref="inputCliente"
                                 class="input mb-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                                 placeholder="Nome do cliente..." type="text" name="nomeCliente" required>
@@ -33,12 +35,11 @@
                                 placeholder="Pedido..." type="text" name="pedidoMovimento" required>
                             <p v-if="isShowingError" class="text-red-600/80 text-center text-sm my-1">{{ errorMessage }}</p>
                             <div class="mt-8 space-x-2 flex justify-end">
-                                <button type="submit"
-                                    class="px-4 py-2 text-sm font-medium text-white bg-rose-600 hover:bg-rose-500 rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-rose-500 focus:outline-none">Adicionar
-                                    venda
-                                </button>
                                 <button @click="toggleCardFormModal = !toggleCardFormModal" type="button"
                                     class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-black rounded-md focus:ring-2 focus:ring-offset-2 focus:ring-rose-500 focus:outline-none">Cancelar</button>
+                                <button type="submit"
+                                    class="px-4 py-2 text-sm font-medium text-white bg-green-600/90 hover:bg-green-600/70 rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-green-300 focus:outline-none">Adicionar
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -59,8 +60,8 @@ export default {
     components: {
     },
     props: {
-        list: Object,
         setList: Function,
+        list: Object
     },
     data() {
         return {
@@ -103,14 +104,17 @@ export default {
                 return;
             }
 
-            this.axios.get(url + 'movimento/create/' + this.nomeCliente + '/' + this.precoMovimento + '/' + this.pedidoMovimento + '/' + this.list.status)
+            let body = { nomeCliente: this.nomeCliente, precoMovimento: this.precoMovimento, pedidoMovimento: this.pedidoMovimento, cardStatus: this.list.status };
+
+            this.axios.post(url + 'movimento/create', body, { headers: { "Content-Type": "multipart/form-data" } })
                 .then(res => {
+                    console.log(res);
                     this.setList();
-                    this.$emit('cardCreated');
                     this.$refs.inputCliente.value = '';
                     this.$refs.inputPreco.value = '';
                     this.$refs.inputPedido.value = '';
                     this.toggleCardFormModal = false;
+                    this.$emit('cardCreated');
                 })
                 .catch(err => {
                     this.errorMessage = err.msg;
@@ -121,3 +125,9 @@ export default {
     }
 }
 </script>
+
+<style scoped>
+.add-card{
+    transition: all .2s ease-in-out;
+}
+</style>

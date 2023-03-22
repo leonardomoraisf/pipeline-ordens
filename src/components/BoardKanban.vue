@@ -1,7 +1,7 @@
 <template>
     <div class="flex flex-col h-screen bg-white relative">
 
-        <div class="shrink-0 grid place-content-center p-4 mt-4">
+        <div class="shrink-0 grid place-content-center p-4 mt-2">
             <h1 class="text-2xl text-black font-bold">Pipeline das ordens de serviços</h1>
             <button class="px-3 py-2 font-medium text-sm text-gray-900 rounded-md flex justify-center">
                 <font-awesome-icon class="w-5 h-5" :icon="['fas', 'fa-play']" />
@@ -9,7 +9,7 @@
             </button>
         </div>
 
-        <main class="flex-1 overflow-hidden mt-6">
+        <main class="flex-1 overflow-hidden ">
             <div class="flex flex-col h-full">
 
                 <div class="shrink-0 flex justify-center bg-white px-4 py-3 container mx-auto">
@@ -23,7 +23,7 @@
                     </button>
                 </div>
 
-                <div class="flex-1 overflow-x-auto mt-12">
+                <div class="flex-1 overflow-x-auto mt-8">
 
                     <div class="inline-flex h-full items-start px-4 pb-4">
                         <CardList v-for="list in listBoards" :key="list.status" :list="list" :setList="setList"
@@ -33,14 +33,15 @@
 
                             <CreateBoardListForm :setList="setList"></CreateBoardListForm>
 
-                            <div
-                                class="mt-6 w-full h-48 flex justify-center items-center px-6 text-center border-2 rounded-md border-dashed border-black/50 hover:border-black/80 text-black/50 hover:text-black/80 font-semibold text-xl">
+                            <div v-if="listBoards.length !== 0"
+                                class="mt-32 w-full h-screen flex justify-center items-center px-6 text-center border-2 rounded-md border-dashed border-black/30 hover:border-black/50 text-black/30 hover:text-black/50 font-semibold text-xl">
                                 <p>Para remover do pipeline, arraste pra cá</p>
                             </div>
 
                         </div>
 
                     </div>
+
                 </div>
 
             </div>
@@ -63,7 +64,7 @@ export default {
     },
     data() {
         return {
-            listBoards: []
+            listBoards: {}
         }
     },
     methods: {

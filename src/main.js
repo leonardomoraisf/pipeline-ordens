@@ -8,7 +8,6 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 import { fas } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 axios.defaults.baseURL = 'http://localhost:80';
-axios.defaults.headers.post['Access-Control-Allow-Origin'] = '*';
 import VueAxios from 'vue-axios';
 
 Vue.config.productionTip = false;
