@@ -8,11 +8,10 @@
 // @ is an alias to /src
 import BoardKanban from "@/components/BoardKanban";
 
-
 export default {
   name: "HomeView",
   components: {
     BoardKanban,
-  },
+  }
 };
 </script>
