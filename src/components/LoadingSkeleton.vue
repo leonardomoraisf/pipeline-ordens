@@ -6,7 +6,7 @@
 
                 <div class="inline-flex h-full items-start px-4 pb-4">
 
-                    <div class="w-72 flex flex-col rounded-md p-2 max-h-full">
+                    <div class="w-72 flex flex-col rounded-md py-2 max-h-full">
                         <div>
                             <div>
 
@@ -106,7 +106,7 @@
                         </div>
                     </div>
 
-                    <div class="w-72 flex flex-col rounded-md p-2 max-h-full">
+                    <div class="w-72 flex flex-col rounded-md py-2 max-h-full">
                         <div>
                             <div>
 
@@ -190,7 +190,7 @@
                         </div>
                     </div>
 
-                    <div class="w-72 flex flex-col rounded-md p-2 max-h-full">
+                    <div class="w-72 flex flex-col rounded-md py-2 max-h-full">
                         <div>
                             <div>
 
@@ -254,7 +254,7 @@
                         </div>
                     </div>
 
-                    <div class="w-72 flex flex-col rounded-md p-2 max-h-full">
+                    <div class="w-72 flex flex-col rounded-md py-2 max-h-full">
                         <div>
                             <div>
 
@@ -339,7 +339,7 @@
                         </div>
                     </div>
 
-                    <div class="flex flex-col rounded-md p-2 max-h-full w-72">
+                    <div class="flex flex-col rounded-md py-2 max-h-full w-72">
                         <div>
                             <div class="relative mb-6 sm:mb-0 add">
                                 <div class="flex items-center justify-center">

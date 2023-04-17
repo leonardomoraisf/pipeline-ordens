@@ -52,7 +52,6 @@ export default {
     },
     props: {
         list: Object,
-        setList: Function,
         cards: Array
     },
     data() {

@@ -5,20 +5,26 @@
                 <div class="relative mx-auto w-full">
                     <div class="bg-white w-full rounded-md h-screen">
 
-                        <form @submit.prevent="onSubmit">
+                        <form @submit.prevent="onSubmit" v-if="!isDeletingStatus">
                             <div
                                 class="w-full rounded-t-md border-b-2 border-neutral-100 border-opacity-100 p-4 dark:border-opacity-50">
 
                                 <div class="flex items-center space-x-4">
                                     <div :style="{ backgroundColor: isEdit === 0 ? regStatusColor : editStatusColor }"
                                         :class="{ 'shake': animated }" @click="toggleInputColor = !toggleInputColor"
-                                        class="cursor-pointer hover:scale-125 z-10 flex items-center justify-center w-6 h-6 p-6 rounded-full shrink-0 group-hover:scale-110 status-circle">
+                                        class="group relative cursor-pointer hover:scale-125 z-10 flex items-center justify-center w-6 h-6 p-6 rounded-full shrink-0 group-hover:scale-110 status-circle">
                                         <p v-if="isEdit === 0" class="text-xl" :style="{ color: colorStatusTextRef }">{{
                                             lastList.ordem + 1
                                         }}</p>
                                         <p v-if="isEdit === 1" class="text-xl" :style="{ color: colorStatusTextRef }">{{
                                             list.ordem
                                         }}</p>
+                                        <button type="button" class="hidden absolute -top-2 right-0 group-hover:grid"
+                                            v-if="isEdit === 1" @click="confirmDeleteStatus">
+                                            <font-awesome-icon
+                                                class="w-4 h-4 text-gray-600 hover:text-red-600 transition-all"
+                                                :icon="['fas', 'fa-trash']" />
+                                        </button>
                                     </div>
 
                                     <div class="w-full">
@@ -85,6 +91,15 @@
                             </div>
                         </form>
 
+                        <div class="flex justify-center items-center" v-if="isDeletingStatus">
+                            <div class="hollow-dots-spinner mt-24">
+                                <div class="dot"></div>
+                                <div class="dot"></div>
+                                <div class="dot"></div>
+                            </div>
+                            <p class="text-2xl font-semibold">Deletando status</p>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -145,15 +160,60 @@ export default {
                 blue: 235,
                 alpha: 1
             },
-            colorStatusTextRef: ref(this.colorStatusText)
+            colorStatusTextRef: ref(this.colorStatusText),
+            isDeletingStatus: ref(false)
         }
     },
-    mounted(){
-        if(this.isEdit === 1){
+    mounted() {
+        if (this.isEdit === 1) {
             this.colorStatusTextRef = this.ajustarCorTexto(this.editStatusColor);
         }
     },
     methods: {
+        confirmDeleteStatus() {
+            this.toggleInputColor = !this.toggleInputColor;
+            if (this.list.cards.length > 0) {
+                ToastCenter5.fire('Você não pode excluir esse status!', 'Esse status ainda possui cards, se quiser deletá-lo, mude os cards de status.', 'warning');
+            } else if (this.list.cards.length === 0) {
+                this.$confirm(
+                    {
+                        message: 'Você tem certeza que deseja deletar esse status?',
+                        button: {
+                            no: 'Sim, deletar',
+                            yes: 'Não'
+                        },
+                        /**
+                         * Callback Function
+                         * @param {Boolean} confirm
+                         */
+                        callback: confirm => {
+                            if (confirm) {
+
+                            } else {
+                                this.deleteStatus();
+                            }
+                        }
+                    }
+                )
+            }
+
+        },
+        deleteStatus() {
+            this.isDeletingStatus = !this.isDeletingStatus;
+            this.axios.delete('/v2/pipeline/status/' + this.list.id_status + '/delete')
+                .then(res => {
+                    this.$emit('closeModal');
+                    this.isDeletingStatus = !this.isDeletingStatus;
+                    Toast.fire(res.data.message, "Atualizando pipeline...", "success");
+                    this.$emit('statusDeleted', this.list);
+                })
+                .catch(err => {
+                    this.isDeletingStatus = !this.isDeletingStatus;
+                    this.isSubmiting = false;
+                    this.isShowingError = true;
+                    this.errorMessage = res.data.message;
+                })
+        },
         rgb2hex(rgb) {
             rgb = rgb.match(/^rgba?[\s+]?\([\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?/i);
             return (rgb && rgb.length === 4) ? "#" +
@@ -204,10 +264,10 @@ export default {
                 if (this.editStatusName !== this.backupEditStatusName || this.editStatusColor !== this.backupEditStatusColor) {
                     this.$confirm(
                         {
-                            message: 'Você fez alterações! Deseja continuar editando?',
+                            message: 'Você fez alterações! Deseja descartar as alterações?',
                             button: {
-                                no: 'Não, descartar',
-                                yes: 'Sim'
+                                no: 'Sim, descartar',
+                                yes: 'Não'
                             },
                             /**
                              * Callback Function
@@ -234,6 +294,8 @@ export default {
                 }
             }
             if (this.isEdit === 0) {
+                this.isShowingError = false;
+                this.errorMessage = "";
                 this.toggleInputColor = false;
                 this.$emit('closeModal');
             }

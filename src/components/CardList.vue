@@ -1,33 +1,37 @@
 <template>
     <div>
 
-        <StatusTimeline @changeListInfo="changeListInfo" :setList="setList" :list="list" :corTextoStatus="corTextoStatus"
-            :lastList="lastList" :ajustarCorTexto="ajustarCorTexto">
+        <StatusTimeline :list="list" :corTextoStatus="corTextoStatus" :lastList="lastList"
+            :ajustarCorTexto="ajustarCorTexto" @statusDeleted="onStatusDeleted">
         </StatusTimeline>
 
         <div class="text-center">
             <p class="text-xl font-semibold text-gray-500">{{ cards.length }}</p>
         </div>
 
-        <MovimentoModalCreate :list="list" :cards="cards" :setList="setList" @cardCreated="onCardCreated">
+        <MovimentoModalCreate :list="list" :cards="cards" class="px-2" @cardCreated="onCardCreated">
         </MovimentoModalCreate>
 
-        <div class="absolute invisible">
-            <button @click="addCard" class="bg-blue-600 text-white font-semibold px-2 py-3 rounded-md mt-3">Teste animação</button>
-        </div>
-
-        <div class="pb-3 flex flex-col overflow-hidden mt-6">
+        <div class="pb-3 flex flex-col overflow-hidden mt-4 px-2">
             <div class="px-2 flex-1 overflow-y-auto cards-scrollbar" ref="listRef">
 
                 <Draggable :list="cards" group="cards" class="space-y-3 pb-24 h-full draggable pt-2" tag="ul"
-                    drag-class="drag" ghost-class="ghost" @change="onChange" @end="onDropCard" handle=".drag-card"
+                    id="table-normal" drag-class="drag" ghost-class="ghost" @change="onChange" handle=".drag-card"
                     ref="list">
-                    <CardListItem v-for="card in cards" :key="card.id_card" :card="card" :setList="setList"
-                        :colorStatus="list.color" :ajustarCorTexto="ajustarCorTexto" :corTextoCard="corTextoStatus" />
+
+                    <CardListItem v-for="card in cards" :key="card.id_card" :card="card" :colorStatus="list.color"
+                        :corTextoCard="corTextoStatus" :dataHoje="dataHoje" :isToInative="false"
+                        @openModalEditComments="toggleModalEditComments" />
+
                 </Draggable>
 
             </div>
         </div>
+
+        <ModalEditCardComments :cardIsEditing="cardIsEditing" :toggleModal="isShowingModalEditComments"
+            :colorStatus="list.color" :corTextoCard="corTextoStatus" :inInativeCards="false" ref="modalEditCommentsRef"
+            @closeModalEditComments="toggleModalEditComments" :dataHoje="dataHoje"></ModalEditCardComments>
+
     </div>
 </template>
 
@@ -36,7 +40,8 @@ import Draggable from 'vuedraggable';
 import MovimentoModalCreate from "./MovimentoModalCreate.vue";
 import CardListItem from "./CardListItem.vue";
 import { ref, nextTick } from "vue";
-import StatusTimeline from "./StatusTimeline.vue"
+import StatusTimeline from "./StatusTimeline.vue";
+import ModalEditCardComments from './ModalEditCardComments.vue';
 
 export default {
     name: 'CardList',
@@ -44,42 +49,56 @@ export default {
         Draggable,
         MovimentoModalCreate,
         CardListItem,
-        StatusTimeline
+        StatusTimeline,
+        ModalEditCardComments
     },
     props: {
         list: Object,
-        setList: Function,
         lastList: Object,
         ajustarCorTexto: Function,
         idEmpresa: Number,
         newCard: {
             type: Object,
             default: () => ({})
-        }
+        },
+        editedCard: {
+            type: Object,
+            default: () => ({})
+        },
+        dataHoje: String,
     },
     data() {
         return {
             cards: ref(this.list.cards),
             corTextoStatus: '',
-            isDeletingCard: ref(false)
+            isShowingModalEditComments: ref(false),
+            cardIsEditing: {}
         }
     },
     mounted() {
         this.corTextoStatus = this.ajustarCorTexto(this.list.color);
     },
     methods: {
-        addCard() {
-            let index = Math.floor(Math.random() * (1000000 - 1000 + 1)) + 1000;
-            let card = {
-                celulares: '"[{"number": "31971516241"}]"',
-                id_card: index,
-                id_status: this.list.id_status,
-                nome: 'Teste ' + index,
-                posicao: 60000,
-                telefones: null,
-                valor: 100
+        /**
+         * Método chamado para abrir a modal de edição de comentários de um card que está na lista
+         * para transformar o card em inative
+         * @param {Object} card 
+         */
+        async toggleModalEditComments(card) {
+            this.isShowingModalEditComments = !this.isShowingModalEditComments;
+            this.cardIsEditing = card;
+
+            if (this.isShowingModalEditComments === true) {
+                await nextTick();
+                this.$refs.modalEditCommentsRef.$refs.textareaRef.focus();
             }
-            this.onCardCreated(card);
+        },
+        /**
+         * Método que é chamado quando um status é deletado, ele emite qual lista for deletada,
+         * para no componente pai ser procurado pelo index e ser retirado do array
+         */
+        onStatusDeleted(list) {
+            this.$emit('statusDeleted', list);
         },
         /**
          * Método que é acionado quando um movimento/card é criado
@@ -87,27 +106,29 @@ export default {
          */
         async onCardCreated(novoCard) {
             this.cards.push(novoCard);
+
+            // Reorganiza a lista
+            this.cards.sort((a, b) => a.posicao - b.posicao);
+
             await nextTick();
 
             const childrenList = this.$refs.list.$children;
-            const lengthChildrenList = childrenList.length;
-            const lastChildren = childrenList[lengthChildrenList - 1];
-            const lastElement = lastChildren.$el;
+            const childrenIndex = childrenList.findIndex(obj => obj.card.id_card === novoCard.id_card);
+            const element = childrenList[childrenIndex].$el;
 
-            lastElement.style.transition = "transform 0.2s ease";
+            element.style.transition = "all 0.2s ease";
             setTimeout(() => {
-                lastElement.style.transform = "scale(1.05)";
-                lastElement.style.opacity = "0.8";
+                element.style.transform = "scale(1.05)";
+                element.style.opacity = "0.8";
             }, 100);
             setTimeout(() => {
-                lastElement.style.transform = "scale(1)";
-                lastElement.style.opacity = "1";
+                element.style.transform = "scale(1)";
+                element.style.opacity = "1";
             }, 1000);
 
-            lastElement.scrollIntoView({
+            element.scrollIntoView({
                 behavior: 'smooth'
             });
-
         },
         /**
          * Método que é acionado quando acontece alguma mudança de status ou posição de cards do componente draggable
@@ -136,66 +157,79 @@ export default {
 
             let body = {
                 id_status: this.list.id_status,
-                posicao: posicao
+                posicao: posicao,
+                ativo: 1,
+                comentarios: card.comentarios
             };
 
-            this.axios.put("/v2/pipeline/cards/" + card.id_card + "/move", body)
+            this.axios.put("/v2/pipeline/cards/" + card.id_card + "/edit", body)
                 .then(res => {
-                    this.cards[index].posicao = posicao;
+
                 })
                 .catch(err => {
                 })
-        },
-        onDropCard(e) {
-            const tableId = e.to.id;
-
-            if (tableId === 'table-delete') {
-                const movedCard = e.item._underlying_vm_;
-                this.$confirm(
-                    {
-                        message: 'Tem certeza que deseja deletar esse card do pipeline?',
-                        button: {
-                            no: 'Cancelar',
-                            yes: 'Sim'
-                        },
-                        /**
-                         * Callback Function
-                         * @param {Boolean} confirm
-                         */
-                        callback: confirm => {
-                            if (confirm) {
-                                this.deleteCard(movedCard);
-                            } else {
-                                this.onCardCreated(movedCard);
-                            }
-                        }
-                    }
-                )
-            }
-        },
-        deleteCard(card) {
-            ToastTopEnd5.fire('Aguarde', 'Deletando card...', 'warning');
-            this.axios.delete('/v2/pipeline/cards/' + card.id_card + '/delete')
-                .then(res => {
-                    Toast.fire(res.data.message, '', 'success');
-                })
-        },
-        /**
-         * Método chamado quando o status é editado para evitar chamada no banco de dados,
-         * ele seta o nome e cor por aqui e já troca a cor do texto
-         * @param {String} nome 
-         * @param {String} color 
-         */
-        changeListInfo(edit) {
-            this.list.nome = edit.nome;
-            this.list.color = edit.color;
-            this.corTextoStatus = this.ajustarCorTexto(this.list.color);
         }
     },
     watch: {
+        /**
+         * Método para escutar o card recebido pelo canal new-cards e adicioná-lo na lista
+         */
         newCard(newCard, oldCard) {
-            if(newCard.id_status == this.list.id_status){
+            if (newCard.id_status === this.list.id_status) {
+                newCard.valor = parseFloat(newCard.valor);
+                newCard.posicao = parseFloat(newCard.posicao);
                 this.onCardCreated(newCard);
+            }
+        },
+        /**
+         * Método para escutar o card recebido pelo canal edited-cards e mudar as informações do card na lista
+         */
+        editedCard(newEditedCard, oldEditedCard) {
+            const novoCard = newEditedCard;
+            // Procura o card na lista
+            let cardIndex = this.cards.findIndex(obj => obj.id_card === novoCard.id_card);
+            if (cardIndex !== -1) {
+                // Atualiza o card
+                let cardInList = this.cards[cardIndex];
+                novoCard.posicao = parseFloat(novoCard.posicao);
+                novoCard.valor = parseFloat(novoCard.valor);
+                cardInList = novoCard;
+
+                if (cardInList.ativo === 0) {
+                    // anima o card sumindo
+                    const childrenList = this.$refs.list.$children;
+                    const childrenIndex = childrenList.findIndex(obj => obj.card.id_card === cardInList.id_card);
+                    const element = childrenList[childrenIndex].$el;
+
+                    element.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                    element.style.transition = "transform 0.2s ease-in-out";
+                    element.style.transform = "scale(1.05)";
+
+                    setTimeout(() => {
+                        element.style.transition = "transform 1s ease-in-out";
+                        element.style.transform = "scale(0)";
+                    }, 500);
+
+                    setTimeout(() => {
+                        // emite o card para colocá-lo na lista de cards inativos
+                        this.$emit('cardIsNowInative', cardInList);
+
+                        // remove o card da lista atual
+                        this.cards.splice(cardIndex, 1);
+                    }, 2000);
+                }
+
+                // Verifica se o id_status continua o mesmo, se não continuou, remove o card dessa lista
+                // e emite como um card novo pro componente pai
+                if (cardInList.id_status !== this.list.id_status && cardInList.ativo === 1) {
+                    // emite o card para colocá-lo na lista certa
+                    this.$emit('cardInWrongList', cardInList);
+
+                    // remove o card da lista atual
+                    this.cards.splice(cardIndex, 1);
+                }
             }
         }
     }
