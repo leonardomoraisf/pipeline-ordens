@@ -40,7 +40,8 @@
             </div>
 
             <div class="mt-3 h-8 max-h-8 overflow-hidden whitespace-nowrap text-ellipsis px-2">
-                <p class="text-base font-semibold text-gray-900 text-center">{{ list.nome }}</p>
+                <p class="text-base font-semibold text-gray-900 text-center" v-if="list.nome.length <=35 ">{{ list.nome }}</p>
+                <p class="text-base font-semibold text-gray-900 text-center" v-tooltip.bottom="{ content: list.nome }" v-if="list.nome.length > 35">{{ list.nome }}</p>
             </div>
         </div>
 
@@ -84,8 +85,6 @@ export default {
          */
         async toggleModalEditStatusFunc() {
             this.toggleStatusEditModal = !this.toggleStatusEditModal;
-            await nextTick();
-            this.$refs.sideModalEdit.$refs.editStatusNameRef.focus();
             this.animated = true;
             setTimeout(() => {
                 this.animated = false;

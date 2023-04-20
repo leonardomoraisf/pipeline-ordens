@@ -1,6 +1,5 @@
 <template>
     <div>
-
         <StatusTimeline :list="list" :corTextoStatus="corTextoStatus" :lastList="lastList"
             :ajustarCorTexto="ajustarCorTexto" @statusDeleted="onStatusDeleted">
         </StatusTimeline>
@@ -15,13 +14,13 @@
         <div class="pb-3 flex flex-col overflow-hidden mt-4 px-2">
             <div class="px-2 flex-1 overflow-y-auto cards-scrollbar" ref="listRef">
 
-                <Draggable :list="cards" group="cards" class="space-y-3 pb-24 h-full draggable pt-2" tag="ul"
-                    id="table-normal" drag-class="drag" ghost-class="ghost" @change="onChange" handle=".drag-card"
+                <Draggable v-model="cards" class="space-y-3 pb-24 h-full draggable pt-2" tag="ul" v-bind="dragOptions"
+                    id="table-normal" @change="onChange"
                     ref="list">
 
-                    <CardListItem v-for="card in cards" :key="card.id_card" :card="card" :colorStatus="list.color"
-                        :corTextoCard="corTextoStatus" :dataHoje="dataHoje" :isToInative="false"
-                        @openModalEditComments="toggleModalEditComments" />
+                        <CardListItem v-for="card in cards" :key="card.id_card" :card="card" :colorStatus="list.color"
+                            :corTextoCard="corTextoStatus" :dataHoje="dataHoje" :isToInative="false"
+                            @openModalEditComments="toggleModalEditComments" />
 
                 </Draggable>
 
@@ -65,14 +64,14 @@ export default {
             type: Object,
             default: () => ({})
         },
-        dataHoje: String,
+        dataHoje: String
     },
     data() {
         return {
             cards: ref(this.list.cards),
             corTextoStatus: '',
             isShowingModalEditComments: ref(false),
-            cardIsEditing: {}
+            cardIsEditing: {},
         }
     },
     mounted() {
@@ -105,9 +104,11 @@ export default {
          * @param {Object} novoCard 
          */
         async onCardCreated(novoCard) {
+            let cardIndex = this.cards.findIndex(obj => obj.id_card === novoCard.id_card);
+            if (cardIndex !== -1) return;
+
             this.cards.push(novoCard);
 
-            // Reorganiza a lista
             this.cards.sort((a, b) => a.posicao - b.posicao);
 
             await nextTick();
@@ -137,7 +138,6 @@ export default {
         onChange(e) {
             // Pega o card que foi ou movido de tabela, ou movido de posição
             let item = e.added || e.moved;
-
             if (!item) return;
 
             let index = item.newIndex;
@@ -155,6 +155,13 @@ export default {
                 posicao = nextCard.posicao / 2;
             }
 
+            let novoCard = {
+                ...card,
+                posicao: posicao,
+                id_status: this.list.id_status
+            };
+            this.$set(this.cards, index, novoCard);
+
             let body = {
                 id_status: this.list.id_status,
                 posicao: posicao,
@@ -170,6 +177,17 @@ export default {
                 })
         }
     },
+    computed: {
+        dragOptions() {
+            return {
+                animation: 0,
+                group: "cards",
+                ghostClass: "ghost",
+                dragClass: "drag",
+                handle: ".drag-card"
+            };
+        },
+    },
     watch: {
         /**
          * Método para escutar o card recebido pelo canal new-cards e adicioná-lo na lista
@@ -178,6 +196,7 @@ export default {
             if (newCard.id_status === this.list.id_status) {
                 newCard.valor = parseFloat(newCard.valor);
                 newCard.posicao = parseFloat(newCard.posicao);
+
                 this.onCardCreated(newCard);
             }
         },
@@ -186,51 +205,55 @@ export default {
          */
         editedCard(newEditedCard, oldEditedCard) {
             const novoCard = newEditedCard;
+
             // Procura o card na lista
-            let cardIndex = this.cards.findIndex(obj => obj.id_card === novoCard.id_card);
-            if (cardIndex !== -1) {
-                // Atualiza o card
-                let cardInList = this.cards[cardIndex];
-                novoCard.posicao = parseFloat(novoCard.posicao);
-                novoCard.valor = parseFloat(novoCard.valor);
-                cardInList = novoCard;
+            const cardIndex = this.cards.findIndex(obj => obj.id_card === novoCard.id_card);
+            if (cardIndex === -1) return;
 
-                if (cardInList.ativo === 0) {
-                    // anima o card sumindo
-                    const childrenList = this.$refs.list.$children;
-                    const childrenIndex = childrenList.findIndex(obj => obj.card.id_card === cardInList.id_card);
-                    const element = childrenList[childrenIndex].$el;
+            novoCard.posicao = parseFloat(novoCard.posicao);
+            novoCard.valor = parseFloat(novoCard.valor);
 
-                    element.scrollIntoView({
-                        behavior: 'smooth'
-                    });
-                    element.style.transition = "transform 0.2s ease-in-out";
-                    element.style.transform = "scale(1.05)";
+            this.$set(this.cards, cardIndex, novoCard);
+            this.$forceUpdate();
 
-                    setTimeout(() => {
-                        element.style.transition = "transform 1s ease-in-out";
-                        element.style.transform = "scale(0)";
-                    }, 500);
+            if (novoCard.ativo === 0) {
+                // anima o card sumindo
+                const childrenList = this.$refs.list.$children;
+                const childrenIndex = childrenList.findIndex(obj => obj.card.id_card === novoCard.id_card);
+                const element = childrenList[childrenIndex].$el;
 
-                    setTimeout(() => {
-                        // emite o card para colocá-lo na lista de cards inativos
-                        this.$emit('cardIsNowInative', cardInList);
+                element.scrollIntoView({
+                    behavior: 'smooth'
+                });
+                element.style.transition = "transform 0.2s ease-in-out";
+                element.style.transform = "scale(1.05)";
 
-                        // remove o card da lista atual
-                        this.cards.splice(cardIndex, 1);
-                    }, 2000);
-                }
+                setTimeout(() => {
+                    element.style.transition = "transform 1s ease-in-out";
+                    element.style.transform = "scale(0)";
+                }, 500);
 
-                // Verifica se o id_status continua o mesmo, se não continuou, remove o card dessa lista
-                // e emite como um card novo pro componente pai
-                if (cardInList.id_status !== this.list.id_status && cardInList.ativo === 1) {
-                    // emite o card para colocá-lo na lista certa
-                    this.$emit('cardInWrongList', cardInList);
+                setTimeout(() => {
+                    // emite o card para colocá-lo na lista de cards inativos
+                    this.$emit('cardIsNowInative', novoCard);
 
                     // remove o card da lista atual
                     this.cards.splice(cardIndex, 1);
-                }
+                }, 2000);
             }
+
+            // Verifica se o id_status continua o mesmo, se não continuou, remove o card dessa lista
+            // e emite como um card novo pro componente pai
+            if (novoCard.id_status !== this.list.id_status && novoCard.ativo === 1) {
+                // emite o card para colocá-lo na lista certa
+                this.$emit('cardInWrongList', novoCard);
+
+                // remove o card da lista atual
+                this.cards.splice(cardIndex, 1);
+            }
+        },
+        'list.color': function (novoValor, valorAntigo) {
+            this.corTextoStatus = this.ajustarCorTexto(novoValor);
         }
     }
 }

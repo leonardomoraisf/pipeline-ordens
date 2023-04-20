@@ -1,23 +1,45 @@
 <template>
-    <li class="drag-card" :class="{'card-list' : !inModalEditComments}" @click="$emit('turnCardActive', card)">
+    <li class="drag-card" :class="{ 'card-list': !inModalEditComments }">
 
         <div :style="{ backgroundColor: colorStatus }"
             class="group relative p-3 shadow rounded-md border-b border-gray-300 text-left">
 
-            <div class="h-28 flex flex-col justify-between" :class="{'hover:cursor-grab' : !inInativeCardList, 'hover:cursor-pointer' : inInativeCardList}" :style="{ color: corTextoCard }">
+            <div class="h-28 flex flex-col justify-between"
+                :class="{ 'hover:cursor-grab': !inInativeCardList, 'hover:cursor-pointer': inInativeCardList }"
+                :style="{ color: corTextoCard }">
+
+                <div class="absolute top-3 right-3" v-if="inInativeCardList && existeStatus">
+                    <button
+                        class="text-base text-white font-semibold bg-green-600 hover:bg-green-500 hover:scale-105 p-2 rounded-md transition-all"
+                        @click="$emit('turnCardActive', card)">
+                        Reativar
+                    </button>
+                </div>
+
+                <div v-if="inInativeCardList && !existeStatus" class="absolute top-2 right-2">
+                    <button @click="deleteCard" class="bg-rose-500 rounded-md hover:bg-rose-400 p-2 transition-colors">
+                        Deletar
+                    </button>
+                </div>
+
+                <div class="bg-white/50 absolute inset-0 w-full h-full z-50 grid place-content-center" v-if="isDeleting">
+                    <div class="half-circle-spinner">
+                        <div class="circle circle-1"></div>
+                        <div class="circle circle-2"></div>
+                    </div>
+                </div>
 
                 <div>
-                    <p class="text-base">{{ card.nome }}</p>
+                    <p class="text-base">{{ card.nome !== null ? card.nome : "Movimento sem cliente"}}</p>
                     <p class="text-base">{{ celular }}</p>
+                    <p v-if="inInativeCardList" class="text-base font-normal"><b>Status:</b> {{ card.statusName }}
+                    </p>
                 </div>
 
-                <circular-count-down-timer v-if="isToInative" class="absolute top-1 right-3" :circles="circles" :stepLength="circles.stepLength"
-                :main-circle-id="circles.id || '1'" :fill-color="colorStatus" :stroke-width="3"
-				:stroke-color="corTextoCard" v-tooltip="'Quando o tempo acabar, o card será colocado como inativo!'"/>
-
-                <div v-if="inInativeCardList" class="absolute top-2 right-2">
-                    <p class="text-base font-normal"><b>Status:</b> {{ card.statusName }}</p>
-                </div>
+                <circular-count-down-timer v-if="isToInative" class="absolute top-1 right-3" :circles="circles"
+                    :stepLength="circles.stepLength" :main-circle-id="circles.id || '1'" :fill-color="colorStatus"
+                    :stroke-width="3" :stroke-color="corTextoCard"
+                    v-tooltip="'Quando o tempo acabar, o card será colocado como inativo!'" />
 
                 <div class="flex justify-between items-center">
 
@@ -25,9 +47,11 @@
                         <div v-if="!inModalEditComments" class="hover:scale-125 transition-transform mr-2">
                             <button @click.stop="$emit('openModalEditComments', card)">
                                 <font-awesome-icon v-if="card.comentarios === null || card.comentarios.length === 0"
-                                    class="w-8 h-8 opacity-60" :icon="['far', 'comment']" />
+                                    class="w-8 h-8 opacity-70" :style="{ color: corTextoCard }"
+                                    :icon="['far', 'comment']" />
                                 <font-awesome-icon v-if="card.comentarios !== null && card.comentarios.length > 0"
-                                    class="w-8 h-8 text-black/60 opacity-60" :icon="['fas', 'comment']" />
+                                    class="w-8 h-8 opacity-70" :style="{ color: corTextoCard }"
+                                    :icon="['fas', 'comment']" />
                             </button>
                         </div>
 
@@ -77,6 +101,10 @@ export default {
         inInativeCardList: {
             type: Boolean,
             default: false
+        },
+        existeStatus: {
+            type: Boolean,
+            default: true
         }
     },
     data() {
@@ -98,10 +126,24 @@ export default {
                     label: 'segundos',
                     dependentCircles: ['1']
                 }
-            ]
+            ],
+            isDeleting: ref(false)
         }
     },
     methods: {
+        deleteCard() {
+            this.isDeleting = true;
+            this.axios.delete('/v2/pipeline/cards/' + this.card.id_card + '/delete')
+                .then(res => {
+                    this.isDeleting = false;
+                    this.$emit('cardDeleted', this.card);
+                    ToastTopStart5.fire('Sucesso!', res.data.message, 'success');
+                })
+                .catch(err => {
+                    this.isDeleting = true;
+                    ToastTopStart5.fire('Erro!', res.data.message, 'error');
+                })
+        },
         calculaDiferencaDias() {
             let dataHoje = new Date(this.dataHoje);
 
@@ -117,7 +159,7 @@ export default {
             this.diferencaDiasTotal = diasTotal;
         },
         cardToInative() {
-            ToastTopStart5.fire('Sucesso!', 'O card de '+this.card.nome+' será colocado como inativo.', 'success');
+            ToastTopStart5.fire('Sucesso!', 'O card de ' + this.card.nome + ' será colocado como inativo.', 'success');
 
             let body = {
                 id_status: this.card.id_status,
@@ -126,12 +168,12 @@ export default {
                 comentarios: this.card.comentarios
             };
 
-            let card = {...this.card, ativo: 0};
+            let card = { ...this.card, ativo: 0 };
 
             this.$emit('putCardToInative', card);
             this.axios.put("/v2/pipeline/cards/" + card.id_card + "/edit", body)
                 .then(res => {
-                    
+
                 })
                 .catch(err => {
                 })
@@ -182,5 +224,47 @@ export default {
 
 .card-list:hover {
     transform: scale(1.05) !important;
+}
+
+.half-circle-spinner,
+.half-circle-spinner * {
+    box-sizing: border-box;
+}
+
+.half-circle-spinner {
+    width: 60px;
+    height: 60px;
+    border-radius: 100%;
+    position: relative;
+}
+
+.half-circle-spinner .circle {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 100%;
+    border: calc(60px / 10) solid transparent;
+}
+
+.half-circle-spinner .circle.circle-1 {
+    border-top-color: white;
+    animation: half-circle-spinner-animation 1s infinite;
+}
+
+.half-circle-spinner .circle.circle-2 {
+    border-bottom-color: white;
+    animation: half-circle-spinner-animation 1s infinite alternate;
+}
+
+@keyframes half-circle-spinner-animation {
+    0% {
+        transform: rotate(0deg);
+
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 </style>

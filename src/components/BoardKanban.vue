@@ -9,12 +9,6 @@
 
             <div class="flex flex-col align-middle items-center">
                 <h1 class="text-2xl text-black font-bold">Pipeline das ordens de serviços</h1>
-
-                <button class="px-3 py-2 font-medium text-sm text-gray-900 rounded-md flex justify-center"
-                    v-if="isFirstTime !== 1">
-                    <font-awesome-icon class="w-5 h-5" :icon="['fas', 'fa-play']" />
-                    <span class="ml-1">Tutorial</span>
-                </button>
             </div>
 
             <div class="shrink-0 flex justify-center bg-white px-4 py-3 container mx-auto">
@@ -34,53 +28,51 @@
 
                     <div class="inline-flex h-full items-start px-4 pb-4">
                         <CardList v-for="list in listBoards" :key="list.id_status" :list="list" :lastList="lastList"
-                            class="w-72 flex flex-col rounded-md py-2 max-h-full" :ajustarCorTexto="ajustarCorTexto"
+                            class="w-72 flex flex-col rounded-md pt-2 max-h-full" :ajustarCorTexto="ajustarCorTexto"
                             :idEmpresa="idEmpresa" :newCard="newCard" :editedCard="editedCard"
                             @statusDeleted="onStatusDeleted" :dataHoje="dataHoje" @cardInWrongList="onCardInWrongList"
-                            @cardIsNowInative="onCardIsNowInative" />
+                            @cardIsNowInative="onCardIsNowInative"/>
 
                         <div class="flex flex-col rounded-md py-2 max-h-full w-72">
 
-                            <!-- Essa div abaixo some assim que o usuário cria mais de três status, 
+                            <!-- Essa div abaixo aparece assim que o usuário cria mais de três status, 
                                     pois já, pelo menos aparentemente, aprendeu a usar -->
                             <div class="relative mb-6 sm:mb-0 hover:cursor-pointer text-black/50 hover:text-black/70 hover:scale-110 add"
-                                @click="toggleModalCreateStatusFunc" v-if="listBoards.length <= 3">
-                                <div class="flex items-center justify-center">
+                                @click="toggleModalCreateStatusFunc" v-if="listBoards.length > 3"
+                                v-tooltip="'Adicione um novo status'">
+
+                                <div class="flex h-8 max-h-8 items-center justify-center mt-3">
                                     <div
                                         class="z-10 flex items-center justify-center w-6 h-6 rounded-full border-2 border-dashed border-black/70 p-6 shrink-0">
                                         <font-awesome-icon :icon="['fas', 'fa-plus']" />
                                     </div>
                                 </div>
 
-                                <div class="mt-3 flex justify-center text-center h-8 max-h-8">
+                            </div>
+
+                            <!-- Essa div abaixo some assim que o usuário cria mais de três status, 
+                                    pois já, pelo menos aparentemente, aprendeu a usar -->
+                            <div class="relative mb-6 sm:mb-0 hover:cursor-pointer text-black/50 hover:text-black/70 hover:scale-110 add"
+                                @click="toggleModalCreateStatusFunc" v-if="listBoards.length <= 3">
+
+                                <div class="flex h-8 max-h-8 items-center justify-center mt-3">
                                     <h3 class="text-base font-semibold">Adicione um novo
                                         status</h3>
                                 </div>
-                            </div>
 
-                            <!-- Essa div abaixo aparece assim que o usuário cria mais de três status, 
-                                    pois já, pelo menos aparentemente, aprendeu a usar -->
-                            <div class="relative mb-14 hover:cursor-pointer text-black/50 hover:text-black/70 hover:scale-110 add"
-                                @click="toggleModalCreateStatusFunc" v-if="listBoards.length > 3">
-                                <div class="flex items-center justify-center">
-                                    <div class="z-10 flex items-center justify-center w-6 h-6 rounded-full border-2 border-dashed border-black/70 p-6 shrink-0"
-                                        v-tooltip="'Adicione um novo status'">
-                                        <font-awesome-icon :icon="['fas', 'fa-plus']" />
-                                    </div>
-                                </div>
                             </div>
 
                             <SideModal :list="{ id_status: 0 }" :lastList="lastList"
                                 :toggleModal="isShowingModalCreateStatus" @closeModal="toggleModalCreateStatusFunc"
                                 :animated="animated" :colorStatusText="'#FFFFFF'" ref="sideModalCreate"
-                                :ajustarCorTexto="ajustarCorTexto">
+                                :ajustarCorTexto="ajustarCorTexto" class="mb-2">
                             </SideModal>
 
-                            <div @click="toggleModalInativeCards"
-                                class="pb-3 hover:cursor-pointer relative h-screen flex flex-col overflow-hidden px-2 mt-36 border-2 rounded-md border-dashed border-black/30 hover:border-black/50 text-black/30 hover:text-black/50"
+                            <div @click="openModalInativeCards"
+                                class="pb-3 hover:cursor-pointer relative h-screen flex flex-col overflow-hidden px-2 mt-48 border-2 rounded-md border-dashed border-black/30 hover:border-black/50 text-black/30 hover:text-black/50"
                                 v-tooltip="'Clique para visualizar os cards inativos'">
                                 <div class="px-2 flex-1 overflow-y-auto cards-scrollbar" ref="listRef">
-                                    <Draggable :list="cardsToInativeList" group="cards"
+                                    <Draggable v-model="cardsToInativeList" group="cards"
                                         class="space-y-3 pb-24 h-full draggable pt-2" tag="ul" id="table-delete"
                                         drag-class="drag" ghost-class="ghost" handle=".drag-card" ref="listInativeRef">
 
@@ -91,7 +83,7 @@
                                             @openModalEditComments="toggleModalEditComments" />
 
                                         <div class="absolute inset-0 flex items-center justify-center trash" slot="header">
-                                            <p class="text-xl">Para remover do pipeline, arraste para cá</p>
+                                            <p class="text-xl px-1">Para remover cards do pipeline, arraste para cá</p>
                                             <div class="invisible absolute">
                                                 <font-awesome-icon class="w-7 h-7" :icon="['fas', 'fa-trash']" />
                                             </div>
@@ -109,9 +101,12 @@
 
                             <ModalInativeCardList :list="listBoards" :toggleModal="isShowingModalInativeCardList"
                                 :inativeCardsList="inativeCardsList" :dataHoje="dataHoje"
-                                @closeModalInativeCardList="toggleModalInativeCards"
+                                @closeModalInativeCardList="closeModalInativeCards"
                                 @openModalEditComments="toggleModalEditComments" @turnCardActive="onTurnCardActive"
-                                :ajustarCorTexto="ajustarCorTexto"></ModalInativeCardList>
+                                :ajustarCorTexto="ajustarCorTexto" @cardDeleted="onCardDeleted"
+                                :isRequesting="isRequestingInativeCardList" :isRequestingMore="isRequestingMoreInativeCards"
+                                @nextPagInativeCards="requestInativeCards">
+                            </ModalInativeCardList>
 
                         </div>
 
@@ -157,12 +152,15 @@ export default {
             editedCard: {},
             search: '',
             dataHoje: '',
-            isFirstTime: 0,
             inativeCardsList: [],
             cardsToInativeList: [],
             isShowingModalEditComments: ref(false),
             cardIsEditing: {},
             isShowingModalInativeCardList: ref(false),
+            isRequestingInativeCardList: ref(false),
+            isRequestingMoreInativeCards: ref(false),
+            dataRequestInativeCardList: [],
+            qtdRequests: 1
         }
     },
     computed: {
@@ -177,12 +175,19 @@ export default {
     },
     methods: {
         /**
+         * Método chamado quando um card que não possui mais status é deletado
+         * @param {Object} card 
+         */
+        onCardDeleted(card) {
+            let cardIndex = this.inativeCardsList.findIndex(obj => obj.id_card === card.id_card);
+            this.inativeCardsList.splice(cardIndex, 1);
+        },
+        /**
          * Método chamado quando um card recebido do pusher agora está inativo
          * esse método joga o card para a lista de cards inativos
          * @param {Object} card 
          */
         onCardIsNowInative(card) {
-            console.log(card)
             this.inativeCardsList.push(card);
         },
         /**
@@ -194,6 +199,9 @@ export default {
             this.newCard = card;
         },
         onTurnCardActive(card) {
+            let statusIndex = this.listBoards.findIndex(obj => obj.id_status === card.id_status);
+            if (statusIndex === -1) return ToastTopStart5.fire('Erro!', 'O status em que esse card estava foi removido do pipeline!', 'error');
+
             // Toast para o usuário
             ToastTopStart5.fire('Sucesso!', 'O card de ' + card.nome + ' está ativo novamente!', 'success');
 
@@ -218,13 +226,68 @@ export default {
             // Manda o card como novo card, para ele voltar para sua lista
             this.newCard = card;
         },
-        /**
-         * Método para abrir ou fechar a modal de cards inativos
-         */
-        toggleModalInativeCards() {
-            this.isShowingModalInativeCardList = !this.isShowingModalInativeCardList;
+        requestInativeCards() {
+            if (this.qtdRequests === 1) {
+                this.isRequestingInativeCardList = true;
+                this.axios.get('/v2/pipeline/cards/inactive')
+                    .then(res => {
+                        const data = res.data;
+                        this.inativeCardsList = data.data;
+
+                        delete data.data;
+                        this.dataRequestInativeCardList = data;
+
+                        this.inativeCardsList.forEach(card => {
+                            card.posicao = parseFloat(card.posicao);
+                            card.valor = parseFloat(card.valor);
+                        });
+                        this.isRequestingInativeCardList = false;
+                        this.qtdRequests += 1;
+                    })
+                    .catch(err => {
+                        ToastTopStart5.fire('Erro!', err.data, 'error');
+                    })
+            } else if (this.qtdRequests > 1) {
+                if (this.dataRequestInativeCardList.next_page_url === null) return;
+
+                this.isRequestingMoreInativeCards = true;
+                let url = this.dataRequestInativeCardList.next_page_url;
+                this.axios.get(url.substring(22))
+                    .then(res => {
+                        const data = res.data;
+
+                        const cards = data.data;
+                        cards.forEach(card => {
+                            card.posicao = parseFloat(card.posicao);
+                            card.valor = parseFloat(card.valor);
+                        });
+                        this.inativeCardsList = this.inativeCardsList.concat(cards);
+
+                        delete data.data;
+                        this.dataRequestInativeCardList = data;
+
+                        this.isRequestingMoreInativeCards = false;
+                    })
+                    .catch(err => {
+                        ToastTopStart5.fire('Erro!', err.data, 'error');
+                    })
+            }
         },
         /**
+         * Método para abrir a modal de cards inativos
+         */
+        openModalInativeCards() {
+            this.isShowingModalInativeCardList = true;
+            this.requestInativeCards();
+        },
+        /**
+         * Método para echar a modal de cards inativos
+         */
+        closeModalInativeCards() {
+            this.isShowingModalInativeCardList = false;
+        },
+        /**
+         * 
          * Método chamado para abrir a modal de edição de comentários de um card que está na lista
          * para transformar o card em inative
          * @param {Object} card 
@@ -294,17 +357,9 @@ export default {
                 .then(res => {
                     this.listBoards = res.data;
 
-                    // Remove o último índice que contém se o usuário da sessão já entrou no pipeline alguma vez
-                    this.isFirstTime = this.listBoards[this.listBoards.length - 1].s_pipeline_first === null ? 0 : this.listBoards[this.listBoards.length - 1].s_pipeline_first;
-                    this.listBoards.splice(this.listBoards.length - 1, 1);
-
                     // Remove o último índice que contém de qual empresa é essa lista, esse
                     // dado é usado para cadastrar os canais do Pusher
                     this.idEmpresa = this.listBoards[this.listBoards.length - 1].id_empresa;
-                    this.listBoards.splice(this.listBoards.length - 1, 1);
-
-                    // Remove o último índice, que é a lista de cards inativo dessa empresa
-                    this.inativeCardsList = this.listBoards[this.listBoards.length - 1].inative_cards;
                     this.listBoards.splice(this.listBoards.length - 1, 1);
 
                     // Transforma as informações dos cards inativos para float
@@ -384,53 +439,61 @@ export default {
          * e escutar os novos status criados, concatenando com o id da empresa correspondente
          */
         bindChannels() {
+            /*
             // Se inscreve no canal
             var pipeline = this.$pusher.subscribe('pipeline.' + this.idEmpresa);
 
             // Escuta evento card-criado
             pipeline.bind('card-criado', (data) => {
-                const newCard = data[0];
+                const newCard = data.card[0];
                 this.newCard = newCard;
             });
 
             // Escuta evento card-editado
             pipeline.bind('card-editado', (data) => {
-                const editedCard = data[0];
+                if (data.pusher === true) {
+                    const editedCard = data.card[0];
 
-                // Verifica se o card editado tem o ativo === 1 para verificar se ele está na lista de cards inativos
-                // Se sim, ele retira da lista e joga como novo card
-                // Se não, ele só envia como card editado
-                if (editedCard.ativo === 1) {
-                    let cardIndex = this.inativeCardsList.findIndex(obj => obj.id_card === editedCard.id_card);
-                    if (cardIndex !== -1) {
-                        // Remove o card da lista
-                        this.inativeCardsList.splice(cardIndex, 1);
-
-                        // Joga como novo card
-                        this.newCard = editedCard;
-                    } else if (cardIndex === -1) {
+                    // Verifica se o card editado tem o ativo === 1 para verificar se ele está na lista de cards inativos
+                    // Se sim, ele retira da lista e joga como novo card
+                    // Se não, ele só envia como card editado
+                    if (editedCard.ativo === 1) {
                         this.editedCard = editedCard;
+
+                    } else if (editedCard.ativo === 0) {
+                        let cardIndex = this.inativeCardsList.findIndex(obj => obj.id_card === editedCard.id_card);
+                        if (cardIndex !== -1) return this.editedCard = editedCard;
+
+                        // Atualiza
+                        editedCard.posicao = parseFloat(editedCard.posicao);
+                        editedCard.valor = parseFloat(editedCard.valor);
+                        this.inativeCardsList[cardIndex] = editedCard;
                     }
-                } else if (editedCard.ativo === 0) {
-                    this.editedCard = editedCard;
                 }
             });
 
             pipeline.bind('status-criado', (data) => {
-                const newStatus = data;
-                newStatus['cards'] = [];
-                this.onStatusCreated(newStatus);
+                if (data.pusher === true) {
+                    const newStatus = data.status;
+
+                    newStatus['cards'] = [];
+                    this.onStatusCreated(newStatus);
+                }
             });
 
             pipeline.bind('status-editado', (data) => {
-                const editedStatus = data;
-                this.listBoards.forEach(status => {
-                    if (status.id_status === editedStatus.id_status) {
-                        status.nome = editedStatus.nome;
-                        status.color = editedStatus.color;
-                    }
-                });
+                if (data.pusher === true) {
+                    const editedStatus = data.status;
+
+                    this.listBoards.forEach(status => {
+                        if (status.id_status === editedStatus.id_status) {
+                            status.nome = editedStatus.nome;
+                            status.color = editedStatus.color;
+                        }
+                    })
+                }
             });
+            */
         },
         /**
          * Método para ajustar a cor do texto de acordo com o backgroud do status

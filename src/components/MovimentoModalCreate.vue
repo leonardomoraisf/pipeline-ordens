@@ -71,10 +71,10 @@ export default {
         onLoad() {
             this.isLoadingIframe = !this.isLoadingIframe;
         },
-        async openModal() {
+        openModal() {
             this.clickCancel = !this.clickCancel;
             ToastCenter.fire("Abrindo...", "Já, já você poderá criar novos cards!", "info");
-            await this.axios.post('/v2/pipeline/setId', { id_status_pipeline: this.list.id_status })
+            this.axios.post('/v2/pipeline/setId', { id_status_pipeline: this.list.id_status })
                 .then(res => {
                     if (res.data.status === 1) {
                         this.toggleCardFormModal = !this.toggleCardFormModal;

@@ -33,7 +33,7 @@
                                                 class="text-2xl w-full font-semibold px-3 max-w-full py-6 rounded-md shadow appearance-none border outline-none text-gray-700 leading-tight focus:shadow-outline"
                                                 type="text" ref="regStatusNameRef" placeholder="Nome do status..."
                                                 name="regStatusName" v-model="regStatusName"
-                                                :class="{ 'text-red-500': regStatusName.length > maxLength, 'border-red-500': regStatusName.length > maxLength }">
+                                                :class="{ 'text-red-500': regStatusName.length > maxLength, 'border-red-500': regStatusName.length > maxLength }"  maxlength="50">
                                             <p class="fixed top-4 right-5 font-semibold text-sm text-gray-500"
                                                 :class="{ 'text-red-500': regStatusName.length > maxLength }">{{
                                                     regStatusName.length }} | máx: {{ maxLength }}</p>
@@ -44,7 +44,7 @@
                                                 class="text-2xl w-full font-semibold px-3 max-w-full py-6 rounded-md shadow appearance-none border outline-none text-gray-700 leading-tight focus:shadow-outline"
                                                 type="text" ref="editStatusNameRef" placeholder="Nome do status..."
                                                 name="editStatusName" v-model="editStatusName"
-                                                :class="{ 'text-red-500': editStatusName.length > maxLength, 'border-red-500': editStatusName.length > maxLength }">
+                                                :class="{ 'text-red-500': editStatusName.length > maxLength, 'border-red-500': editStatusName.length > maxLength }"  maxlength="50">
                                             <p class="fixed top-4 right-5 font-semibold text-sm text-gray-500"
                                                 :class="{ 'text-red-500': editStatusName.length > maxLength }">{{
                                                     editStatusName.length }} | máx: {{ maxLength }}</p>
@@ -73,7 +73,10 @@
                                             <button type="button" @click="closeModal"
                                                 class="px-8 py-4 text-xl font-medium text-gray-700 hover:text-black rounded-md focus:ring-2 focus:ring-offset-2 focus:ring-rose-500 focus:outline-none">Cancelar</button>
                                             <button type="submit"
-                                                class="px-8 py-4 ml-6 text-xl font-medium text-white salvar rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-green-300 focus:outline-none hover:scale-110">{{
+                                                class="px-8 py-4 ml-6 text-xl font-medium text-white salvar rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-green-300 focus:outline-none hover:scale-110" v-if="isEdit === 0">{{
+                                                    buttonName }}</button>
+                                            <button type="submit"
+                                                class="px-8 py-4 ml-6 text-xl font-medium text-white salvar rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-green-300 focus:outline-none hover:scale-110" v-if="isEdit === 1 && editStatusName !== backupEditStatusName || editStatusColor !== backupEditStatusColor">{{
                                                     buttonName }}</button>
                                         </div>
 
@@ -91,13 +94,13 @@
                             </div>
                         </form>
 
-                        <div class="flex justify-center items-center" v-if="isDeletingStatus">
-                            <div class="hollow-dots-spinner mt-24">
+                        <div class="flex flex-col justify-center items-center h-full" v-if="isDeletingStatus">
+                            <p class="text-2xl font-semibold mb-2">Deletando status</p>
+                            <div class="hollow-dots-spinner">
                                 <div class="dot"></div>
                                 <div class="dot"></div>
                                 <div class="dot"></div>
                             </div>
-                            <p class="text-2xl font-semibold">Deletando status</p>
                         </div>
 
                     </div>
@@ -105,7 +108,7 @@
             </div>
         </transition>
         <Transition name="fade" appear>
-            <div v-if="toggleModal" class="absolute inset-0 z-40 bg-black/30"></div>
+            <div v-if="toggleModal" @click="closeModal" class="absolute inset-0 z-40 bg-black/30"></div>
         </Transition>
 
     </div>
@@ -260,6 +263,8 @@ export default {
             }
         },
         closeModal() {
+            if(this.isSubmiting === true) return;
+            
             if (this.isEdit === 1) {
                 if (this.editStatusName !== this.backupEditStatusName || this.editStatusColor !== this.backupEditStatusColor) {
                     this.$confirm(
@@ -283,21 +288,54 @@ export default {
                                     this.backupEditStatusName = this.list.nome;
                                     this.backupEditStatusColor = this.list.color;
                                     this.colorStatusTextRef = this.colorStatusText;
+                                    this.isShowingError = false;
+                                    this.errorMessage = "";
                                     this.$emit('closeModal');
                                 }
                             }
                         }
                     )
                 } else {
+                    this.isShowingError = false;
+                    this.errorMessage = "";
                     this.toggleInputColor = false;
                     this.$emit('closeModal');
                 }
             }
             if (this.isEdit === 0) {
-                this.isShowingError = false;
-                this.errorMessage = "";
-                this.toggleInputColor = false;
-                this.$emit('closeModal');
+                if (this.regStatusName !== '' || this.regStatusColor !== '#2563eb') {
+                    this.$confirm(
+                        {
+                            message: 'Você começou a criar algo! Deseja descartar?',
+                            button: {
+                                no: 'Sim, descartar',
+                                yes: 'Não'
+                            },
+                            /**
+                             * Callback Function
+                             * @param {Boolean} confirm
+                             */
+                            callback: confirm => {
+                                if (confirm) {
+
+                                } else {
+                                    this.regStatusName = '';
+                                    this.regStatusColor = '#2563eb';
+                                    this.isShowingError = false;
+                                    this.errorMessage = "";
+                                    this.toggleInputColor = false;
+                                    this.$emit('closeModal');
+                                }
+                            }
+                        }
+                    )
+                } else {
+                    this.isShowingError = false;
+                    this.errorMessage = "";
+                    this.toggleInputColor = false;
+                    this.$emit('closeModal');
+                }
+
             }
         },
         onSubmit(ev) {
@@ -326,6 +364,13 @@ export default {
                 let body = {
                     nome: this.editStatusName,
                     color: this.editStatusColor
+                }
+
+                if (this.editStatusName === this.backupEditStatusName && this.editStatusColor === this.backupEditStatusColor) {
+                    this.isSubmiting = false;
+                    this.errorMessage = 'Você não alterou nada!';
+                    this.isShowingError = true;
+                    return;
                 }
 
                 this.axios.put('/v2/pipeline/status/' + this.list.id_status + '/edit', body)
