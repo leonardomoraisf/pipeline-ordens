@@ -52,7 +52,8 @@ export default {
     },
     props: {
         list: Object,
-        cards: Array
+        cards: Array,
+        pipelinePusher: Object
     },
     data() {
         return {

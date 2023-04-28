@@ -1,8 +1,9 @@
 <template>
   <div id="app">
-    <router-view />
+    <fragment>
+      <router-view></router-view>
+    </fragment>
   </div>
 </template>
 
-<style>
-</style>
+<style></style>

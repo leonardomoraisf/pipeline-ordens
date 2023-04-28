@@ -1,390 +1,528 @@
 <template>
-    <div>
-        <transition name="modal">
-            <div class="z-50 overflow-x-hidden overflow-y-hidden flex justify-center items-center modal" v-if="toggleModal">
-                <div class="relative mx-auto w-full">
-                    <div class="bg-white w-full rounded-md h-screen overflow-y-auto" ref="scrollRef"
-                        v-on:scroll="checkIfScrolledToEnd">
+  <div>
+    <transition name="modal">
+      <div
+        class="z-50 overflow-x-hidden overflow-y-hidden flex justify-center items-center modal"
+        v-if="toggleModal"
+      >
+        <div class="relative mx-auto w-full">
+          <div
+            class="bg-white w-full rounded-md h-screen overflow-y-auto"
+            ref="scrollRef"
+          >
+            <div
+              class="sticky top-0 z-50 bg-white rounded-t-md border-b-2 border-neutral-100 border-opacity-100 px-4 py-2 dark:border-opacity-50"
+            >
+              <div class="flex flex-shrink-0 items-center justify-between py-2">
+                <h5 class="text-2xl text-black">Cards inativos</h5>
+                <button
+                  type="button"
+                  class="box-content rounded-none border-none hover:no-underline hover:opacity-75 focus:opacity-100 focus:shadow-none focus:outline-none"
+                  @click="closeModal"
+                >
+                  <font-awesome-icon
+                    class="w-6 h-6 text-gray-900/70 hover:text-rose-600"
+                    :icon="['fas', 'fa-close']"
+                  />
+                </button>
+              </div>
 
-                        <div
-                            class="sticky top-0 z-50 bg-white rounded-t-md border-b-2 border-neutral-100 border-opacity-100 px-4 py-2 dark:border-opacity-50">
-
-                            <div class="flex flex-shrink-0 items-center justify-between py-2">
-                                <h5 class="font-semibold text-xl text-gray-900/70">Clique em um card para torná-lo ativo
-                                    novamente!</h5>
-                                <button type="button"
-                                    class="box-content rounded-none border-none hover:no-underline hover:opacity-75 focus:opacity-100 focus:shadow-none focus:outline-none"
-                                    @click="closeModal">
-                                    <font-awesome-icon class="w-6 h-6 text-gray-900/70 hover:text-rose-600"
-                                        :icon="['fas', 'fa-close']" />
-                                </button>
-                            </div>
-
-                        </div>
-
-                        <div class="h-screen flex flex-row bg-white">
-
-                            <div class="w-7/12 pl-4 py-2">
-                                <ul class="space-y-2">
-                                    <CardListItem v-for="card in filteredInativeCardsList" :key="card.id_card" :card="card"
-                                        :colorStatus="card.colorStatus" :corTextoCard="card.corTextoCard"
-                                        :dataHoje="dataHoje" :inInativeCardList="true"
-                                        @openModalEditComments="$emit('openModalEditComments', card)"
-                                        @turnCardActive="$emit('turnCardActive', card)" :existeStatus="card.existeStatus"
-                                        @cardDeleted="$emit('cardDeleted', card)" v-if="!isRequesting"></CardListItem>
-
-                                    <p v-if="filteredInativeCardsList.length === 0 && !isRequesting" class="font-semibold text-2xl">Sem
-                                        resultados</p>
-
-                                    <div v-if="isRequestingMore" class="flex flex-row justify-center py-4">
-                                        <div class="hollow-dots-spinner">
-                                            <div class="dot"></div>
-                                            <div class="dot"></div>
-                                            <div class="dot"></div>
-                                        </div>
-                                    </div>
-
-                                    <div class="flex flex-col justify-center items-center h-full" v-if="isRequesting">
-                                        <div class="half-circle-spinner">
-                                            <div class="circle circle-1"></div>
-                                            <div class="circle circle-2"></div>
-                                        </div>
-                                        <span class="font-semibold">Carregando</span>
-                                    </div>
-                                </ul>
-                            </div>
-
-                            <div class="w-1/12 flex justify-center h-64">
-                                <div class="border border-neutral-200">
-                                </div>
-                            </div>
-
-                            <div class="w-4/12 rounded-md pt-2 pr-4">
-                                <div>
-                                    <div class="relative">
-                                        <div class="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none">
-                                            <font-awesome-icon class="w-5 h-5 text-gray-500" :icon="['fas', 'fa-search']" />
-                                        </div>
-                                        <input
-                                            class="shadow appearance-none pl-8 pr-4 py-4 rounded w-full text-gray-700 leading-tight focus:outline-none focus:shadow-outline text-base"
-                                            v-model="search" @input="filter" name="search" type="text"
-                                            placeholder="Pesquisa">
-                                    </div>
-                                </div>
-                                <div class="pt-4 mb-4">
-                                    <hr class="border-gray-700" />
-                                </div>
-
-                                <div class="space-y-2">
-                                    <div class="flex items-center">
-                                        <p class="w-10">De:</p>
-                                        <input type="date" name="startDate" v-model="startDate" @change="filter"
-                                            class="mx-auto">
-                                    </div>
-
-                                    <div class="flex items-center">
-                                        <p class="w-10">Até:</p>
-                                        <input type="date" name="endDate" v-model="endDate" @change="filter"
-                                            class="mx-auto">
-                                    </div>
-                                </div>
-
-                                <div class="mt-4 flex justify-end">
-                                    <button @click="limpaFiltros"
-                                        class="font-semibold hover:text-red-600 transition-colors rounded-md p-2">
-                                        Limpar filtros
-                                    </button>
-                                </div>
-
-                            </div>
-                        </div>
-
+              <transition name="fade">
+                <form
+                  v-if="!isRequestingAllInactiveStatus"
+                  @submit.prevent="buscaCards"
+                  class="w-full flex flex-row justify-between items-center space-x-4 pt-4 pb-1"
+                >
+                  <div class="w-full">
+                    <div class="relative">
+                      <div
+                        class="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none"
+                      >
+                        <font-awesome-icon
+                          class="w-5 h-5 text-gray-500"
+                          :icon="['fas', 'fa-search']"
+                        />
+                      </div>
+                      <input
+                        class="border rounded-full appearance-none py-5 pl-8 w-full text-gray-700 leading-tight focus:outline-none"
+                        v-model="search"
+                        name="search"
+                        type="text"
+                        placeholder="Digite algo"
+                      />
                     </div>
+                  </div>
 
+                  <select
+                    v-model="statusSelected"
+                    class="w-full border py-4 pl-5 rounded-full focus:outline-none hover:cursor-pointer"
+                  >
+                    <option value="" selected>Todos os status</option>
+                    <option value="" disabled>----- Status Ativos -----</option>
+                    <option
+                      v-for="status in list"
+                      :value="status.id_status"
+                      :key="status.id_status"
+                    >
+                      {{ status.nome }}
+                    </option>
+                    <option value="" disabled>
+                      ----- Status Inativos -----
+                    </option>
+                    <option
+                      v-for="status in allInactiveStatus"
+                      :value="status.id_status"
+                      :key="status.id_status"
+                    >
+                      {{ status.nome }}
+                    </option>
+                  </select>
+
+                  <div class="flex justify-center items-center space-x-1">
+                    <date-picker
+                      v-model="date"
+                      @change="setDate"
+                      :format="'DD/MM/YYYY'"
+                      :placeholder="'Data inicial - Data final'"
+                      :input-class="'py-4 pl-2 w-full focus:outline-none border rounded-full'"
+                      range
+                    ></date-picker>
+                  </div>
+
+                  <div class="flex flex-col">
+                    <button
+                      type="submit"
+                      class="transition-all rounded-full px-4 py-5 btn-buscar hover:scale-105 text-gray-700"
+                      :class="{ 'bg-color-gray-700': isRequesting }"
+                      :disabled="isRequesting"
+                    >
+                      Buscar
+                    </button>
+                  </div>
+                </form>
+              </transition>
+
+              <div
+                class="flex justify-center w-full"
+                v-if="isRequestingAllInactiveStatus"
+              >
+                <div class="looping-rhombuses-spinner">
+                  <div class="rhombus"></div>
+                  <div class="rhombus"></div>
+                  <div class="rhombus"></div>
                 </div>
-            </div>
-        </transition>
-        <Transition name="fade" appear>
-            <div v-if="toggleModal" class="absolute inset-0 z-40 bg-black/30"></div>
-        </Transition>
+              </div>
 
-    </div>
+              <transition name="fade">
+                <div
+                  class="flex justify-end w-full"
+                  v-if="search !== '' || startDate !== null || endDate !== null"
+                >
+                  <button
+                    type="button"
+                    @click="limpaFiltros"
+                    class="text-gray-700 hover:text-red-600 transition-all font-semibold text-sm"
+                  >
+                    Limpar filtros
+                  </button>
+                </div>
+              </transition>
+            </div>
+
+            <div class="h-screen flex flex-row bg-white">
+              <div class="w-full pl-4 py-2">
+                <ul class="space-y-2 px-8" v-if="!isRequesting">
+                  <CardListItem
+                    ref="list"
+                    v-for="card in inativeCardsList"
+                    :key="card.id_card"
+                    :card="card"
+                    :colorStatus="card.colorStatus"
+                    :corTextoCard="card.corTextoCard"
+                    :dataHoje="dataHoje"
+                    :inInativeCardList="true"
+                    @openModalEditComments="
+                      $emit('openModalEditComments', card)
+                    "
+                    @turnCardActive="onTurnCardActive"
+                    :existeStatus="card.existeStatus"
+                    @cardDeleted="onDeleteCard"
+                    :statusInativo="card.statusInativo"
+                    :tiposMovimento="tiposMovimento"
+                  ></CardListItem>
+
+                  <div
+                    class="flex-row justify-center py-4"
+                    :class="{
+                      visible: isRequestingMore,
+                      invisible: !isRequestingMore,
+                    }"
+                  >
+                    <div class="hollow-dots-spinner">
+                      <div class="dot"></div>
+                      <div class="dot"></div>
+                      <div class="dot"></div>
+                    </div>
+                  </div>
+                </ul>
+                <div
+                  class="flex flex-col justify-center items-center"
+                  v-if="isRequesting"
+                >
+                  <div class="half-circle-spinner">
+                    <div class="circle circle-1"></div>
+                    <div class="circle circle-2"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </transition>
+    <Transition name="fade" appear>
+      <div v-if="toggleModal" class="absolute inset-0 z-40 bg-black/30"></div>
+    </Transition>
+  </div>
 </template>
 
 <script>
 import { ref, nextTick } from "vue";
 import CardListItem from "./CardListItem.vue";
-import dayjs from 'dayjs';
-import isBetween from 'dayjs/plugin/isBetween';
+import dayjs from "dayjs";
+import isBetween from "dayjs/plugin/isBetween";
 dayjs.extend(isBetween);
+import DatePicker from "vue2-datepicker";
+import "vue2-datepicker/index.css";
+import "vue2-datepicker/locale/pt-br";
 
 export default {
-    name: 'ModalInativeCardList',
-    components: {
-        CardListItem
+  name: "ModalInativeCardList",
+  components: {
+    CardListItem,
+    DatePicker,
+  },
+  props: {
+    toggleModal: {
+      type: Boolean,
+      default: ref(false),
     },
-    props: {
-        inativeCardsList: Array,
-        toggleModal: {
-            type: Boolean,
-            default: ref(false)
-        },
-        dataHoje: String,
-        list: Array,
-        ajustarCorTexto: Function,
-        isRequesting: Boolean,
-        isRequestingMore: Boolean
+    dataHoje: String,
+    list: Array,
+    ajustarCorTexto: Function,
+    tiposMovimento: Object,
+    animaElementSumindo: Function,
+  },
+  data() {
+    return {
+      date: null,
+      startDate: null,
+      endDate: null,
+      search: "",
+      statusSelected: "",
+      // Lista da requisição de cards inativos
+      inativeCardsList: [],
+      isRequesting: ref(false),
+      isRequestingMore: ref(false),
+      dataRequestInativeCardList: [],
+      qtdRequests: 1,
+      arrayURL: [],
+      alreadyRequestedAllInactiveStatus: ref(false),
+      allInactiveStatus: [],
+      completeStatusList: [],
+      isRequestingAllInactiveStatus: ref(false),
+    };
+  },
+  methods: {
+    async onDeleteCard(card) {
+      const list = this.$refs.list;
+
+      var elementIndex = list.findIndex(
+        (obj) => obj.card.id_card === card.id_card
+      );
+      let element = list[elementIndex].$el;
+
+      await this.animaElementSumindo(element);
+
+      setTimeout(() => {
+        // remove o card da lista atual
+        this.inativeCardsList.splice(elementIndex, 1);
+        this.$emit("cardDeleted", card);
+      }, 2000);
     },
-    data() {
-        return {
-            startDate: null,
-            endDate: null,
-            search: ''
+    async onTurnCardActive(card) {
+      const list = this.$refs.list;
+
+      var elementIndex = list.findIndex(
+        (obj) => obj.card.id_card === card.id_card
+      );
+      let element = list[elementIndex].$el;
+
+      await new Promise((resolve) => {
+        this.animaElementSumindo(element, resolve, false);
+      });
+
+      // remove o card da lista atual
+      await this.inativeCardsList.splice(elementIndex, 1);
+      await this.$emit("turnCardActive", card);
+    },
+    setDate() {
+      this.startDate = this.date[0];
+      this.endDate = this.date[1];
+    },
+    buscaCards() {
+      let scroll = this.$refs.scrollRef;
+      scroll.scrollTop = 0;
+
+      var dataInicialFormatada = this.startDate;
+      var dataFinalFormatada = this.endDate;
+
+      if (this.startDate && this.endDate) {
+        let dataInicial = new Date(this.startDate);
+        let anoInicial = dataInicial.getFullYear();
+        let mesInicial = ("0" + (dataInicial.getMonth() + 1)).slice(-2);
+        let diaInicial = ("0" + dataInicial.getDate()).slice(-2);
+        dataInicialFormatada = `${anoInicial}-${mesInicial}-${diaInicial}`;
+
+        let dataFinal = new Date(this.endDate);
+        let anoFinal = dataFinal.getFullYear();
+        let mesFinal = ("0" + (dataFinal.getMonth() + 1)).slice(-2);
+        let diaFinal = ("0" + dataFinal.getDate()).slice(-2);
+        dataFinalFormatada = `${anoFinal}-${mesFinal}-${diaFinal}`;
+      }
+
+      let body = {
+        busca: this.search,
+        status: this.statusSelected === "" ? null : this.statusSelected,
+        dataInicial: dataInicialFormatada,
+        dataFinal: dataFinalFormatada,
+      };
+
+      this.isRequesting = true;
+      this.axios
+        .post("/v2/pipeline/cards/inactive", body)
+        .then((res) => {
+          const data = res.data;
+          this.inativeCardsList = data;
+
+          this.inativeCardsList.forEach((card) => {
+            card.posicao = parseFloat(card.posicao);
+            card.valor = parseFloat(card.valor);
+          });
+
+          this.adicionaInfos();
+
+          this.isRequesting = false;
+        })
+        .catch((err) => {
+          this.isRequesting = false;
+          console.log(err);
+        });
+    },
+    closeModal() {
+      this.limpaFiltros();
+      this.$emit("closeModalInativeCardList");
+    },
+    adicionaInfos() {
+      this.inativeCardsList.forEach((card) => {
+        var statusIndex = this.list.findIndex(
+          (obj) => obj.id_status === card.id_status
+        );
+        if (statusIndex !== -1) {
+          let status = this.list[statusIndex];
+          let statusName = status.nome;
+          let colorStatus = status.color;
+          card.statusName = statusName;
+          card.colorStatus = colorStatus;
+          card.corTextoCard = this.ajustarCorTexto(colorStatus);
+        } else {
+          statusIndex = this.allInactiveStatus.findIndex(
+            (obj) => obj.id_status === card.id_status
+          );
+          if (statusIndex !== -1) {
+            let status = this.allInactiveStatus[statusIndex];
+            let statusName = status.nome;
+            let colorStatus = status.color;
+            card.statusName = statusName;
+            card.colorStatus = colorStatus;
+            card.corTextoCard = this.ajustarCorTexto(colorStatus);
+            card.statusInativo = true;
+          } else {
+            card.statusName = "Removido do pipeline";
+            card.colorStatus = "#71717A";
+            card.corTextoCard = "#FFFFFF";
+            card.existeStatus = false;
+          }
         }
+        card["date"] = card.data_hora_cadastro.substring(0, 10);
+      });
     },
-    computed: {
-        /**
-         * Método para filtrar os cards
-         */
-        filteredInativeCardsList() {
-            if (!this.startDate && !this.endDate && this.search === '') {
-
-                return this.inativeCardsList;
-            }
-
-            if (this.startDate && this.endDate && this.search === '') {
-
-                const start = dayjs(this.startDate);
-                const end = dayjs(this.endDate);
-                return this.inativeCardsList.filter(card => dayjs(card.date).isBetween(start, end, null, '[]'));
-            }
-
-            if (this.search !== '' && !this.startDate || !this.endDate) {
-
-                return this.inativeCardsList.filter(card => {
-
-                    if (card.nome.toLowerCase().includes(this.search.toLowerCase())) {
-                        return card.nome.toLowerCase().includes(this.search.toLowerCase());
-                    }
-
-                    if (card.statusName.toLowerCase().includes(this.search.toLowerCase())) {
-                        return card.statusName.toLowerCase().includes(this.search.toLowerCase());
-                    }
-                })
-            }
-
-            if (this.search !== '' && this.startDate && this.endDate) {
-                const start = dayjs(this.startDate);
-                const end = dayjs(this.endDate);
-
-                return this.inativeCardsList.filter(card => {
-
-                    if (dayjs(card.date).isBetween(start, end, null, '[]')) {
-                        if (card.nome.toLowerCase().includes(this.search.toLowerCase())) {
-                            return card.nome.toLowerCase().includes(this.search.toLowerCase());
-                        }
-
-                        if (card.statusName.toLowerCase().includes(this.search.toLowerCase())) {
-                            return card.statusName.toLowerCase().includes(this.search.toLowerCase());
-                        }
-                    }
-                })
-            }
-
+    limpaFiltros() {
+      this.date = null;
+      this.startDate = null;
+      this.endDate = null;
+      this.search = "";
+      this.statusSelected = "";
+    },
+    limpaSelect() {
+      this.statusSelected = "";
+    },
+    getAllInactiveStatus() {
+      this.isRequestingAllInactiveStatus = true;
+      this.alreadyRequestedAllInactiveStatus = true;
+      this.axios
+        .get("/v2/pipeline/status/inactive")
+        .then((res) => {
+          this.allInactiveStatus = res.data;
+          this.isRequestingAllInactiveStatus = false;
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    },
+  },
+  watch: {
+    toggleModal(newValue, oldValue) {
+      if (newValue === true && oldValue === false) {
+        if (this.alreadyRequestedAllInactiveStatus === false) {
+          this.getAllInactiveStatus();
         }
+      }
     },
-    methods: {
-        closeModal() {
-            this.limpaFiltros();
-            this.$emit('closeModalInativeCardList');
-        },
-        adicionaInfos() {
-            this.inativeCardsList.forEach(card => {
-                let statusIndex = this.list.findIndex(obj => obj.id_status === card.id_status);
-                if (statusIndex !== -1) {
-                    let status = this.list[statusIndex];
-                    let statusName = status.nome;
-                    let colorStatus = status.color;
-                    card.statusName = statusName;
-                    card.colorStatus = colorStatus;
-                    card.corTextoCard = this.ajustarCorTexto(colorStatus);
-                } else {
-                    card.statusName = 'Removido do pipeline';
-                    card.colorStatus = '#71717A';
-                    card.corTextoCard = '#FFFFFF';
-                    card.existeStatus = false;
-                }
-                card['date'] = card.data_hora_cadastro.substring(0, 10);
-            });
-        },
-        filter() {
-            this.adicionaInfos();
-            this.$forceUpdate(); // atualiza a lista filtrada
-        },
-        checkIfScrolledToEnd() {
-            const element = this.$refs.scrollRef;
-            if (element.scrollTop + element.clientHeight >= element.scrollHeight) {
-                this.$emit('nextPagInativeCards');
-            }
-        },
-        limpaFiltros() {
-            this.startDate = null;
-            this.endDate = null;
-            this.search = '';
-            this.filter();
-        }
+    list(newList, oldList) {
+      this.getAllInactiveStatus();
     },
-    mounted() {
-        this.adicionaInfos();
-    },
-    watch: {
-        inativeCardsList(newArray, oldArray) {
-            this.adicionaInfos();
-        }
-    }
-}
+  },
+};
 </script>
 
 <style scoped>
+.btn-buscar {
+  background-color: #cfe2f3;
+}
 ::-webkit-scrollbar {
-    background-color: transparent;
-    width: 8px;
-    border-top-right-radius: 5px;
-    border-bottom-right-radius: 5px;
+  background-color: transparent;
+  width: 8px;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb {
-    background-color: #aeaeae;
-    border-radius: 5px;
+  background-color: #aeaeae;
+  border-radius: 5px;
 }
 
 .fade-enter-active,
 .fade-leave-active {
-    transition: opacity 0.5s ease-in-out;
+  transition: opacity 0.5s ease-in-out;
 }
 
 .fade-enter-from,
 .fade-leave-to {
-    opacity: 0;
+  opacity: 0;
 }
 
 .modal-enter-active,
 .modal-leave-active {
-    transition: transform 0.5s ease-in-out;
+  transition: transform 0.5s ease-in-out;
 }
 
 .modal-enter,
 .modal-leave-to {
-    transform: translateX(100%);
-}
-
-.filters-enter-active,
-.filters-leave-active {
-    transition: opacity 0.2s ease-in-out;
-}
-
-.filters-enter,
-.filters-leave-to {
-    opacity: 0;
-}
-
-.filters-fade-enter-active,
-.filters-fade-leave-active {
-    transition: opacity 0.5s ease-in-out;
-}
-
-.filters-fade-enter,
-.filters-fade-leave-to {
-    opacity: 0;
+  transform: translateX(100%);
 }
 
 .modal {
-    position: fixed;
-    top: 0;
-    right: 0;
-    width: 30%;
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 45%;
 }
 
 @media (max-width: 1536px) {
-    .modal {
-        width: 40%;
-    }
+  .modal {
+    width: 45%;
+  }
 }
 
 @media (max-width: 1280px) {
-    .modal {
-        width: 50%;
-    }
+  .modal {
+    width: 55%;
+  }
 }
 
 @media (max-width: 1024px) {
-    .modal {
-        width: 70%;
-    }
+  .modal {
+    width: 70%;
+  }
 }
 
 @media (max-width: 768px) {
-    .modal {
-        width: 100%;
-    }
+  .modal {
+    width: 100%;
+  }
 }
 
-input[type="date"] {
-    background-color: #2563eb;
-    font-family: "Roboto Mono", monospace;
-    color: #ffffff;
-    font-size: 18px;
-    border: none;
-    outline: none;
-    border-radius: 5px;
+.input-date {
+  background-color: transparent;
+  border: 5px solid #cccccc;
+  color: rgb(55, 65, 81);
+  outline: none;
+  border-radius: 0.25rem;
+  padding: 1rem 0;
 }
 
 ::-webkit-calendar-picker-indicator {
-    background-color: #ffffff;
-    padding: 2px;
-    cursor: pointer;
-    border-radius: 3px;
+  background-color: #ffffff;
+  padding: 2px;
+  cursor: pointer;
+  border-radius: 3px;
 }
 
-.half-circle-spinner,
-.half-circle-spinner * {
-    box-sizing: border-box;
+.looping-rhombuses-spinner,
+.looping-rhombuses-spinner * {
+  box-sizing: border-box;
 }
 
-.half-circle-spinner {
-    width: 60px;
-    height: 60px;
-    border-radius: 100%;
-    position: relative;
+.looping-rhombuses-spinner {
+  width: calc(15px * 4);
+  height: 15px;
+  position: relative;
 }
 
-.half-circle-spinner .circle {
-    content: "";
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    border-radius: 100%;
-    border: calc(60px / 10) solid transparent;
+.looping-rhombuses-spinner .rhombus {
+  height: 15px;
+  width: 15px;
+  background-color: black;
+  left: calc(15px * 4);
+  position: absolute;
+  margin: 0 auto;
+  border-radius: 2px;
+  transform: translateY(0) rotate(45deg) scale(0);
+  animation: looping-rhombuses-spinner-animation 2500ms linear infinite;
 }
 
-.half-circle-spinner .circle.circle-1 {
-    border-top-color: black;
-    animation: half-circle-spinner-animation 1s infinite;
+.looping-rhombuses-spinner .rhombus:nth-child(1) {
+  animation-delay: calc(2500ms * 1 / -1.5);
 }
 
-.half-circle-spinner .circle.circle-2 {
-    border-bottom-color: black;
-    animation: half-circle-spinner-animation 1s infinite alternate;
+.looping-rhombuses-spinner .rhombus:nth-child(2) {
+  animation-delay: calc(2500ms * 2 / -1.5);
 }
 
-@keyframes half-circle-spinner-animation {
-    0% {
-        transform: rotate(0deg);
+.looping-rhombuses-spinner .rhombus:nth-child(3) {
+  animation-delay: calc(2500ms * 3 / -1.5);
+}
 
-    }
-
-    100% {
-        transform: rotate(360deg);
-    }
+@keyframes looping-rhombuses-spinner-animation {
+  0% {
+    transform: translateX(0) rotate(45deg) scale(0);
+  }
+  50% {
+    transform: translateX(-233%) rotate(45deg) scale(1);
+  }
+  100% {
+    transform: translateX(-466%) rotate(45deg) scale(0);
+  }
 }
 </style>

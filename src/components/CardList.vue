@@ -1,359 +1,429 @@
 <template>
-    <div>
-        <StatusTimeline :list="list" :corTextoStatus="corTextoStatus" :lastList="lastList"
-            :ajustarCorTexto="ajustarCorTexto" @statusDeleted="onStatusDeleted">
-        </StatusTimeline>
+  <div>
+    <StatusTimeline
+      :list="list"
+      :corTextoStatus="corTextoStatus"
+      :lastList="lastList"
+      :ajustarCorTexto="ajustarCorTexto"
+      @statusDeleted="$emit('statusDeleted', list)"
+      :cards="cards"
+    >
+    </StatusTimeline>
 
-        <div class="text-center">
-            <p class="text-xl font-semibold text-gray-500">{{ cards.length }}</p>
-        </div>
-
-        <MovimentoModalCreate :list="list" :cards="cards" class="px-2" @cardCreated="onCardCreated">
-        </MovimentoModalCreate>
-
-        <div class="pb-3 flex flex-col overflow-hidden mt-4 px-2">
-            <div class="px-2 flex-1 overflow-y-auto cards-scrollbar" ref="listRef">
-
-                <Draggable v-model="cards" class="space-y-3 pb-24 h-full draggable pt-2" tag="ul" v-bind="dragOptions"
-                    id="table-normal" @change="onChange"
-                    ref="list">
-
-                        <CardListItem v-for="card in cards" :key="card.id_card" :card="card" :colorStatus="list.color"
-                            :corTextoCard="corTextoStatus" :dataHoje="dataHoje" :isToInative="false"
-                            @openModalEditComments="toggleModalEditComments" />
-
-                </Draggable>
-
-            </div>
-        </div>
-
-        <ModalEditCardComments :cardIsEditing="cardIsEditing" :toggleModal="isShowingModalEditComments"
-            :colorStatus="list.color" :corTextoCard="corTextoStatus" :inInativeCards="false" ref="modalEditCommentsRef"
-            @closeModalEditComments="toggleModalEditComments" :dataHoje="dataHoje"></ModalEditCardComments>
-
+    <div class="text-center">
+      <p class="text-xl font-semibold text-gray-500">{{ cards.length }}</p>
     </div>
+
+    <MovimentoModalCreate
+      :list="list"
+      :cards="cards"
+      class="px-2"
+      :pipelinePusher="pipelinePusher"
+    >
+    </MovimentoModalCreate>
+
+    <div class="pb-3 flex flex-col overflow-hidden mt-4 px-2">
+      <div class="px-2 flex-1 overflow-y-auto cards-scrollbar">
+        <draggable
+          v-model="cards"
+          class="pb-24 h-full draggable pt-2 space-y-3"
+          v-bind="dragOptions"
+          @change="onChange"
+          tag="ul"
+          ref="list"
+        >
+          <CardListItem
+            v-for="card in cards"
+            :key="card.id_card"
+            :card="card"
+            :colorStatus="list.color"
+            :corTextoCard="corTextoStatus"
+            :dataHoje="dataHoje"
+            :isToInative="false"
+            @openModalEditComments="toggleModalEditComments"
+            :tiposMovimento="tiposMovimento"
+          />
+        </draggable>
+      </div>
+    </div>
+
+    <ModalEditCardComments
+      :cardIsEditing="cardIsEditing"
+      :toggleModal="isShowingModalEditComments"
+      :colorStatus="list.color"
+      :corTextoCard="corTextoStatus"
+      :inInativeCards="false"
+      ref="modalEditCommentsRef"
+      @closeModalEditComments="toggleModalEditComments"
+      :dataHoje="dataHoje"
+      :tiposMovimento="tiposMovimento"
+      @editComment="onEditComment"
+    ></ModalEditCardComments>
+  </div>
 </template>
 
 <script>
-import Draggable from 'vuedraggable';
+import draggable from "vuedraggable";
 import MovimentoModalCreate from "./MovimentoModalCreate.vue";
 import CardListItem from "./CardListItem.vue";
 import { ref, nextTick } from "vue";
 import StatusTimeline from "./StatusTimeline.vue";
-import ModalEditCardComments from './ModalEditCardComments.vue';
+import ModalEditCardComments from "./ModalEditCardComments.vue";
 
 export default {
-    name: 'CardList',
-    components: {
-        Draggable,
-        MovimentoModalCreate,
-        CardListItem,
-        StatusTimeline,
-        ModalEditCardComments
+  name: "CardList",
+  components: {
+    draggable,
+    MovimentoModalCreate,
+    CardListItem,
+    StatusTimeline,
+    ModalEditCardComments,
+  },
+  props: {
+    list: Object,
+    lastList: Object,
+    ajustarCorTexto: Function,
+    idEmpresa: Number,
+    dataHoje: String,
+    newCard: {
+      type: Object,
+      default: () => ({}),
     },
-    props: {
-        list: Object,
-        lastList: Object,
-        ajustarCorTexto: Function,
-        idEmpresa: Number,
-        newCard: {
-            type: Object,
-            default: () => ({})
-        },
-        editedCard: {
-            type: Object,
-            default: () => ({})
-        },
-        dataHoje: String
+    editedCard: {
+      type: Object,
+      default: () => ({}),
     },
-    data() {
-        return {
-            cards: ref(this.list.cards),
-            corTextoStatus: '',
-            isShowingModalEditComments: ref(false),
-            cardIsEditing: {},
+    editedCardStatus: {
+      type: Object,
+      default: () => ({}),
+    },
+    pipelinePusher: Object,
+    tiposMovimento: Object,
+    pusherSessionID: Number,
+    animaElementSumindo: Function,
+  },
+  data() {
+    return {
+      cards: ref(this.list.cards),
+      corTextoStatus: "",
+      isShowingModalEditComments: ref(false),
+      cardIsEditing: {}
+    };
+  },
+  computed: {
+    dragOptions() {
+      return {
+        animation: 200,
+        group: "cards",
+        ghostClass: "ghost",
+        dragClass: "drag",
+        disabled: false,
+        handle: ".drag-card",
+      };
+    },
+  },
+  mounted() {
+    this.corTextoStatus = this.ajustarCorTexto(this.list.color);
+  },
+  methods: {
+    onEditComment(card) {
+      let cardIndex = this.cards.findIndex(
+        (obj) => obj.id_card === card.id_card
+      );
+
+      if (cardIndex !== -1) {
+        this.cards[cardIndex].comentarios = card.comentarios;
+      }
+    },
+    /**
+     * Método chamado para abrir a modal de edição de comentários de um card que está na lista
+     * para transformar o card em inative
+     * @param {Object} card
+     */
+    async toggleModalEditComments(card) {
+      this.isShowingModalEditComments = !this.isShowingModalEditComments;
+      this.cardIsEditing = card;
+
+      if (this.isShowingModalEditComments === true) {
+        await nextTick();
+        this.$refs.modalEditCommentsRef.$refs.textareaRef.focus();
+      }
+    },
+    /**
+     * Método que é acionado quando um movimento/card é criado
+     * @param {Object} novoCard
+     */
+    async onCardCreated(novoCard) {
+      let cardIndex = this.cards.findIndex(
+        (obj) => obj.id_card === novoCard.id_card
+      );
+      if (cardIndex !== -1) return;
+
+      this.cards.push(novoCard);
+      this.organizaListaCards();
+
+      await nextTick();
+
+      const childrenList = this.$refs.list.$children;
+      const childrenIndex = childrenList.findIndex(
+        (obj) => obj.card.id_card === novoCard.id_card
+      );
+      const element = childrenList[childrenIndex].$el;
+
+      element.style.transition = "all 0.2s ease";
+      element.style.transform = "scale(0)";
+
+      setTimeout(() => {
+        element.style.transform = "scale(1.05)";
+        element.style.opacity = "0.8";
+      }, 300);
+
+      element.scrollIntoView({
+        behavior: "smooth",
+      });
+
+      setTimeout(() => {
+        element.style.transform = "scale(1)";
+        element.style.opacity = "1";
+      }, 1500);
+    },
+    /**
+     * Método que é acionado quando acontece alguma mudança de status ou posição de cards do componente draggable
+     * @param {Event} e
+     */
+    onChange(e) {
+      const item = e.added || e.moved;
+      if (!item) return;
+
+      let index = item.newIndex;
+      if (index === -1) {
+        index = this.cards.findIndex(
+          (obj) => obj.id_card === item.element.id_card
+        );
+        if (index === -1) {
+          return ToastTopEnd5.fire(
+            "Erro!",
+            "Houve um erro ao mover o card!",
+            "error"
+          );
         }
+      }
+
+      const prevCard = this.cards[index - 1];
+      const nextCard = this.cards[index + 1];
+      const card = this.cards[index];
+
+      let posicao = card.posicao;
+
+      if (prevCard && nextCard) {
+        posicao = (prevCard.posicao + nextCard.posicao) / 2;
+      } else if (prevCard) {
+        posicao = prevCard.posicao + prevCard.posicao / 2;
+      } else if (nextCard) {
+        posicao = nextCard.posicao / 2;
+      }
+
+      card.id_status = this.list.id_status;
+      card.posicao = posicao;
+
+      const body = {
+        id_status: this.list.id_status,
+        posicao,
+        ativo: 1,
+        comentarios: card.comentarios,
+        pusherSessionID: this.pusherSessionID,
+      };
+
+      this.$emit("newRequest", () => {
+        return this.axios.put(`/v2/pipeline/cards/${card.id_card}/edit`, body);
+      });
     },
-    mounted() {
-        this.corTextoStatus = this.ajustarCorTexto(this.list.color);
+    organizaListaCards() {
+      this.cards.sort((a, b) => a.posicao - b.posicao);
     },
-    methods: {
-        /**
-         * Método chamado para abrir a modal de edição de comentários de um card que está na lista
-         * para transformar o card em inative
-         * @param {Object} card 
-         */
-        async toggleModalEditComments(card) {
-            this.isShowingModalEditComments = !this.isShowingModalEditComments;
-            this.cardIsEditing = card;
-
-            if (this.isShowingModalEditComments === true) {
-                await nextTick();
-                this.$refs.modalEditCommentsRef.$refs.textareaRef.focus();
-            }
-        },
-        /**
-         * Método que é chamado quando um status é deletado, ele emite qual lista for deletada,
-         * para no componente pai ser procurado pelo index e ser retirado do array
-         */
-        onStatusDeleted(list) {
-            this.$emit('statusDeleted', list);
-        },
-        /**
-         * Método que é acionado quando um movimento/card é criado
-         * @param {Object} novoCard 
-         */
-        async onCardCreated(novoCard) {
-            let cardIndex = this.cards.findIndex(obj => obj.id_card === novoCard.id_card);
-            if (cardIndex !== -1) return;
-
-            this.cards.push(novoCard);
-
-            this.cards.sort((a, b) => a.posicao - b.posicao);
-
-            await nextTick();
-
-            const childrenList = this.$refs.list.$children;
-            const childrenIndex = childrenList.findIndex(obj => obj.card.id_card === novoCard.id_card);
-            const element = childrenList[childrenIndex].$el;
-
-            element.style.transition = "all 0.2s ease";
-            setTimeout(() => {
-                element.style.transform = "scale(1.05)";
-                element.style.opacity = "0.8";
-            }, 100);
-            setTimeout(() => {
-                element.style.transform = "scale(1)";
-                element.style.opacity = "1";
-            }, 1000);
-
-            element.scrollIntoView({
-                behavior: 'smooth'
-            });
-        },
-        /**
-         * Método que é acionado quando acontece alguma mudança de status ou posição de cards do componente draggable
-         * @param {Event} e 
-         */
-        onChange(e) {
-            // Pega o card que foi ou movido de tabela, ou movido de posição
-            let item = e.added || e.moved;
-            if (!item) return;
-
-            let index = item.newIndex;
-            let prevCard = this.cards[index - 1];
-            let nextCard = this.cards[index + 1];
-            let card = this.cards[index];
-
-            let posicao = card.posicao;
-
-            if (prevCard && nextCard) {
-                posicao = (prevCard.posicao + nextCard.posicao) / 2;
-            } else if (prevCard) {
-                posicao = prevCard.posicao + (prevCard.posicao / 2);
-            } else if (nextCard) {
-                posicao = nextCard.posicao / 2;
-            }
-
-            let novoCard = {
-                ...card,
-                posicao: posicao,
-                id_status: this.list.id_status
-            };
-            this.$set(this.cards, index, novoCard);
-
-            let body = {
-                id_status: this.list.id_status,
-                posicao: posicao,
-                ativo: 1,
-                comentarios: card.comentarios
-            };
-
-            this.axios.put("/v2/pipeline/cards/" + card.id_card + "/edit", body)
-                .then(res => {
-
-                })
-                .catch(err => {
-                })
-        }
+    verificaAdicionaCard(newCard) {
+      if (newCard.id_status === this.list.id_status) {
+        this.onCardCreated(newCard);
+      }
     },
-    computed: {
-        dragOptions() {
-            return {
-                animation: 0,
-                group: "cards",
-                ghostClass: "ghost",
-                dragClass: "drag",
-                handle: ".drag-card"
-            };
-        },
+    async addNewCard(newCard) {
+      await this.verificaAdicionaCard(newCard);
     },
-    watch: {
-        /**
-         * Método para escutar o card recebido pelo canal new-cards e adicioná-lo na lista
-         */
-        newCard(newCard, oldCard) {
-            if (newCard.id_status === this.list.id_status) {
-                newCard.valor = parseFloat(newCard.valor);
-                newCard.posicao = parseFloat(newCard.posicao);
+    async verificaEditedCardStatus(editedCard) {
+      // Procura card na lista
+      const cardIndex = await this.cards.findIndex(
+        (obj) => obj.id_card === editedCard.id_card
+      );
 
-                this.onCardCreated(newCard);
-            }
-        },
-        /**
-         * Método para escutar o card recebido pelo canal edited-cards e mudar as informações do card na lista
-         */
-        editedCard(newEditedCard, oldEditedCard) {
-            const novoCard = newEditedCard;
+      if (cardIndex !== -1) {
+        const card = await this.cards[cardIndex];
 
-            // Procura o card na lista
-            const cardIndex = this.cards.findIndex(obj => obj.id_card === novoCard.id_card);
-            if (cardIndex === -1) return;
+        if (editedCard.id_status !== card.id_status) {
+          ToastTopEnd5.fire(
+            "Opa!",
+            `O card ${this.tiposMovimento[editedCard.tipo]}(${
+              editedCard.id_movimento
+            }) mudou de status!`,
+            "info"
+          );
 
-            novoCard.posicao = parseFloat(novoCard.posicao);
-            novoCard.valor = parseFloat(novoCard.valor);
+          // anima o card sumindo
+          const childrenList = await this.$refs.list.$children;
+          const childrenIndex = await childrenList.findIndex(
+            (obj) => obj.card.id_card === editedCard.id_card
+          );
+          const element = await childrenList[childrenIndex].$el;
 
-            this.$set(this.cards, cardIndex, novoCard);
-            this.$forceUpdate();
+          await new Promise((resolve) => {
+            this.animaElementSumindo(element, resolve);
+          });
 
-            if (novoCard.ativo === 0) {
-                // anima o card sumindo
-                const childrenList = this.$refs.list.$children;
-                const childrenIndex = childrenList.findIndex(obj => obj.card.id_card === novoCard.id_card);
-                const element = childrenList[childrenIndex].$el;
+          await this.cards.splice(cardIndex, 1);
+          await this.$emit("cardInWrongList", editedCard);
+        } else if (editedCard.id_status === card.id_status) return;
+      }
+    },
+    async verificaEditedCard(editedCard) {
+      // Procura card na lista
+      const cardIndex = await this.cards.findIndex(
+        (obj) => obj.id_card === editedCard.id_card
+      );
 
-                element.scrollIntoView({
-                    behavior: 'smooth'
-                });
-                element.style.transition = "transform 0.2s ease-in-out";
-                element.style.transform = "scale(1.05)";
+      if (cardIndex !== -1 && editedCard.ativo === 1) {
+        ToastTopEnd5.fire(
+          "Opa!",
+          `O card ${this.tiposMovimento[editedCard.tipo]}(${
+            editedCard.id_movimento
+          }) atualizado!`,
+          "info"
+        );
 
-                setTimeout(() => {
-                    element.style.transition = "transform 1s ease-in-out";
-                    element.style.transform = "scale(0)";
-                }, 500);
+        await this.$set(this.cards, cardIndex, editedCard);
+        return this.organizaListaCards();
+      }
 
-                setTimeout(() => {
-                    // emite o card para colocá-lo na lista de cards inativos
-                    this.$emit('cardIsNowInative', novoCard);
+      if (cardIndex !== -1 && editedCard.ativo === 0) {
+        // Se existe na lista mas o ativo é 0, o card tem que sumir
+        ToastTopEnd5.fire(
+          "Opa!",
+          `O card ${this.tiposMovimento[editedCard.tipo]}(${
+            editedCard.id_movimento
+          }) foi inativado!`,
+          "info"
+        );
 
-                    // remove o card da lista atual
-                    this.cards.splice(cardIndex, 1);
-                }, 2000);
-            }
+        // anima o card sumindo
+        const childrenList = await this.$refs.list.$children;
+        const childrenIndex = await childrenList.findIndex(
+          (obj) => obj.card.id_card === editedCard.id_card
+        );
+        const element = await childrenList[childrenIndex].$el;
 
-            // Verifica se o id_status continua o mesmo, se não continuou, remove o card dessa lista
-            // e emite como um card novo pro componente pai
-            if (novoCard.id_status !== this.list.id_status && novoCard.ativo === 1) {
-                // emite o card para colocá-lo na lista certa
-                this.$emit('cardInWrongList', novoCard);
+        await new Promise((resolve) => {
+          this.animaElementSumindo(element, resolve);
+        });
 
-                // remove o card da lista atual
-                this.cards.splice(cardIndex, 1);
-            }
-        },
-        'list.color': function (novoValor, valorAntigo) {
-            this.corTextoStatus = this.ajustarCorTexto(novoValor);
-        }
-    }
-}
+        await this.cards.splice(cardIndex, 1);
+      }
+    },
+  },
+  watch: {
+    "list.color": function (novoValor, valorAntigo) {
+      this.corTextoStatus = this.ajustarCorTexto(novoValor);
+    },
+    /**
+     * Método para escutar o card recebido pelo canal new-cards e adicioná-lo na lista
+     */
+    newCard(newCard, oldCard) {
+      this.addNewCard(newCard);
+    },
+    /**
+     * Método para escutar o card recebido pelo canal edited-cards e mudar as informações do card na lista
+     */
+    editedCard(newEditedCard, oldEditedCard) {
+      this.verificaEditedCard(newEditedCard);
+    },
+    editedCardStatus(newEditedCardStatus, oldEditedCardStatus) {
+      this.verificaEditedCardStatus(newEditedCardStatus);
+    },
+  },
+};
 </script>
 
 <style scoped>
 ::-webkit-scrollbar {
-    background-color: transparent;
-    width: 0px;
-    border-top-right-radius: 5px;
-    border-bottom-right-radius: 5px;
+  background-color: transparent;
+  width: 0px;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb {
-    background-color: #aeaeae;
-    border-radius: 5px;
+  background-color: #aeaeae;
+  border-radius: 5px;
 }
 
 .cards-scrollbar {
-    behavior: smooth;
+  behavior: smooth;
 }
 
 .draggable {
-    behavior: smooth;
+  behavior: smooth;
 }
 
 .cards-scrollbar:hover::-webkit-scrollbar {
-    width: 5px;
+  width: 5px;
 }
 
 .status-circle {
-    transition: all .2s ease-in-out;
+  transition: all 0.2s ease-in-out;
 }
 
 .fade-enter-active,
 .fade-leave-active {
-    transition: opacity 0.5s ease-in-out;
+  transition: opacity 0.5s ease-in-out;
 }
 
 .fade-enter-from,
 .fade-leave-to {
-    opacity: 0;
+  opacity: 0;
 }
 
 .modal-slide-enter-active,
 .modal-slide-leave-active {
-    transition: opacity 0.5s ease-in-out;
-    transition: transform 0.5s ease-in-out;
+  transition: opacity 0.5s ease-in-out;
+  transition: transform 0.5s ease-in-out;
 }
 
 .modal-slide-enter,
 .modal-slide-leave-to {
-    transform: translateX(100%);
-    opacity: 0;
+  transform: translateX(100%);
+  opacity: 0;
 }
 
 .input-color {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    background-color: transparent;
-    width: 2.5rem;
-    height: 2.5rem;
-    border: none;
-    cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-color: transparent;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: none;
+  cursor: pointer;
 }
 
 .input-color::-webkit-color-swatch {
-    border-radius: 50%;
+  border-radius: 50%;
 }
 
 .input-color::-moz-color-swatch {
-    border-radius: 50%;
+  border-radius: 50%;
 }
 
-.cards-enter-from {
-    opacity: 0;
-    transform: scale(0.6);
+.flip-list-move {
+  transition: transform 0.5s;
 }
-
-.cards-enter-to {
-    opacity: 1;
-    transform: scale(1);
-}
-
-.cards-enter-active {
-    transition: all 0.4s ease;
-}
-
-.cards-leave-from {
-    opacity: 1;
-    transform: scale(1);
-}
-
-.cards-leave-to {
-    opacity: 0;
-    transform: scale(0.6);
-}
-
-.cards-leave-active {
-    transition: all 0.4s ease;
+.no-move {
+  transition: transform 0s;
 }
 </style>

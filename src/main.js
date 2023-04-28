@@ -28,7 +28,7 @@ Vue.use(require('vue-pusher'), {
   api_key: '8619138d44f33b2b6bc9',
   options: {
     cluster: 'sa1',
-    authEndpoint: '/api/pusher/auth',
+    authEndpoint: '/v2/pipeline/pusher/auth',
   }
 });
 
