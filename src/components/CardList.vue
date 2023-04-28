@@ -107,7 +107,7 @@ export default {
       cards: ref(this.list.cards),
       corTextoStatus: "",
       isShowingModalEditComments: ref(false),
-      cardIsEditing: {}
+      cardIsEditing: {},
     };
   },
   computed: {
@@ -243,6 +243,11 @@ export default {
     },
     verificaAdicionaCard(newCard) {
       if (newCard.id_status === this.list.id_status) {
+        const cardIndex = this.cards.findIndex(
+          (obj) => obj.id_card === newCard.id_card
+        );
+        if (cardIndex !== -1) return;
+        
         this.onCardCreated(newCard);
       }
     },

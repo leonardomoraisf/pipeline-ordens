@@ -14,7 +14,7 @@
               class="sticky top-0 z-50 bg-white rounded-t-md border-b-2 border-neutral-100 border-opacity-100 px-4 py-2 dark:border-opacity-50"
             >
               <div class="flex flex-shrink-0 items-center justify-between py-2">
-                <h5 class="text-2xl text-black">Cards inativos</h5>
+                <h5 class="text-2xl text-black">Cards finalizados</h5>
                 <button
                   type="button"
                   class="box-content rounded-none border-none hover:no-underline hover:opacity-75 focus:opacity-100 focus:shadow-none focus:outline-none"
@@ -34,7 +34,7 @@
                   class="w-full flex flex-row justify-between items-center space-x-4 pt-4 pb-1"
                 >
                   <div class="w-full">
-                    <div class="relative">
+                    <div class="relative hover:scale-105 transition-all">
                       <div
                         class="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none"
                       >
@@ -55,10 +55,9 @@
 
                   <select
                     v-model="statusSelected"
-                    class="w-full border py-4 pl-5 rounded-full focus:outline-none hover:cursor-pointer"
+                    class="w-full border py-4 pl-5 rounded-full focus:outline-none hover:cursor-pointer hover:scale-105 transition-all"
                   >
                     <option value="" selected>Todos os status</option>
-                    <option value="" disabled>----- Status Ativos -----</option>
                     <option
                       v-for="status in list"
                       :value="status.id_status"
@@ -66,7 +65,7 @@
                     >
                       {{ status.nome }}
                     </option>
-                    <option value="" disabled>
+                    <option value="" disabled v-if="allInactiveStatus.length > 0">
                       ----- Status Inativos -----
                     </option>
                     <option
@@ -78,7 +77,7 @@
                     </option>
                   </select>
 
-                  <div class="flex justify-center items-center space-x-1">
+                  <div class="flex justify-center items-center space-x-1 hover:scale-105 transition-all">
                     <date-picker
                       v-model="date"
                       @change="setDate"
@@ -92,7 +91,7 @@
                   <div class="flex flex-col">
                     <button
                       type="submit"
-                      class="transition-all rounded-full px-4 py-5 btn-buscar hover:scale-105 text-gray-700"
+                      class="transition-all rounded-full px-4 py-5 btn-buscar hover:scale-110 text-gray-700"
                       :class="{ 'bg-color-gray-700': isRequesting }"
                       :disabled="isRequesting"
                     >
@@ -130,8 +129,8 @@
             </div>
 
             <div class="h-screen flex flex-row bg-white">
-              <div class="w-full pl-4 py-2">
-                <ul class="space-y-2 px-8" v-if="!isRequesting">
+              <div class="w-full py-2">
+                <ul class="space-y-3 px-4" v-if="!isRequesting">
                   <CardListItem
                     ref="list"
                     v-for="card in inativeCardsList"
@@ -181,7 +180,7 @@
       </div>
     </transition>
     <Transition name="fade" appear>
-      <div v-if="toggleModal" class="absolute inset-0 z-40 bg-black/30"></div>
+      <div v-if="toggleModal" class="absolute inset-0 z-40 bg-black/30" @click="closeModal"></div>
     </Transition>
   </div>
 </template>

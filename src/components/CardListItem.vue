@@ -1,30 +1,47 @@
 <template>
-  <li class="drag-card" :class="{ 'card-list': !inModalEditComments }">
+  <li
+    class="drag-card"
+    :class="{
+      'card-list': !inModalEditComments && !inInativeCardList,
+      flex: inInativeCardList,
+    }"
+  >
     <div
       :style="{ backgroundColor: colorStatus }"
       class="group relative p-3 shadow rounded-md border-b border-gray-300 text-left"
+      :class="{ 'w-3/5': inInativeCardList }"
     >
       <div
         class="h-28 flex flex-col justify-between"
         :class="{
           'hover:cursor-grab': !inInativeCardList && !inModalEditComments,
-          'hover:cursor-pointer': inInativeCardList,
         }"
         :style="{ color: corTextoCard }"
       >
-        <div class="absolute top-3 right-3" v-if="inInativeCardList && existeStatus && !statusInativo && card.movimento_ativo === 1">
+        <div
+          class="absolute top-3 right-3"
+          v-if="
+            inInativeCardList &&
+            existeStatus &&
+            !statusInativo &&
+            card.movimento_ativo === 1
+          "
+        >
           <button
-            class="text-base text-black font-semibold bg-white hover:scale-105 p-2 rounded-md transition-all"
+            class="text-base text-black font-semibold bg-white hover:scale-105 hover:bg-gray-200 p-2 rounded-md transition-all"
             @click="$emit('turnCardActive', card)"
           >
             Reativar
           </button>
         </div>
 
-        <div v-if="inInativeCardList && !existeStatus || statusInativo" class="absolute top-2 right-2">
+        <div
+          v-if="(inInativeCardList && !existeStatus) || statusInativo"
+          class="absolute top-2 right-2"
+        >
           <button
             @click="deleteCard"
-            class="bg-rose-500 rounded-md hover:bg-rose-400 p-2 transition-colors"
+            class="bg-red-500 rounded-md hover:bg-red-400 p-2 transition-all hover:scale-105 text-white"
           >
             Deletar
           </button>
@@ -69,7 +86,8 @@
             {{ tiposMovimento[card.tipo] }}({{ card.id_movimento }})
           </p>
           <p v-if="inInativeCardList" class="text-base font-normal truncate">
-            <b>Status<span v-if="statusInativo"> inativo</span>:</b> {{ card.statusName }}
+            <b>Status<span v-if="statusInativo"> inativo</span>:</b>
+            {{ card.statusName }}
           </p>
         </div>
 
@@ -83,7 +101,9 @@
           :stroke-width="3"
           :stroke-color="corTextoCard"
           :underneath-stroke-color="colorStatus"
-          v-tooltip="'Quando o tempo acabar, o card será colocado como inativo!'"
+          v-tooltip="
+            'Quando o tempo acabar, o card será colocado como inativo!'
+          "
         />
 
         <div class="flex justify-between items-center">
@@ -95,13 +115,17 @@
               <button @click.stop="$emit('openModalEditComments', card)">
                 <span
                   class="material-symbols-outlined opacity-70 pt-2"
-                  v-if="card.comentarios === null || card.comentarios.length === 0"
+                  v-if="
+                    card.comentarios === null || card.comentarios.length === 0
+                  "
                 >
                   chat_bubble
                 </span>
                 <span
                   class="material-symbols-filled opacity-70 pt-2"
-                  v-if="card.comentarios !== null && card.comentarios.length > 0"
+                  v-if="
+                    card.comentarios !== null && card.comentarios.length > 0
+                  "
                 >
                   chat_bubble
                 </span>
@@ -118,7 +142,9 @@
               v-tooltip.bottom="'Dias no status/Dias no pipeline'"
             >
               <span class="text-white font-semibold">{{ diferencaDias }}</span>
-              <span class="text-white font-semibold">/{{ diferencaDiasTotal }}d</span>
+              <span class="text-white font-semibold"
+                >/{{ diferencaDiasTotal }}d</span
+              >
             </div>
 
             <div
@@ -149,6 +175,20 @@
               Deletar
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="inInativeCardList" class="ml-4 w-2/5 ">
+      <div class="flex flex-col text-left p-2 justify-center h-full overflow-hidden">
+        <div>
+          <p class="truncate text-xl">Finalizado:</p>
+          <p class="truncate">
+            {{ diaLog }}, {{ dataHoraLog }}
+          </p>
+        </div>
+        <div>
+          <p class="truncate w-full">{{ cardLog.nome_pessoa }}</p>
         </div>
       </div>
     </div>
@@ -184,7 +224,7 @@ export default {
     },
     statusInativo: {
       type: Boolean,
-      default: false
+      default: false,
     },
     tiposMovimento: Object
   },
@@ -193,7 +233,10 @@ export default {
       errorMessage: "",
       isShowingError: ref(false),
       celular: "",
-      valorFormatado: String(parseFloat(this.card.valor.toFixed(2))).replace(".", ","),
+      valorFormatado: String(parseFloat(this.card.valor.toFixed(2))).replace(
+        ".",
+        ","
+      ),
       diferencaDias: 0,
       toggleModal: ref(false),
       diferencaDiasTotal: 0,
@@ -209,6 +252,12 @@ export default {
         },
       ],
       isDeleting: ref(false),
+      cardLog:
+        this.card.log === null || this.card.log === undefined
+          ? ""
+          : JSON.parse(this.card.log)[0],
+      dataHoraLog: "",
+      diaLog: ""
     };
   },
   methods: {
@@ -233,8 +282,12 @@ export default {
       let diferenca = Math.abs(dataHoje.getTime() - dataCard.getTime());
       let dias = Math.ceil(diferenca / (1000 * 60 * 60 * 24));
 
-      let dataCardTotal = new Date(this.card.data_hora_cadastro.substring(0, 10));
-      let diferencaTotal = Math.abs(dataHoje.getTime() - dataCardTotal.getTime());
+      let dataCardTotal = new Date(
+        this.card.data_hora_cadastro.substring(0, 10)
+      );
+      let diferencaTotal = Math.abs(
+        dataHoje.getTime() - dataCardTotal.getTime()
+      );
       let diasTotal = Math.ceil(diferencaTotal / (1000 * 60 * 60 * 24));
 
       this.diferencaDias = dias;
@@ -276,20 +329,43 @@ export default {
       this.celular = JSON.parse(this.card.celulares)[0].number;
     }
 
-    if (this.isToInative === true) {
+    if (this.isToInative) {
       this.timeoutInativeCard = setTimeout(() => {
         this.cardToInative();
       }, 3000);
+    }
+
+    if (this.inInativeCardList) {
+      var data = new Date(this.cardLog.data_hora_cadastro);
+      let diasDaSemana = [
+        "Domingo",
+        "Segunda-feira",
+        "Terça-feira",
+        "Quarta-feira",
+        "Quinta-feira",
+        "Sexta-feira",
+        "Sábado"
+      ];
+      var diaDaSemana = diasDaSemana[data.getDay()];
+      this.diaLog = diaDaSemana;
+
+      const dia = data.getDate();
+      const mes = data.getMonth() + 1;
+      const ano = data.getFullYear();
+      const dataFormatada = dia + "/" + mes + "/" + ano;
+      const hora = data.toLocaleTimeString();
+      const dataHoraFormatadas = dataFormatada + " | " + hora;
+      this.dataHoraLog = dataHoraFormatadas;
     }
   },
   beforeDestroy() {
     clearTimeout(this.timeoutInativeCard);
   },
   watch: {
-    card(newCard,oldCard){
+    card(newCard, oldCard) {
       this.calculaDiferencaDias();
-    }
-  }
+    },
+  },
 };
 </script>
 

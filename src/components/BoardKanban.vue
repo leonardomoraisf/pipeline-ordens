@@ -712,7 +712,7 @@ export default {
       try {
         // Se inscreve no canal da empresa
         this.pipelinePusher = await this.$pusher.subscribe(
-          "private-pipeline." + this.idEmpresa
+          "private-company-" + this.idEmpresa
         );
 
         this.pusherSessionID = this.pipelinePusher.pusher.sessionID;
