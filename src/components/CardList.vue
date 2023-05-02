@@ -58,6 +58,7 @@
       :dataHoje="dataHoje"
       :tiposMovimento="tiposMovimento"
       @editComment="onEditComment"
+      :pusherSessionID="pusherSessionID"
     ></ModalEditCardComments>
   </div>
 </template>
@@ -171,12 +172,11 @@ export default {
       const element = childrenList[childrenIndex].$el;
 
       element.style.transition = "all 0.2s ease";
-      element.style.transform = "scale(0)";
 
       setTimeout(() => {
         element.style.transform = "scale(1.05)";
         element.style.opacity = "0.8";
-      }, 300);
+      }, 100);
 
       element.scrollIntoView({
         behavior: "smooth",
@@ -185,7 +185,7 @@ export default {
       setTimeout(() => {
         element.style.transform = "scale(1)";
         element.style.opacity = "1";
-      }, 1500);
+      }, 500);
     },
     /**
      * Método que é acionado quando acontece alguma mudança de status ou posição de cards do componente draggable
@@ -234,9 +234,7 @@ export default {
         pusherSessionID: this.pusherSessionID,
       };
 
-      this.$emit("newRequest", () => {
-        return this.axios.put(`/v2/pipeline/cards/${card.id_card}/edit`, body);
-      });
+      this.axios.put(`/v2/pipeline/cards/${card.id_card}/edit`, body);
     },
     organizaListaCards() {
       this.cards.sort((a, b) => a.posicao - b.posicao);
@@ -247,7 +245,7 @@ export default {
           (obj) => obj.id_card === newCard.id_card
         );
         if (cardIndex !== -1) return;
-        
+
         this.onCardCreated(newCard);
       }
     },
@@ -329,6 +327,22 @@ export default {
         });
 
         await this.cards.splice(cardIndex, 1);
+      }
+
+      if (
+        cardIndex === -1 &&
+        editedCard.ativo === 1 &&
+        editedCard.id_status === this.list.id_status
+      ) {
+        ToastTopEnd5.fire(
+          "Opa!",
+          `O card ${this.tiposMovimento[editedCard.tipo]}(${
+            editedCard.id_movimento
+          }) foi reativado!`,
+          "info"
+        );
+
+        await this.onCardCreated(editedCard);
       }
     },
   },

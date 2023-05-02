@@ -136,7 +136,8 @@ export default {
     corTextoCard: String,
     inInativeCards: Boolean,
     dataHoje: String,
-    tiposMovimento: Object
+    tiposMovimento: Object,
+    pusherSessionID: Number
   },
   data() {
     return {
@@ -198,6 +199,7 @@ export default {
         posicao: this.cardIsEditing.posicao,
         ativo: this.cardIsEditing.ativo,
         comentarios: this.cardComentarios,
+        pusherSessionID: this.pusherSessionID
       };
 
       const card = {

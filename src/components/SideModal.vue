@@ -537,7 +537,7 @@ export default {
   },
   watch: {
     toggleModal(newValue, oldValue) {
-      if (newValue === true && oldValue === false) {
+      if (newValue === true && oldValue === false && this.isEdit === 1) {
         let hex = this.list.color.replace(/#/g, "");
         var aRgbHex = hex.match(/.{1,2}/g);
         var aRgb = [

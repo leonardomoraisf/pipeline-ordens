@@ -7,7 +7,7 @@
       >
         <div class="relative mx-auto w-full">
           <div
-            class="bg-white w-full rounded-md h-screen overflow-y-auto"
+            class="bg-white w-full rounded-md h-screen overflow-y-auto overflow-x-hidden"
             ref="scrollRef"
           >
             <div
@@ -27,78 +27,107 @@
                 </button>
               </div>
 
+              <button
+                class="flex items-center space-x-1"
+                v-if="
+                  isShowingFilters === false && !isRequestingAllInactiveStatus
+                "
+                @click="isShowingFilters = !isShowingFilters"
+              >
+                <span class="font-semibold">Filtros</span>
+                <font-awesome-icon class="w-5 h-5" :icon="['fas', 'fa-plus']" />
+              </button>
+
               <transition name="fade">
-                <form
-                  v-if="!isRequestingAllInactiveStatus"
-                  @submit.prevent="buscaCards"
-                  class="w-full flex flex-row justify-between items-center space-x-4 pt-4 pb-1"
-                >
-                  <div class="w-full">
-                    <div class="relative hover:scale-105 transition-all">
-                      <div
-                        class="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none"
-                      >
-                        <font-awesome-icon
-                          class="w-5 h-5 text-gray-500"
-                          :icon="['fas', 'fa-search']"
+                <div>
+                  <button
+                    class="float-left flex items-center space-x-1"
+                    v-if="
+                      isShowingFilters === true &&
+                      !isRequestingAllInactiveStatus
+                    "
+                    @click="isShowingFilters = !isShowingFilters"
+                  >
+                    <span class="font-semibold">Filtros</span>
+                    <font-awesome-icon
+                      class="w-5 h-5"
+                      :icon="['fas', 'fa-minus']"
+                    />
+                  </button>
+                  <form
+                    v-if="!isRequestingAllInactiveStatus && isShowingFilters"
+                    @submit.prevent="buscaCards"
+                    class="w-full flex flex-col justify-between xl:flex-row space-y-1 xl:space-x-2 pb-1 items-center"
+                  >
+                    <div class="w-full">
+                      <div class="relative hover:scale-105 transition-all">
+                        <div
+                          class="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none"
+                        >
+                          <font-awesome-icon
+                            class="w-5 h-5 text-gray-500"
+                            :icon="['fas', 'fa-search']"
+                          />
+                        </div>
+                        <input
+                          class="border rounded-full appearance-none py-4 pl-8 text-gray-700 leading-tight focus:outline-none w-full"
+                          v-model="search"
+                          name="search"
+                          type="text"
+                          placeholder="Digite algo"
                         />
                       </div>
-                      <input
-                        class="border rounded-full appearance-none py-5 pl-8 w-full text-gray-700 leading-tight focus:outline-none"
-                        v-model="search"
-                        name="search"
-                        type="text"
-                        placeholder="Digite algo"
-                      />
                     </div>
-                  </div>
 
-                  <select
-                    v-model="statusSelected"
-                    class="w-full border py-4 pl-5 rounded-full focus:outline-none hover:cursor-pointer hover:scale-105 transition-all"
-                  >
-                    <option value="" selected>Todos os status</option>
-                    <option
-                      v-for="status in list"
-                      :value="status.id_status"
-                      :key="status.id_status"
+                    <select
+                      v-model="statusSelected"
+                      class="border py-4 pl-1 w-full rounded-full focus:outline-none hover:cursor-pointer hover:scale-105 transition-all"
                     >
-                      {{ status.nome }}
-                    </option>
-                    <option value="" disabled v-if="allInactiveStatus.length > 0">
-                      ----- Status Inativos -----
-                    </option>
-                    <option
-                      v-for="status in allInactiveStatus"
-                      :value="status.id_status"
-                      :key="status.id_status"
-                    >
-                      {{ status.nome }}
-                    </option>
-                  </select>
+                      <option value="" selected>Todos os status</option>
+                      <option
+                        v-for="status in list"
+                        :value="status.id_status"
+                        :key="status.id_status"
+                      >
+                        {{ status.nome }}
+                      </option>
+                      <option
+                        value=""
+                        disabled
+                        v-if="allInactiveStatus.length > 0"
+                      >
+                        ----- Status Inativos -----
+                      </option>
+                      <option
+                        v-for="status in allInactiveStatus"
+                        :value="status.id_status"
+                        :key="status.id_status"
+                      >
+                        {{ status.nome }}
+                      </option>
+                    </select>
 
-                  <div class="flex justify-center items-center space-x-1 hover:scale-105 transition-all">
-                    <date-picker
-                      v-model="date"
-                      @change="setDate"
-                      :format="'DD/MM/YYYY'"
-                      :placeholder="'Data inicial - Data final'"
-                      :input-class="'py-4 pl-2 w-full focus:outline-none border rounded-full'"
-                      range
-                    ></date-picker>
-                  </div>
+                    <div class="hover:scale-105 transition-all w-full">
+                      <date-picker
+                        v-model="date"
+                        @change="setDate"
+                        :format="'DD/MM/YYYY'"
+                        :placeholder="'Data inicial - Data final'"
+                        :input-class="'w-full py-4 pl-2 focus:outline-none border rounded-full'"
+                        range
+                      ></date-picker>
+                    </div>
 
-                  <div class="flex flex-col">
                     <button
                       type="submit"
-                      class="transition-all rounded-full px-4 py-5 btn-buscar hover:scale-110 text-gray-700"
+                      class="transition-all rounded-full px-4 py-4 btn-buscar hover:scale-110 text-gray-700 w-full xl:w-min"
                       :class="{ 'bg-color-gray-700': isRequesting }"
                       :disabled="isRequesting"
                     >
                       Buscar
                     </button>
-                  </div>
-                </form>
+                  </form>
+                </div>
               </transition>
 
               <div
@@ -180,7 +209,11 @@
       </div>
     </transition>
     <Transition name="fade" appear>
-      <div v-if="toggleModal" class="absolute inset-0 z-40 bg-black/30" @click="closeModal"></div>
+      <div
+        v-if="toggleModal"
+        class="absolute inset-0 z-40 bg-black/30"
+        @click="closeModal"
+      ></div>
     </Transition>
   </div>
 </template>
@@ -211,6 +244,10 @@ export default {
     ajustarCorTexto: Function,
     tiposMovimento: Object,
     animaElementSumindo: Function,
+    editedCardComment: {
+      type: Object,
+      default: () => ({}),
+    },
   },
   data() {
     return {
@@ -230,6 +267,7 @@ export default {
       allInactiveStatus: [],
       completeStatusList: [],
       isRequestingAllInactiveStatus: ref(false),
+      isShowingFilters: true,
     };
   },
   methods: {
@@ -390,6 +428,13 @@ export default {
     },
     list(newList, oldList) {
       this.getAllInactiveStatus();
+    },
+    editedCardComment(newCard, oldCard) {
+      this.inativeCardsList.forEach((card) => {
+        if (newCard.id_card === card.id_card) {
+          card.comentarios = newCard.comentarios;
+        }
+      });
     },
   },
 };
