@@ -2,6 +2,7 @@
   <div>
     <StatusTimeline
       :list="list"
+      :ordem="ordem"
       :corTextoStatus="corTextoStatus"
       :lastList="lastList"
       :ajustarCorTexto="ajustarCorTexto"
@@ -42,6 +43,7 @@
             :isToInative="false"
             @openModalEditComments="toggleModalEditComments"
             :tiposMovimento="tiposMovimento"
+            :pusherSessionID="pusherSessionID"
           />
         </draggable>
       </div>
@@ -102,6 +104,7 @@ export default {
     tiposMovimento: Object,
     pusherSessionID: Number,
     animaElementSumindo: Function,
+    ordem: Number,
   },
   data() {
     return {
@@ -171,12 +174,15 @@ export default {
       );
       const element = childrenList[childrenIndex].$el;
 
-      element.style.transition = "all 0.2s ease";
+      element.style.transition = "all 0.5s ease";
+
+      element.style.transform = "scale(0)";
+      element.style.opacity = "0";
 
       setTimeout(() => {
-        element.style.transform = "scale(1.05)";
+        element.style.transform = "scale(1.02)";
         element.style.opacity = "0.8";
-      }, 100);
+      }, 500);
 
       element.scrollIntoView({
         behavior: "smooth",
@@ -185,7 +191,7 @@ export default {
       setTimeout(() => {
         element.style.transform = "scale(1)";
         element.style.opacity = "1";
-      }, 500);
+      }, 1000);
     },
     /**
      * Método que é acionado quando acontece alguma mudança de status ou posição de cards do componente draggable
@@ -195,18 +201,13 @@ export default {
       const item = e.added || e.moved;
       if (!item) return;
 
-      let index = item.newIndex;
+      const index =
+        item.newIndex !== -1
+          ? item.newIndex
+          : this.cards.findIndex((obj) => obj.id_card === item.element.id_card);
       if (index === -1) {
-        index = this.cards.findIndex(
-          (obj) => obj.id_card === item.element.id_card
-        );
-        if (index === -1) {
-          return ToastTopEnd5.fire(
-            "Erro!",
-            "Houve um erro ao mover o card!",
-            "error"
-          );
-        }
+        ToastTopEnd5.fire("Erro!", "Houve um erro ao mover o card!", "error");
+        return;
       }
 
       const prevCard = this.cards[index - 1];
@@ -234,7 +235,9 @@ export default {
         pusherSessionID: this.pusherSessionID,
       };
 
-      this.axios.put(`/v2/pipeline/cards/${card.id_card}/edit`, body);
+      this.$emit("newRequest", () => {
+        return this.axios.put(`/v2/pipeline/cards/${card.id_card}/edit`, body);
+      });
     },
     organizaListaCards() {
       this.cards.sort((a, b) => a.posicao - b.posicao);
@@ -283,6 +286,7 @@ export default {
 
           await this.cards.splice(cardIndex, 1);
           await this.$emit("cardInWrongList", editedCard);
+          return;
         } else if (editedCard.id_status === card.id_status) return;
       }
     },
@@ -302,7 +306,8 @@ export default {
         );
 
         await this.$set(this.cards, cardIndex, editedCard);
-        return this.organizaListaCards();
+        await this.organizaListaCards();
+        return;
       }
 
       if (cardIndex !== -1 && editedCard.ativo === 0) {
@@ -327,6 +332,7 @@ export default {
         });
 
         await this.cards.splice(cardIndex, 1);
+        return;
       }
 
       if (
@@ -342,7 +348,9 @@ export default {
           "info"
         );
 
-        await this.onCardCreated(editedCard);
+        this.$emit('cardReativado', editedCard);
+        await this.verificaAdicionaCard(editedCard);
+        return;
       }
     },
   },
@@ -363,7 +371,9 @@ export default {
       this.verificaEditedCard(newEditedCard);
     },
     editedCardStatus(newEditedCardStatus, oldEditedCardStatus) {
-      this.verificaEditedCardStatus(newEditedCardStatus);
+      this.$emit("changeCardPos", () => {
+        return this.verificaEditedCardStatus(newEditedCardStatus);
+      });
     },
   },
 };

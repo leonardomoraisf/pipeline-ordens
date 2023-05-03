@@ -6,7 +6,7 @@
     >
       <div
         class="flex items-center"
-        v-if="list.ordem === 1 && lastList.ordem !== 1"
+        v-if="ordem === 1 && lastList.ordem !== 1"
       >
         <div class="flex w-full h-0 bg-gray-700"></div>
         <div
@@ -14,7 +14,7 @@
           class="z-10 flex items-center justify-center w-6 h-6 p-6 rounded-full shrink-0 group-hover:scale-110 status-circle"
         >
           <p :style="{ color: corTextoStatus }" class="text-xl">
-            {{ list.ordem }}
+            {{ ordem }}
           </p>
         </div>
         <div class="flex w-full h-0.5 bg-gray-700"></div>
@@ -22,7 +22,7 @@
 
       <div
         class="flex items-center"
-        v-if="list.ordem === 1 && lastList.ordem === 1"
+        v-if="ordem === 1 && lastList.ordem === 1"
       >
         <div class="flex w-full h-0 bg-gray-700"></div>
         <div
@@ -30,7 +30,7 @@
           class="z-10 flex items-center justify-center w-6 h-6 p-6 rounded-full shrink-0 group-hover:scale-110 status-circle"
         >
           <p :style="{ color: corTextoStatus }" class="text-xl">
-            {{ list.ordem }}
+            {{ ordem }}
           </p>
         </div>
         <div class="flex w-full h-0 bg-gray-700"></div>
@@ -38,7 +38,7 @@
 
       <div
         class="flex items-center"
-        v-if="list.ordem !== 1 && list.ordem !== lastList.ordem"
+        v-if="ordem !== 1 && ordem !== lastList.ordem"
       >
         <div class="sm:flex w-full h-0.5 bg-gray-700"></div>
         <div
@@ -46,7 +46,7 @@
           class="z-10 flex items-center justify-center w-6 h-6 p-6 rounded-full shrink-0 group-hover:scale-110 status-circle"
         >
           <p :style="{ color: corTextoStatus }" class="text-xl">
-            {{ list.ordem }}
+            {{ ordem }}
           </p>
         </div>
         <div class="sm:flex w-full h-0.5 bg-gray-700"></div>
@@ -54,7 +54,7 @@
 
       <div
         class="flex items-center"
-        v-if="list.ordem !== 1 && list.ordem === lastList.ordem"
+        v-if="ordem !== 1 && ordem === lastList.ordem"
       >
         <div class="sm:flex w-full h-0.5 bg-gray-700"></div>
         <div
@@ -62,7 +62,7 @@
           class="z-10 flex items-center justify-center w-6 h-6 p-6 rounded-full shrink-0 group-hover:scale-110 status-circle"
         >
           <p :style="{ color: corTextoStatus }" class="text-xl">
-            {{ list.ordem }}
+            {{ ordem }}
           </p>
         </div>
         <div class="sm:flex w-full h-0 bg-gray-700"></div>
@@ -114,6 +114,7 @@ export default {
   },
   props: {
     list: Object,
+    ordem: Number,
     corTextoStatus: String,
     lastList: Object,
     ajustarCorTexto: Function,

@@ -179,13 +179,13 @@
       </div>
     </div>
 
-    <div v-if="inInativeCardList" class="ml-4 w-2/5 ">
-      <div class="flex flex-col text-left p-2 justify-center h-full overflow-hidden">
+    <div v-if="inInativeCardList" class="ml-4 w-2/5">
+      <div
+        class="flex flex-col text-left p-2 justify-center h-full overflow-hidden"
+      >
         <div>
           <p class="truncate text-xl">Finalizado:</p>
-          <p class="truncate">
-            {{ diaLog }}, {{ dataHoraLog }}
-          </p>
+          <p class="truncate">{{ diaLog }}, {{ dataHoraLog }}</p>
         </div>
         <div>
           <p class="truncate w-full">{{ cardLog.nome_pessoa }}</p>
@@ -226,7 +226,8 @@ export default {
       type: Boolean,
       default: false,
     },
-    tiposMovimento: Object
+    tiposMovimento: Object,
+    pusherSessionID: Number,
   },
   data() {
     return {
@@ -245,7 +246,7 @@ export default {
           id: "1",
           steps: 60,
           size: 45,
-          value: 59,
+          value: 60,
           stepLength: -1,
           label: "segundos",
           dependentCircles: ["1"],
@@ -257,7 +258,7 @@ export default {
           ? ""
           : JSON.parse(this.card.log)[0],
       dataHoraLog: "",
-      diaLog: ""
+      diaLog: "",
     };
   },
   methods: {
@@ -309,15 +310,16 @@ export default {
         posicao: this.card.posicao,
         ativo: 0,
         comentarios: this.card.comentarios,
+        pusherSessionID: this.pusherSessionID,
       };
 
       let card = { ...this.card, ativo: 0 };
 
       this.$emit("putCardToInative", card);
-      this.axios
-        .put("/v2/pipeline/cards/" + card.id_card + "/edit", body)
-        .then((res) => {})
-        .catch((err) => {});
+      this.$emit("newRequest", () => {
+        return this.axios.put(`/v2/pipeline/cards/${card.id_card}/edit`, body);
+      });
+
     },
   },
   mounted() {
@@ -332,7 +334,7 @@ export default {
     if (this.isToInative) {
       this.timeoutInativeCard = setTimeout(() => {
         this.cardToInative();
-      }, 3000);
+      }, 60000);
     }
 
     if (this.inInativeCardList) {
@@ -344,7 +346,7 @@ export default {
         "Quarta-feira",
         "Quinta-feira",
         "Sexta-feira",
-        "Sábado"
+        "Sábado",
       ];
       var diaDaSemana = diasDaSemana[data.getDay()];
       this.diaLog = diaDaSemana;

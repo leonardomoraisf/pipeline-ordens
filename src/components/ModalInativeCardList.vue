@@ -248,6 +248,10 @@ export default {
       type: Object,
       default: () => ({}),
     },
+    cardIsNowActive: {
+      type: Object,
+      default: () => ({}),
+    },
   },
   data() {
     return {
@@ -293,6 +297,7 @@ export default {
       var elementIndex = list.findIndex(
         (obj) => obj.card.id_card === card.id_card
       );
+      if (elementIndex === -1) return;
       let element = list[elementIndex].$el;
 
       await new Promise((resolve) => {
@@ -433,6 +438,13 @@ export default {
       this.inativeCardsList.forEach((card) => {
         if (newCard.id_card === card.id_card) {
           card.comentarios = newCard.comentarios;
+        }
+      });
+    },
+    cardIsNowActive(newCard, oldCard) {
+      this.inativeCardsList.forEach((card) => {
+        if (newCard.id_card === card.id_card) {
+          this.onTurnCardActive(newCard);
         }
       });
     },

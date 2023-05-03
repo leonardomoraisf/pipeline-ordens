@@ -360,6 +360,7 @@ export default {
     },
     closeModal() {
       if (this.isSubmiting === true) return;
+      if (this.isDeletingStatus === true) return;
 
       if (this.isEdit === 1) {
         if (

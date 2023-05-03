@@ -25,6 +25,19 @@
       >
         <font-awesome-icon class="w-10 h-10" :icon="['fas', 'fa-bars']" />
       </button>
+
+      <transition name="fade">
+        <div
+          class="fixed top-2 right-2 hidden lg:block"
+          v-if="isRequestingEditCard"
+          v-tooltip.bottom-start="'Não feche a página! Fazendo mudanças...'"
+        >
+          <div class="half-circle-spinner">
+            <div class="circle circle-1"></div>
+            <div class="circle circle-2"></div>
+          </div>
+        </div>
+      </transition>
     </div>
 
     <div
@@ -52,6 +65,7 @@
               :key="list.id_status"
               :list="list"
               :lastList="lastList"
+              :ordem="list.ordem"
               class="w-72 flex flex-col rounded-md pt-2 max-h-full"
               :ajustarCorTexto="ajustarCorTexto"
               :idEmpresa="idEmpresa"
@@ -66,6 +80,10 @@
               :tiposMovimento="tiposMovimento"
               :pusherSessionID="pusherSessionID"
               :animaElementSumindo="animaElementSumindo"
+              :isChangingCardPos="isChangingCardPos"
+              @changeCardPos="onChangeCardPos"
+              @newRequest="onNewRequest"
+              @cardReativado="onCardReativado"
             />
 
             <div class="flex flex-col rounded-md py-2 max-h-full w-72">
@@ -146,6 +164,7 @@
                       :isToInative="true"
                       @putCardToInative="onPutCardToInative"
                       @openModalEditComments="toggleModalEditComments"
+                      @newRequest="onNewRequest"
                       :tiposMovimento="tiposMovimento"
                     />
                     <div
@@ -186,6 +205,7 @@
                 :tiposMovimento="tiposMovimento"
                 :animaElementSumindo="animaElementSumindo"
                 :editedCardComment="editedCardComment"
+                :cardIsNowActive="cardIsNowActive"
               >
               </ModalInativeCardList>
             </div>
@@ -294,6 +314,14 @@ export default {
       editedCardComment: {},
 
       toggleModalFilterStatus: false,
+
+      requestEditCardQueue: [],
+      isRequestingEditCard: false,
+
+      isChangingCardPos: false,
+      cardsToChangePos: [],
+
+      cardIsNowActive: {},
     };
   },
   computed: {
@@ -319,6 +347,53 @@ export default {
     },
   },
   methods: {
+    onCardReativado(card) {
+      this.cardIsNowActive = card;
+    },
+    onNewRequest(request) {
+      this.addToRequestQueue(request);
+    },
+    async addToRequestQueue(request) {
+      this.requestEditCardQueue.push(request);
+      await this.executeNextRequest();
+    },
+    async executeNextRequest() {
+      if (this.isRequestingEditCard || this.requestEditCardQueue.length === 0) {
+        return;
+      }
+      this.isRequestingEditCard = true;
+      const request = this.requestEditCardQueue.shift();
+      try {
+        await request();
+      } catch (err) {
+        console.error(err);
+      } finally {
+        this.isRequestingEditCard = false;
+        await this.executeNextRequest();
+      }
+    },
+    onChangeCardPos(func) {
+      this.addToFuncQueue(func);
+    },
+    async addToFuncQueue(func) {
+      this.cardsToChangePos.push(func);
+      await this.executeNextFunc();
+    },
+    async executeNextFunc() {
+      if (this.isChangingCardPos || this.cardsToChangePos.length === 0) {
+        return;
+      }
+      this.isChangingCardPos = true;
+      const func = this.cardsToChangePos.shift();
+      try {
+        await func();
+      } catch (err) {
+        console.error(err);
+      } finally {
+        this.isChangingCardPos = false;
+        await this.executeNextFunc();
+      }
+    },
     onEditComment(cardObj) {
       let inCardToInativeList = false;
       this.cardsToInativeList.forEach((card) => {
@@ -445,24 +520,30 @@ export default {
      * @param {Object} card
      */
     async onPutCardToInative(card) {
-      let cardIndex = this.cardsToInativeList.findIndex(
-        (obj) => obj.id_card === card.id_card
-      );
 
-      const childrenList = this.$refs.listInativeRef.$children;
-      const childrenIndex = childrenList.findIndex(
-        (obj) => obj.card.id_card === card.id_card
-      );
-      const element = childrenList[childrenIndex].$el;
+      this.onChangeCardPos(async () => {
 
-      await new Promise((resolve) => {
-        this.animaElementSumindo(element, resolve);
+        let cardIndex = this.cardsToInativeList.findIndex(
+          (obj) => obj.id_card === card.id_card
+        );
+
+        if (cardIndex === -1) return;
+
+        const childrenList = this.$refs.listInativeRef.$children;
+        const childrenIndex = childrenList.findIndex(
+          (obj) => obj.card.id_card === card.id_card
+        );
+        const element = childrenList[childrenIndex].$el;
+
+        await new Promise((resolve) => {
+          this.animaElementSumindo(element, resolve);
+        });
+
+        await this.cardsToInativeList.splice(cardIndex, 1);
       });
-
-      await this.cardsToInativeList.splice(cardIndex, 1);
     },
     async animaElementSumindo(element, callback, scroll = true) {
-      element.style.transition = "all 0.1s ease";
+      element.style.transition = "all 0.2s ease";
 
       if (scroll) {
         element.scrollIntoView({
@@ -470,13 +551,17 @@ export default {
         });
       }
 
+      element.style.transform = "scale(1.02)";
+      element.style.opacity = "0.8";
+
       setTimeout(() => {
         element.style.transform = "scale(0)";
-      }, 100);
+        element.style.opacity = "1";
+      }, 600);
 
       setTimeout(() => {
         callback();
-      }, 200);
+      }, 800);
     },
     /**
      * Método que é chamado para abrir ou fechar a modal de criação de status, ele pega a referencia do input,
@@ -543,7 +628,7 @@ export default {
     },
     async calculaOrdem() {
       let ordem = 1;
-      this.listBoards.forEach((status) => {
+      this.listBoards.forEach((status, index) => {
         status.ordem = ordem;
         ordem++;
       });
@@ -696,7 +781,7 @@ export default {
     let dia = ("0" + dataAtual.getDate()).slice(-2);
     let dataFormatada = `${ano}-${mes}-${dia}`;
     this.dataHoje = dataFormatada;
-  }
+  },
 };
 </script>
 
