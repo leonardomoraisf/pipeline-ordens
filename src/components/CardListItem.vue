@@ -28,7 +28,7 @@
           "
         >
           <button
-            class="text-base text-black font-semibold bg-white hover:scale-105 hover:bg-gray-200 p-2 rounded-md transition-all"
+            class="text-base text-black font-semibold bg-white hover:scale-105 hover:bg-gray-200 p-1 rounded-md transition-all"
             @click="$emit('turnCardActive', card)"
           >
             Reativar
@@ -41,7 +41,7 @@
         >
           <button
             @click="deleteCard"
-            class="bg-red-500 rounded-md hover:bg-red-400 p-2 transition-all hover:scale-105 text-white"
+            class="bg-red-500 rounded-md hover:bg-red-400 p-1 transition-all hover:scale-105 text-white"
           >
             Deletar
           </button>
@@ -155,8 +155,8 @@
             </div>
           </div>
 
-          <div>
-            <p class="font-normal">R$ {{ valorFormatado }}</p>
+          <div class="text-ellipsis overflow-hidden">
+            <p class="font-normal truncate">R$ {{ valorFormatado }}</p>
           </div>
         </div>
 
@@ -179,16 +179,16 @@
       </div>
     </div>
 
-    <div v-if="inInativeCardList" class="ml-4 w-2/5">
+    <div v-if="inInativeCardList" class="w-2/5">
       <div
         class="flex flex-col text-left p-2 justify-center h-full overflow-hidden"
       >
         <div>
-          <p class="truncate text-xl">Finalizado:</p>
-          <p class="truncate">{{ diaLog }}, {{ dataHoraLog }}</p>
+          <p class="truncate text-xl break-all">Finalizado:</p>
+          <p class="truncate break-all">{{ diaLog }}, {{ dataHoraLog }}</p>
         </div>
         <div>
-          <p class="truncate w-full">{{ cardLog.nome_pessoa }}</p>
+          <p class="truncate w-full break-all">{{ cardLog.nome_pessoa }}</p>
         </div>
       </div>
     </div>

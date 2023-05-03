@@ -305,6 +305,7 @@ export default {
       });
 
       // remove o card da lista atual
+      await this.$set(this.inativeCardsList, elementIndex, card);
       await this.inativeCardsList.splice(elementIndex, 1);
       await this.$emit("turnCardActive", card);
     },
