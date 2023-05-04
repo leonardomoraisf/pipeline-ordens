@@ -14,11 +14,23 @@ module.exports = defineConfig({
   lintOnSave: false,
 
   chainWebpack: config => {
+    config.plugin("html").tap((args) => {
+      args[0].title = "SIMPLLIS - PIPELINE";
+      return args;
+    });
+
     config.resolve.alias
       .set("@", path.resolve(__dirname, "./src"))
   },
 
   configureWebpack: {
+    optimization: {
+      splitChunks: {
+        minSize: 10000,
+        maxSize: 250000,
+      },
+    },
+
     plugins: [
       new NodePolyfillPlugin()
     ]
