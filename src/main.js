@@ -46,6 +46,7 @@ Vue.config.productionTip = false;
 
 if(process.env.NODE_ENV === 'development'){
   window.APP_URL = 'http://localhost:8585';
+  
   // A porta está 8080 pois em desenvolvimento, esse projeto está com proxy para a porta 8585
   // Se estiver com o projeto em outra porta como 3030, apenas trocar e manter o proxy
   window.API_V2 = 'http://localhost:8080/v2';
