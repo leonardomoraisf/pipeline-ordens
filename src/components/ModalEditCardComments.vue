@@ -137,7 +137,7 @@ export default {
     inInativeCards: Boolean,
     dataHoje: String,
     tiposMovimento: Object,
-    pusherSessionID: Number
+    pusherSessionID: Number,
   },
   data() {
     return {
@@ -149,8 +149,11 @@ export default {
       maxLength: 1000,
     };
   },
-  mounted() {},
   methods: {
+    /**
+     * Método para fechar a modal
+     * Verifica se o submit está sendo feito, se sim bloqueia o fechamento da modal
+     */
     closeModal() {
       if (this.isSubmiting === true) return;
       if (this.backupCardComentarios !== this.cardComentarios) {
@@ -179,6 +182,11 @@ export default {
         this.$emit("closeModalEditComments");
       }
     },
+    
+    /**
+     * Método que faz a requisição de edição dos comentários do card
+     * @param {Event} ev
+     */
     onSubmit(ev) {
       this.isSubmiting = true;
       this.isShowingError = false;
@@ -189,7 +197,9 @@ export default {
       if (this.cardComentarios.length > this.maxLength) {
         this.isSubmiting = false;
         this.errorMessage =
-          "O tamanho máximo dos comentários é de " + this.maxLength + " caracteres!";
+          "O tamanho máximo dos comentários é de " +
+          this.maxLength +
+          " caracteres!";
         this.isShowingError = true;
         return;
       }
@@ -199,33 +209,43 @@ export default {
         posicao: this.cardIsEditing.posicao,
         ativo: this.cardIsEditing.ativo,
         comentarios: this.cardComentarios,
-        pusherSessionID: this.pusherSessionID
+        pusherSessionID: this.pusherSessionID,
       };
 
       const card = {
         id_card: this.cardIsEditing.id_card,
-        comentarios: this.cardComentarios
-      }
+        comentarios: this.cardComentarios,
+      };
 
       this.axios
-        .put("/v2/pipeline/cards/" + this.cardIsEditing.id_card + "/edit", body)
+        .put(
+          `${window.API_V2}/pipeline/cards/${this.cardIsEditing.id_card}/edit`,
+          body
+        )
         .then((res) => {
           Toast.fire(res.data.message, "", "success");
-          this.isSubmiting = false;
           this.isShowingError = false;
           this.$emit("closeModalEditComments");
-          this.$emit("editComment",card);
+          this.$emit("editComment", card);
         })
         .catch((err) => {
           this.errorMessage = err.response.data.message;
           this.isShowingError = true;
+        })
+        .finally(() => {
           this.isSubmiting = false;
         });
     },
   },
   watch: {
+    /**
+     * Método que escuta o novo card e seta o comentário de acordo com o que vier
+     * @param {Object} newCard
+     * @param {Object} newCard
+     */
     cardIsEditing(newCard, oldCard) {
-      this.cardComentarios = newCard.comentarios !== null ? newCard.comentarios : "";
+      this.cardComentarios =
+        newCard.comentarios !== null ? newCard.comentarios : "";
       this.backupCardComentarios =
         newCard.comentarios !== null ? newCard.comentarios : "";
     },

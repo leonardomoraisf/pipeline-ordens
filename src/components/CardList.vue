@@ -130,6 +130,10 @@ export default {
     this.corTextoStatus = this.ajustarCorTexto(this.list.color);
   },
   methods: {
+    /**
+     * Método que seta o comentário do card que teve ser comentário editado
+     * @param {Object} card
+     */
     onEditComment(card) {
       let cardIndex = this.cards.findIndex(
         (obj) => obj.id_card === card.id_card
@@ -139,6 +143,7 @@ export default {
         this.cards[cardIndex].comentarios = card.comentarios;
       }
     },
+
     /**
      * Método chamado para abrir a modal de edição de comentários de um card que está na lista
      * para transformar o card em inative
@@ -153,6 +158,7 @@ export default {
         this.$refs.modalEditCommentsRef.$refs.textareaRef.focus();
       }
     },
+
     /**
      * Método que é acionado quando um movimento/card é criado
      * @param {Object} novoCard
@@ -193,6 +199,7 @@ export default {
         element.style.opacity = "1";
       }, 1000);
     },
+
     /**
      * Método que é acionado quando acontece alguma mudança de status ou posição de cards do componente draggable
      * @param {Event} e
@@ -236,12 +243,21 @@ export default {
       };
 
       this.$emit("newRequest", () => {
-        return this.axios.put(`/v2/pipeline/cards/${card.id_card}/edit`, body);
+        return this.axios.put(`${window.API_V2}/pipeline/cards/${card.id_card}/edit`, body);
       });
     },
+
+    /**
+     * Organiza a lista dos cards de acordo com a sua posição
+     */
     organizaListaCards() {
       this.cards.sort((a, b) => a.posicao - b.posicao);
     },
+
+    /**
+     * Método que verifica se o id_status do card é igual ao dessa lista e adiciona o card
+     * @param {Object} newCard
+     */
     verificaAdicionaCard(newCard) {
       if (newCard.id_status === this.list.id_status) {
         const cardIndex = this.cards.findIndex(
@@ -252,18 +268,30 @@ export default {
         this.onCardCreated(newCard);
       }
     },
+
+    /**
+     * Método assíncrono para chamar o método verificaAdicionaCard
+     * @param {Object} newCard
+     */
     async addNewCard(newCard) {
       await this.verificaAdicionaCard(newCard);
     },
+
+    /**
+     * Método assíncrono que verifica o card recebido do pusher que alterou de status
+     * @param {Object} editedCard
+     */
     async verificaEditedCardStatus(editedCard) {
-      // Procura card na lista
+      // Procura card na lista pelo seu id
       const cardIndex = await this.cards.findIndex(
         (obj) => obj.id_card === editedCard.id_card
       );
 
+      // Se existe na lista com o mesmo id_card
       if (cardIndex !== -1) {
         const card = await this.cards[cardIndex];
 
+        // Se alterou o status procura o element na lista, anima o sumiço e remove da lista
         if (editedCard.id_status !== card.id_status) {
           ToastTopEnd5.fire(
             "Opa!",
@@ -290,12 +318,18 @@ export default {
         } else if (editedCard.id_status === card.id_status) return;
       }
     },
+
+    /**
+     * Método assíncrono que altera informações ou posição de um card
+     * @param {Object} editedCard
+     */
     async verificaEditedCard(editedCard) {
-      // Procura card na lista
+      // Procura card na lista pelo seu id
       const cardIndex = await this.cards.findIndex(
         (obj) => obj.id_card === editedCard.id_card
       );
 
+      // Se existe e continua ativo apenas altera a informação e organiza a lista
       if (cardIndex !== -1 && editedCard.ativo === 1) {
         ToastTopEnd5.fire(
           "Opa!",
@@ -310,6 +344,7 @@ export default {
         return;
       }
 
+      // Se existe na lista mas agora está inativo, anima sumindo e o remove da lista
       if (cardIndex !== -1 && editedCard.ativo === 0) {
         // Se existe na lista mas o ativo é 0, o card tem que sumir
         ToastTopEnd5.fire(
@@ -335,6 +370,8 @@ export default {
         return;
       }
 
+      // Se não existe na lista, mas está ativo e com o mesmo id_status, emite o card como reativado, para chamar 
+      // a funcção de adicionar o card
       if (
         cardIndex === -1 &&
         editedCard.ativo === 1 &&
@@ -355,21 +392,39 @@ export default {
     },
   },
   watch: {
+    /**
+     * Escuta a cor da lista mudar para ajustar a cor do texto automaticamente
+     * @param {String} novoValor
+     * @param {String} valorAntigo
+     */
     "list.color": function (novoValor, valorAntigo) {
       this.corTextoStatus = this.ajustarCorTexto(novoValor);
     },
+
     /**
      * Método para escutar o card recebido pelo canal new-cards e adicioná-lo na lista
+     * @param {Object} newCard
+     * @param {Object} oldCard
      */
     newCard(newCard, oldCard) {
       this.addNewCard(newCard);
     },
+
     /**
-     * Método para escutar o card recebido pelo canal edited-cards e mudar as informações do card na lista
+     * Método para escutar o card recebido pelo canal edited-card e mudar as informações do card na lista
+     * @param {Object} newEditedCard
+     * @param {Object} oldEditedCard
      */
     editedCard(newEditedCard, oldEditedCard) {
       this.verificaEditedCard(newEditedCard);
     },
+
+    /**
+     * Método para escutar o card recebido pelo canal edited-card-status e mudar as mandar para alterar sua posição
+     * emite para o componente pai, colocar em uma fila para as animações funcionarem perfeitamente
+     * @param {Object} newEditedCard
+     * @param {Object} oldEditedCard
+     */
     editedCardStatus(newEditedCardStatus, oldEditedCardStatus) {
       this.$emit("changeCardPos", () => {
         return this.verificaEditedCardStatus(newEditedCardStatus);

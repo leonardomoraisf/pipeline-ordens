@@ -127,12 +127,22 @@ export default {
     };
   },
   methods: {
+    /**
+     * Emite o status editado
+     * @param {Object} edit
+     */
     onStatusEdited(edit) {
       this.$emit("changeListInfo", edit);
     },
+
+    /**
+     * Método para emitir o status deletado
+     * @param {Object} list
+     */
     onStatusDeleted(list) {
       this.$emit("statusDeleted", list);
     },
+
     /**
      * Faz modal de editar o status aparecer ,focar no input e animar a bolinha
      */
@@ -143,6 +153,10 @@ export default {
         this.animated = false;
       }, 1000);
     },
+
+    /**
+     * Fecha a modal de edição
+     */
     closeModalEditStatusFunc() {
       this.toggleStatusEditModal = !this.toggleStatusEditModal;
     },

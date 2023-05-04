@@ -134,10 +134,10 @@
                 class="flex justify-center w-full"
                 v-if="isRequestingAllInactiveStatus"
               >
-                <div class="looping-rhombuses-spinner">
-                  <div class="rhombus"></div>
-                  <div class="rhombus"></div>
-                  <div class="rhombus"></div>
+                <div class="hollow-dots-spinner">
+                  <div class="dot"></div>
+                  <div class="dot"></div>
+                  <div class="dot"></div>
                 </div>
               </div>
 
@@ -180,7 +180,7 @@
                   ></CardListItem>
 
                   <div
-                    class="flex-row justify-center py-4"
+                    class="flex-row justify-center"
                     :class="{
                       visible: isRequestingMore,
                       invisible: !isRequestingMore,
@@ -204,7 +204,11 @@
                 </div>
                 <div
                   class="flex flex-col justify-center items-center"
-                  v-if="alreadyRequestedList && inativeCardsList.length === 0 && !isRequesting"
+                  v-if="
+                    alreadyRequestedList &&
+                    inativeCardsList.length === 0 &&
+                    !isRequesting
+                  "
                 >
                   <p class="font-semibold text-xl">Sem resultados</p>
                 </div>
@@ -279,10 +283,14 @@ export default {
       isRequestingAllInactiveStatus: ref(false),
       isShowingFilters: true,
 
-      alreadyRequestedList: false
+      alreadyRequestedList: false,
     };
   },
   methods: {
+    /**
+     * Método assíncrono para remover o card da lista quando deletado
+     * @param {Object} card
+     */
     async onDeleteCard(card) {
       const list = this.$refs.list;
 
@@ -291,14 +299,19 @@ export default {
       );
       let element = list[elementIndex].$el;
 
-      await this.animaElementSumindo(element);
+      await new Promise((resolve) => {
+        this.animaElementSumindo(element, resolve, false);
+      });
 
-      setTimeout(() => {
-        // remove o card da lista atual
-        this.inativeCardsList.splice(elementIndex, 1);
-        this.$emit("cardDeleted", card);
-      }, 2000);
+      // remove o card da lista atual
+      this.inativeCardsList.splice(elementIndex, 1);
+      this.$emit("cardDeleted", card);
     },
+
+    /**
+     * Método assíncrono que é ativo quando o card é tornado ativo novamente
+     * @param {Object} card
+     */
     async onTurnCardActive(card) {
       const list = this.$refs.list;
 
@@ -317,10 +330,18 @@ export default {
       await this.inativeCardsList.splice(elementIndex, 1);
       await this.$emit("turnCardActive", card);
     },
+
+    /**
+     * Método que seta a data inicial e final da busca
+     */
     setDate() {
       this.startDate = this.date[0];
       this.endDate = this.date[1];
     },
+
+    /**
+     * Método que faz a requisição com base nos filtros de cards inativos
+     */
     buscaCards() {
       let scroll = this.$refs.scrollRef;
       scroll.scrollTop = 0;
@@ -351,7 +372,7 @@ export default {
 
       this.isRequesting = true;
       this.axios
-        .post("/v2/pipeline/cards/inactive", body)
+        .post(`${window.API_V2}/pipeline/cards/inactive`, body)
         .then((res) => {
           const data = res.data;
           this.inativeCardsList = data;
@@ -368,18 +389,30 @@ export default {
         })
         .catch((err) => {
           this.isRequesting = false;
-          console.log(err);
+          ToastTopStart5.fire("Erro!", err.response.data.message, "error");
         });
     },
+
+    /**
+     * Método que chama o método que limpa os filtros e emite para fechar a modal
+     */
     closeModal() {
       this.limpaFiltros();
       this.$emit("closeModalInativeCardList");
     },
+
+    /**
+     * Método chamado toda vez que uma nova lista é trazida
+     * esse método adiciona informações para o card ser mostrado de forma correta
+     * de acordo com seu status
+     */
     adicionaInfos() {
       this.inativeCardsList.forEach((card) => {
         var statusIndex = this.list.findIndex(
           (obj) => obj.id_status === card.id_status
         );
+
+        // Se existe o status na lista principal
         if (statusIndex !== -1) {
           let status = this.list[statusIndex];
           let statusName = status.nome;
@@ -388,6 +421,8 @@ export default {
           card.colorStatus = colorStatus;
           card.corTextoCard = this.ajustarCorTexto(colorStatus);
         } else {
+          // Se não existe verifica se é o status que está inativo
+
           statusIndex = this.allInactiveStatus.findIndex(
             (obj) => obj.id_status === card.id_status
           );
@@ -409,6 +444,10 @@ export default {
         card["date"] = card.data_hora_cadastro.substring(0, 10);
       });
     },
+
+    /**
+     * Método para limpar os filtros
+     */
     limpaFiltros() {
       this.date = null;
       this.startDate = null;
@@ -416,24 +455,30 @@ export default {
       this.search = "";
       this.statusSelected = "";
     },
-    limpaSelect() {
-      this.statusSelected = "";
-    },
+
+    /**
+     * Método que requisita todos os status inativos da empresa
+     */
     getAllInactiveStatus() {
       this.isRequestingAllInactiveStatus = true;
       this.alreadyRequestedAllInactiveStatus = true;
       this.axios
-        .get("/v2/pipeline/status/inactive")
+        .get(`${window.API_V2}/pipeline/status/inactive`)
         .then((res) => {
           this.allInactiveStatus = res.data;
           this.isRequestingAllInactiveStatus = false;
         })
         .catch((err) => {
-          console.log(err);
+          ToastTopStart5.fire("Erro!", err.response.data.message, "error");
         });
     },
   },
   watch: {
+    /**
+     * Método que escuta a modal abrir e fechar, para requisitar os status inativos dela
+     * @param {Boolean} newValue
+     * @param {Boolean} oldValue
+     */
     toggleModal(newValue, oldValue) {
       if (newValue === true && oldValue === false) {
         if (this.alreadyRequestedAllInactiveStatus === false) {
@@ -441,10 +486,22 @@ export default {
         }
       }
     },
+
+    /**
+     * Método que escuta a lista, se ela mudar seta a lista de cards inativos para vazio
+     * @param {Array} newList
+     * @param {Array} oldList
+     */
     list(newList, oldList) {
       this.getAllInactiveStatus();
       this.inativeCardsList = [];
     },
+
+    /**
+     * Método que escuta um card que teve seu comentário editado, para alterar na lista atual
+     * @param {Object} newCard
+     * @param {Object} oldCard
+     */
     editedCardComment(newCard, oldCard) {
       this.inativeCardsList.forEach((card) => {
         if (newCard.id_card === card.id_card) {
@@ -452,6 +509,12 @@ export default {
         }
       });
     },
+
+    /**
+     * Método que escuta se o card agora se tornou ativo do pusher
+     * @param {Object} newCard
+     * @param {Object} oldCard
+     */
     cardIsNowActive(newCard, oldCard) {
       this.inativeCardsList.forEach((card) => {
         if (newCard.id_card === card.id_card) {
@@ -544,52 +607,5 @@ export default {
   padding: 2px;
   cursor: pointer;
   border-radius: 3px;
-}
-
-.looping-rhombuses-spinner,
-.looping-rhombuses-spinner * {
-  box-sizing: border-box;
-}
-
-.looping-rhombuses-spinner {
-  width: calc(15px * 4);
-  height: 15px;
-  position: relative;
-}
-
-.looping-rhombuses-spinner .rhombus {
-  height: 15px;
-  width: 15px;
-  background-color: black;
-  left: calc(15px * 4);
-  position: absolute;
-  margin: 0 auto;
-  border-radius: 2px;
-  transform: translateY(0) rotate(45deg) scale(0);
-  animation: looping-rhombuses-spinner-animation 2500ms linear infinite;
-}
-
-.looping-rhombuses-spinner .rhombus:nth-child(1) {
-  animation-delay: calc(2500ms * 1 / -1.5);
-}
-
-.looping-rhombuses-spinner .rhombus:nth-child(2) {
-  animation-delay: calc(2500ms * 2 / -1.5);
-}
-
-.looping-rhombuses-spinner .rhombus:nth-child(3) {
-  animation-delay: calc(2500ms * 3 / -1.5);
-}
-
-@keyframes looping-rhombuses-spinner-animation {
-  0% {
-    transform: translateX(0) rotate(45deg) scale(0);
-  }
-  50% {
-    transform: translateX(-233%) rotate(45deg) scale(1);
-  }
-  100% {
-    transform: translateX(-466%) rotate(45deg) scale(0);
-  }
 }
 </style>

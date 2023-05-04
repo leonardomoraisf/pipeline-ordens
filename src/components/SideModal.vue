@@ -252,11 +252,15 @@ export default {
     };
   },
   mounted() {
+    // Se for edição ajusta o texto de acordo com o bg do status
     if (this.isEdit === 1) {
       this.colorStatusTextRef = this.ajustarCorTexto(this.editStatusColor);
     }
   },
   methods: {
+    /**
+     * Método para confirmar a inativação do status
+     */
     confirmDeleteStatus() {
       this.toggleInputColor = !this.toggleInputColor;
       if (this.cards.length > 0) {
@@ -286,6 +290,10 @@ export default {
         });
       }
     },
+
+    /**
+     * Método chamado quando um status é inativado
+     */
     deleteStatus() {
       this.isDeletingStatus = !this.isDeletingStatus;
 
@@ -295,7 +303,7 @@ export default {
       };
 
       this.axios
-        .put("/v2/pipeline/status/" + this.list.id_status + "/edit", body)
+        .put(`${window.API_V2}/pipeline/status/${this.list.id_status}/edit`, body)
         .then((res) => {
           this.$emit("closeModal");
           this.isDeletingStatus = !this.isDeletingStatus;
@@ -306,9 +314,13 @@ export default {
           this.isDeletingStatus = !this.isDeletingStatus;
           this.isSubmiting = false;
           this.isShowingError = true;
-          this.errorMessage = res.data.message;
+          this.errorMessage = err.response.data.message;
         });
     },
+    
+    /**
+     * Método que pega uma cor em rgb e transforma em hex
+     */
     rgb2hex(rgb) {
       rgb = rgb.match(
         /^rgba?[\s+]?\([\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?/i
@@ -320,6 +332,12 @@ export default {
             ("0" + parseInt(rgb[3], 10).toString(16)).slice(-2)
         : "";
     },
+
+    /**
+     * Método chamado quando o componente de escolher cor muda
+     * @param {Object} attrs
+     * @param {String} name
+     */
     onChange(attrs, name) {
       let color = this.rgb2hex(attrs.style);
 
@@ -341,6 +359,10 @@ export default {
         this.colorStatusTextRef = this.ajustarCorTexto(color);
       }
     },
+
+    /**
+     * Método que faz o componente de escolher cor abrir ao clicar na bolinha de status
+     */
     async toggleInputColorFunc() {
       if (this.toggleInputColor === true) {
         this.toggleInputColor = !this.toggleInputColor;
@@ -358,6 +380,10 @@ export default {
         this.$refs.editStatusColorRef.click();
       }
     },
+
+    /**
+     * Método que verifica mudanças ou submit e fecha a modal
+     */
     closeModal() {
       if (this.isSubmiting === true) return;
       if (this.isDeletingStatus === true) return;
@@ -429,6 +455,11 @@ export default {
         }
       }
     },
+
+    /**
+     * Método que faz o submit dependendo se é uma edição ou criação de status
+     * @param {Event} ev
+     */
     onSubmit(ev) {
       this.isSubmiting = true;
       this.isShowingError = false;
@@ -470,9 +501,8 @@ export default {
         }
 
         this.axios
-          .put("/v2/pipeline/status/" + this.list.id_status + "/edit", body)
+          .put(`${window.API_V2}/pipeline/status/${this.list.id_status}/edit`, body)
           .then((res) => {
-            this.isSubmiting = false;
             this.$emit("statusEdited", body);
             this.$emit("closeModal");
             this.backupEditStatusName = this.list.nome;
@@ -480,10 +510,13 @@ export default {
             Toast.fire(res.data.message, "Atualizando pipeline...", "success");
           })
           .catch((err) => {
-            this.isSubmiting = false;
+            
             this.isShowingError = true;
             this.errorMessage = err.response.data.message;
-          });
+          })
+          .finally(() => {
+            this.isSubmiting = false;
+          })
       }
 
       if (this.isEdit === 0) {
@@ -512,9 +545,8 @@ export default {
         };
 
         this.axios
-          .post("/v2/pipeline/status/create", body)
+          .post(`${window.API_V2}/pipeline/status/create`, body)
           .then((res) => {
-            this.isSubmiting = false;
             this.$refs.regStatusNameRef.value = "";
             this.regColor = {
               red: 37,
@@ -529,14 +561,20 @@ export default {
             Toast.fire(res.data.message, "Atualizando pipeline...", "success");
           })
           .catch((err) => {
-            this.isSubmiting = false;
             this.isShowingError = true;
             this.errorMessage = err.response.data.message;
-          });
+          })
+          .finally(() => {
+            this.isSubmiting = false;
+          })
       }
     },
   },
   watch: {
+    /**
+     * Método que escuta a modal abrir e fechar para verificar se é edit
+     * e transformar o valor do bg hex para rgb e setar no componente de escolher cor
+     */
     toggleModal(newValue, oldValue) {
       if (newValue === true && oldValue === false && this.isEdit === 1) {
         let hex = this.list.color.replace(/#/g, "");

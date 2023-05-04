@@ -13,22 +13,23 @@ import 'sweetalert2/dist/sweetalert2.min.css';
 import axiosService from "./services/axios";
 import { VTooltip, VPopover, VClosePopover } from 'v-tooltip';
 import VueConfirmDialog from 'vue-confirm-dialog';
-import { autoAnimatePlugin } from '@formkit/auto-animate/vue';
 import CircularCountDownTimer from 'vue-circular-count-down-timer';
 
 library.add(fas);
 library.add(far);
 Vue.component('font-awesome-icon', FontAwesomeIcon);
+
 Vue.use(VueAxios, axiosService);
+
 Vue.use(VueSweetalert2);
-Vue.use(autoAnimatePlugin);
+
 Vue.use(CircularCountDownTimer);
 
 Vue.use(require('vue-pusher'), {
-  api_key: '8619138d44f33b2b6bc9',
+  api_key: process.env.NODE_ENV === 'development' ? process.env.VUE_APP_PUSHER_API_KEY : window.PUSHER_APP_KEY,
   options: {
-    cluster: 'sa1',
-    authEndpoint: '/api/pusher/auth',
+    cluster: process.env.NODE_ENV === 'development' ? 'sa1' : window.PUSHER_APP_CLUSTER,
+    authEndpoint: "/api/pusher/auth",
   }
 });
 
@@ -42,6 +43,13 @@ Vue.component('vue-confirm-dialog', VueConfirmDialog.default);
 import './assets/Toasts';
 
 Vue.config.productionTip = false;
+
+if(process.env.NODE_ENV === 'development'){
+  window.APP_URL = 'http://localhost:8585';
+  // A porta está 8080 pois em desenvolvimento, esse projeto está com proxy para a porta 8585
+  // Se estiver com o projeto em outra porta como 3030, apenas trocar e manter o proxy
+  window.API_V2 = 'http://localhost:8080/v2';
+}
 
 new Vue({
   router,

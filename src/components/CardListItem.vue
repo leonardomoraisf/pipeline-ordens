@@ -271,10 +271,13 @@ export default {
     };
   },
   methods: {
+    /**
+     * Método para deletar o card, caso seu status esteja inativo
+     */
     deleteCard() {
       this.isDeleting = true;
       this.axios
-        .delete("/v2/pipeline/cards/" + this.card.id_card + "/delete")
+        .delete(`${window.API_V2}/pipeline/cards/${this.card.id_card}/delete`)
         .then((res) => {
           this.isDeleting = false;
           this.$emit("cardDeleted", this.card);
@@ -282,9 +285,13 @@ export default {
         })
         .catch((err) => {
           this.isDeleting = true;
-          ToastTopStart5.fire("Erro!", res.data.message, "error");
+          ToastTopStart5.fire("Erro!", err.response.data.message, "error");
         });
     },
+
+    /**
+     * Método que calcula a diferença de dias que o card está no status e no pipeline
+     */
     calculaDiferencaDias() {
       let dataHoje = new Date(this.dataHoje);
 
@@ -303,6 +310,11 @@ export default {
       this.diferencaDias = dias;
       this.diferencaDiasTotal = diasTotal;
     },
+
+    /**
+     * Método chamado após 60 segundos que o card está na lista para inativo
+     * ele emite um evento para ser colocado como inativo e um evento de nova requisição
+     */
     cardToInative() {
       ToastTopStart5.fire(
         "Sucesso!",
@@ -326,25 +338,31 @@ export default {
 
       this.$emit("putCardToInative", card);
       this.$emit("newRequest", () => {
-        return this.axios.put(`/v2/pipeline/cards/${card.id_card}/edit`, body);
+        return this.axios.put(
+          `${window.API_V2}/pipeline/cards/${card.id_card}/edit`,
+          body
+        );
       });
     },
   },
   mounted() {
     this.calculaDiferencaDias();
 
+    // Pega o primeiro celular da lista de celulares da pessoa do movimento se tiver
     if (this.card.celulares !== null) {
       this.celular = this.card.celulares[0].number;
     } else if (typeof this.card.celuares === String) {
       this.celular = JSON.parse(this.card.celulares)[0].number;
     }
 
+    // Se o card foi montado na lista de para inativo, começa a contar 60 segundos
     if (this.isToInative) {
       this.timeoutInativeCard = setTimeout(() => {
         this.cardToInative();
       }, 60000);
     }
 
+    // Se estiver na lista de cards inativos, calcula qual o dia da semana que ele foi finalizado
     if (this.inInativeCardList) {
       var data = new Date(this.cardLog.data_hora_cadastro);
       let diasDaSemana = [
@@ -369,9 +387,15 @@ export default {
     }
   },
   beforeDestroy() {
+    // Limpa o timeout se ele foi colocado como inativo ou retirado da lista para inativo
     clearTimeout(this.timeoutInativeCard);
   },
   watch: {
+    /**
+     * Escuta se alguma informação alterou para calcular novamente os dias
+     * @param {Object} newCard
+     * @param {Object} oldCard
+     */
     card(newCard, oldCard) {
       this.calculaDiferencaDias();
     },

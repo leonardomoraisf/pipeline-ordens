@@ -511,16 +511,34 @@ export default {
     },
   },
   methods: {
+    /**
+     * Atualiza a propriedade "cardIsNowActive" com o objeto "card" que representa um card reativado.
+     * @param {Object} card - Objeto que representa um cartão reativado.
+     */
     onCardReativado(card) {
       this.cardIsNowActive = card;
     },
+
+    /**
+     * Adiciona um objeto "request" que representa uma solicitação de edição de card à fila de solicitações.
+     * @param {Function} request - Função que representa a solicitação de edição de card.
+     */
     onNewRequest(request) {
       this.addToRequestQueue(request);
     },
+
+    /**
+     * Adiciona a solicitação "request" à fila de solicitações e inicia a execução da próxima solicitação.
+     * @param {Function} request - Função que representa a solicitação de edição de card.
+     */
     async addToRequestQueue(request) {
       this.requestEditCardQueue.push(request);
       await this.executeNextRequest();
     },
+
+    /**
+     * Executa a próxima solicitação da fila, se houver, e trata erros de forma adequada.
+     */
     async executeNextRequest() {
       if (this.isRequestingEditCard || this.requestEditCardQueue.length === 0) {
         return;
@@ -530,19 +548,33 @@ export default {
       try {
         await request();
       } catch (err) {
-        console.error(err);
+        ToastTopStart5.fire("Erro!", err.response.data.message, "error");
       } finally {
         this.isRequestingEditCard = false;
         await this.executeNextRequest();
       }
     },
+
+    /**
+     * Adiciona uma função "func" à fila para alterar a posição de um cartão.
+     * @param {Function} func - Função que altera a posição de um cartão.
+     */
     onChangeCardPos(func) {
       this.addToFuncQueue(func);
     },
+
+    /**
+     * Adiciona uma função "func" à fila de funções para alterar a posição de cartões.
+     * @param {Function} func - Função que altera a posição de um cartão.
+     */
     async addToFuncQueue(func) {
       this.cardsToChangePos.push(func);
       await this.executeNextFunc();
     },
+
+    /**
+     * Executa a próxima função na fila de funções para alterar a posição de cartões.
+     */
     async executeNextFunc() {
       if (this.isChangingCardPos || this.cardsToChangePos.length === 0) {
         return;
@@ -558,6 +590,11 @@ export default {
         await this.executeNextFunc();
       }
     },
+
+    /**
+     * Atualiza os comentários em um cartão. Se o cartão já estiver na lista de cartões a inativar, atualiza seus comentários nessa lista. Caso contrário, atualiza os comentários no objeto "editedCardComment".
+     * @param {Object} cardObj - Objeto que representa um cartão e seus comentários.
+     */
     onEditComment(cardObj) {
       let inCardToInativeList = false;
       this.cardsToInativeList.forEach((card) => {
@@ -571,6 +608,7 @@ export default {
         this.editedCardComment = cardObj;
       }
     },
+
     /**
      * Método chamado quando um card que não possui mais status é deletado
      * @param {Object} card
@@ -633,9 +671,11 @@ export default {
         };
 
         this.axios
-          .put("/v2/pipeline/cards/" + card.id_card + "/edit", body)
+          .put(`${window.API_V2}/pipeline/cards/${card.id_card}/edit`, body)
           .then((res) => {})
-          .catch((err) => {});
+          .catch((err) => {
+            ToastTopStart5.fire("Erro!", err.response.data.message, "error");
+          });
       }
 
       // Define o card como o novo card a ser adicionado à lista correta
@@ -648,6 +688,7 @@ export default {
     toggleModalInativeCards() {
       this.isShowingModalInativeCardList = !this.isShowingModalInativeCardList;
     },
+
     /**
      *
      * Método chamado para abrir a modal de edição de comentários de um card que está na lista
@@ -676,6 +717,7 @@ export default {
         this.$refs.modalEditCommentsRef.$refs.textareaRef.focus();
       }
     },
+
     /**
      * Método para remover o card da lista para inativo e colocar na lista de inativos
      * @param {Object} card
@@ -701,6 +743,7 @@ export default {
         await this.cardsToInativeList.splice(cardIndex, 1);
       });
     },
+
     async animaElementSumindo(element, callback, scroll = true) {
       element.style.transition = "all 0.2s ease";
 
@@ -722,6 +765,7 @@ export default {
         callback();
       }, 800);
     },
+
     /**
      * Método que é chamado para abrir ou fechar a modal de criação de status, ele pega a referencia do input,
      * de dentro do componente filho, faz o foco e anima a bolinha para balançar
@@ -739,13 +783,14 @@ export default {
         this.isShowingModalCreateStatus = false;
       }
     },
+
     /**
      * Método para requisitar e setar a lista de status e cards
      */
     setList() {
       this.isRequesting = true;
       this.axios
-        .get("/v2/pipeline/list")
+        .get(`${window.API_V2}/pipeline/list`)
         .then((res) => {
           this.listBoards = res.data;
 
@@ -782,16 +827,18 @@ export default {
           this.bindChannels();
         })
         .catch((err) => {
-          console.log(err);
+          ToastTopStart5.fire("Erro!", err.response.data.message, "error");
         });
     },
+
     async calculaOrdem() {
       let ordem = 1;
-      this.listBoards.forEach((status, index) => {
+      this.listBoards.forEach((status) => {
         status.ordem = ordem;
         ordem++;
       });
     },
+
     /**
      * Método que é chamado quando um status é criado, ele coloca o novo status na lista,
      * adiciona a ordem dele recalculando a ordem de todos
@@ -808,6 +855,7 @@ export default {
       // Pega a última lista novamente
       this.lastList = this.listBoards[this.listBoards.length - 1];
     },
+
     /**
      * Método que é chamado quando um status é deletado, ele procura pelo indice do status, o remove da lista
      * e recalcula a ordem dos status
@@ -825,11 +873,12 @@ export default {
         ? this.listBoards[this.listBoards.length - 1]
         : { ordem: 0 };
     },
+
     /**
      * Método para bindar os canais do Pusher, e escutar os novos cards criados
      * e escutar os novos status criados, concatenando com o id da empresa correspondente
      */
-    bindChannels() {
+    async bindChannels() {
       try {
         // Se inscreve no canal da empresa
         this.pipelinePusher = this.$pusher.subscribe(
@@ -840,11 +889,13 @@ export default {
 
         // Escuta evento card-criado
         this.pipelinePusher.bind("card-criado", (data) => {
-          const newCard = data[0];
-          newCard.posicao = parseFloat(newCard.posicao);
-          newCard.valor = parseFloat(newCard.valor);
+          if (data[0]) {
+            const newCard = data[0];
+            newCard.posicao = parseFloat(newCard.posicao);
+            newCard.valor = parseFloat(newCard.valor);
 
-          this.newCard = newCard;
+            this.newCard = newCard;
+          }
         });
 
         // Escuta evento card-editado
@@ -885,24 +936,35 @@ export default {
         });
 
         this.pipelinePusher.bind("status-criado", (data) => {
-          const newStatus = data;
+          if (data.id_status) {
+            const newStatus = data;
 
-          newStatus["cards"] = [];
-          this.onStatusCreated(newStatus);
+            newStatus["cards"] = [];
+            this.onStatusCreated(newStatus);
+          }
         });
 
         this.pipelinePusher.bind("status-editado", (data) => {
-          const editedStatus = data;
+          if (data.id_status) {
+            const editedStatus = data;
 
-          this.listBoards.forEach((status) => {
-            if (status.id_status === editedStatus.id_status) {
-              status.nome = editedStatus.nome;
-              status.color = editedStatus.color;
-              status.ativo = editedStatus.ativo;
-              if (editedStatus.ativo === 0) {
-                this.onStatusDeleted(status);
+            this.listBoards.forEach((status) => {
+              if (status.id_status === editedStatus.id_status) {
+                status.nome = editedStatus.nome;
+                status.color = editedStatus.color;
+                status.ativo = editedStatus.ativo;
+                if (editedStatus.ativo === 0) {
+                  this.onStatusDeleted(status);
+                }
               }
-            }
+            });
+          }
+        });
+
+        // Espera o Pusher ser autenticado 100% para mostrar a tela
+        await new Promise((resolve) => {
+          this.pipelinePusher.bind("pusher:subscription_succeeded", () => {
+            resolve();
           });
         });
       } catch (err) {
@@ -911,8 +973,9 @@ export default {
         this.isRequesting = false;
       }
     },
+
     /**
-     * Método para ajustar a cor do texto de acordo com o backgroud do status
+     * Método que pega uma cor em HEX e retorna uma cor de texo que fica com contraste
      * @param {String} background
      */
     ajustarCorTexto(background) {

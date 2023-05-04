@@ -16,6 +16,12 @@
       >
     </noscript>
     <div id="app"></div>
+    <script>
+      window.APP_URL = `{{ config('app.url') }}`;
+      window.API_V2 = `{{ config('app.api.v2.url') }}`;
+      window.PUSHER_APP_KEY = `{{ config('services.pusher.app_key') }}`;
+      window.PUSHER_APP_CLUSTER = `{{ config('services.pusher.app_cluster')  }}`;
+    </script>
     <!-- built files will be auto injected -->
   </body>
 </html>
