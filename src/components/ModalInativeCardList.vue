@@ -202,6 +202,12 @@
                     <div class="circle circle-2"></div>
                   </div>
                 </div>
+                <div
+                  class="flex flex-col justify-center items-center"
+                  v-if="alreadyRequestedList && inativeCardsList.length === 0 && !isRequesting"
+                >
+                  <p class="font-semibold text-xl">Sem resultados</p>
+                </div>
               </div>
             </div>
           </div>
@@ -272,6 +278,8 @@ export default {
       completeStatusList: [],
       isRequestingAllInactiveStatus: ref(false),
       isShowingFilters: true,
+
+      alreadyRequestedList: false
     };
   },
   methods: {
@@ -356,6 +364,7 @@ export default {
           this.adicionaInfos();
 
           this.isRequesting = false;
+          this.alreadyRequestedList = true;
         })
         .catch((err) => {
           this.isRequesting = false;
@@ -434,6 +443,7 @@ export default {
     },
     list(newList, oldList) {
       this.getAllInactiveStatus();
+      this.inativeCardsList = [];
     },
     editedCardComment(newCard, oldCard) {
       this.inativeCardsList.forEach((card) => {

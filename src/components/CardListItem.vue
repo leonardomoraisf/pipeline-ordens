@@ -37,13 +37,22 @@
 
         <div
           v-if="(inInativeCardList && !existeStatus) || statusInativo"
-          class="absolute top-2 right-2"
+          class="absolute top-2 right-2 flex flex-col gap-1"
         >
           <button
             @click="deleteCard"
             class="bg-red-500 rounded-md hover:bg-red-400 p-1 transition-all hover:scale-105 text-white"
           >
             Deletar
+          </button>
+          <button
+            class="text-base text-black font-semibold bg-white hover:scale-105 hover:bg-gray-200 p-1 rounded-md transition-all"
+            @click="$emit('turnCardActive', card)"
+            v-tooltip.bottom="
+              'Se reativar esse card, ele voltará para o status 1!'
+            "
+          >
+            Reativar
           </button>
         </div>
 
@@ -319,7 +328,6 @@ export default {
       this.$emit("newRequest", () => {
         return this.axios.put(`/v2/pipeline/cards/${card.id_card}/edit`, body);
       });
-
     },
   },
   mounted() {

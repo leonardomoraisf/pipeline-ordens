@@ -607,12 +607,9 @@ export default {
 
       // Se o status não for encontrado, exibe uma mensagem de erro e retorna
       if (statusIndex === -1) {
-        ToastTopStart5.fire(
-          "Erro!",
-          "O status em que esse card estava foi removido do pipeline!",
-          "error"
-        );
-        return;
+        const firstStatus = this.listBoards[0];
+
+        card.id_status = firstStatus.id_status;
       }
 
       // Exibe uma mensagem de sucesso para o usuário
@@ -908,7 +905,6 @@ export default {
             }
           });
         });
-
       } catch (err) {
         console.log(err);
       } finally {
