@@ -330,6 +330,7 @@
                       @openModalEditComments="toggleModalEditComments"
                       @newRequest="onNewRequest"
                       :tiposMovimento="tiposMovimento"
+                      :pusherSessionID="pusherSessionID"
                     />
                     <div
                       class="absolute inset-0 flex items-center justify-center trash"
