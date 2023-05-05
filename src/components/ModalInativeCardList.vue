@@ -9,6 +9,7 @@
           <div
             class="bg-white w-full rounded-md h-screen overflow-y-auto overflow-x-hidden"
             ref="scrollRef"
+            @scroll="onScroll"
           >
             <div
               class="sticky top-0 z-50 bg-white rounded-t-md border-b-2 border-neutral-100 border-opacity-100 px-4 py-2 dark:border-opacity-50"
@@ -272,6 +273,7 @@ export default {
       statusSelected: "",
       // Lista da requisição de cards inativos
       inativeCardsList: [],
+      dataRequest: {},
       isRequesting: ref(false),
       isRequestingMore: ref(false),
       dataRequestInativeCardList: [],
@@ -375,21 +377,21 @@ export default {
         .post(`${window.API_V2}/pipeline/cards/inactive`, body)
         .then((res) => {
           const data = res.data;
-          this.inativeCardsList = data;
+          this.inativeCardsList = data.data;
 
-          this.inativeCardsList.forEach((card) => {
-            card.posicao = parseFloat(card.posicao);
-            card.valor = parseFloat(card.valor);
-          });
+          delete data.data;
+
+          this.dataRequest = data;
 
           this.adicionaInfos();
 
-          this.isRequesting = false;
           this.alreadyRequestedList = true;
         })
         .catch((err) => {
-          this.isRequesting = false;
           ToastTopStart5.fire("Erro!", err.response.data.message, "error");
+        })
+        .then(() => {
+          this.isRequesting = false;
         });
     },
 
@@ -408,6 +410,9 @@ export default {
      */
     adicionaInfos() {
       this.inativeCardsList.forEach((card) => {
+        card.posicao = parseFloat(card.posicao);
+        card.valor = parseFloat(card.valor);
+
         var statusIndex = this.list.findIndex(
           (obj) => obj.id_status === card.id_status
         );
@@ -470,6 +475,54 @@ export default {
         })
         .catch((err) => {
           ToastTopStart5.fire("Erro!", err.response.data.message, "error");
+        });
+    },
+
+    /**
+     * Método que verifica se o usuário deu scroll até o fim da modal
+     */
+    onScroll() {
+      const element = this.$refs.scrollRef;
+      const scrollPosition = element.scrollTop + element.offsetHeight;
+      const height = element.scrollHeight;
+
+      if (scrollPosition === height) {
+        let paginationUrl = this.dataRequest.next_page_url;
+        if (
+          paginationUrl !== null &&
+          paginationUrl !== undefined &&
+          !this.isRequestingMore
+        ) {
+          this.buscaCardsPaginacao(paginationUrl);
+        }
+      }
+    },
+
+    /**
+     * Método para buscar resultados paginados
+     */
+    buscaCardsPaginacao(paginationUrl) {
+      this.isRequestingMore = true;
+      
+      // Linha para a url ficar certa de acordo com o proxy feito em desenvolvimento
+      let paginationDev = process.env.NODE_ENV === 'development' ? paginationUrl.replace("8585", "8080") : paginationUrl;
+      this.axios
+        .post(paginationDev)
+        .then((res) => {
+          const data = res.data;
+          this.inativeCardsList = this.inativeCardsList.concat(data.data);
+
+          delete data.data;
+
+          this.dataRequest = data;
+
+          this.adicionaInfos();
+        })
+        .catch((err) => {
+          ToastTopStart5.fire("Erro!", err.response.data.message, "error");
+        })
+        .then(() => {
+          this.isRequestingMore = false;
         });
     },
   },
