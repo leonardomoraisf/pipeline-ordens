@@ -442,7 +442,7 @@ export default {
     if (this.isToInative) {
       this.timeoutInativeCard = setTimeout(() => {
         this.cardToInative();
-      }, 3000);
+      }, 60000);
     }
 
     // Se estiver na lista de cards inativos, calcula qual o dia da semana que ele foi finalizado
