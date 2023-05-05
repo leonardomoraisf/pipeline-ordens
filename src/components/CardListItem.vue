@@ -399,6 +399,14 @@ export default {
     card(newCard, oldCard) {
       this.calculaDiferencaDias();
     },
+    /**
+     * Escuta a informação data_hora_registro para calcular a data novamente
+     * @param {String} newValue
+     * @param {String} oldValue
+     */
+    "card.data_hora_registro": function(newValue, oldValue){
+      this.calculaDiferencaDias();
+    }
   },
 };
 </script>

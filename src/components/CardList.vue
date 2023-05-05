@@ -231,6 +231,9 @@ export default {
         posicao = nextCard.posicao / 2;
       }
 
+      if(card.id_status !== this.list.id_status){
+        card.data_hora_registro = `${this.dataHoje}T00:00:00`;
+      }
       card.id_status = this.list.id_status;
       card.posicao = posicao;
 
