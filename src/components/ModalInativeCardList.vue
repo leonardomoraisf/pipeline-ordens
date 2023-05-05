@@ -16,31 +16,33 @@
             >
               <div class="flex flex-shrink-0 items-center justify-between py-2">
                 <h5 class="text-2xl text-black">Cards finalizados</h5>
-                <button
-                  type="button"
-                  class="box-content rounded-none border-none hover:no-underline hover:opacity-75 focus:opacity-100 focus:shadow-none focus:outline-none"
-                  @click="closeModal"
-                >
-                  <font-awesome-icon
-                    class="w-6 h-6 text-gray-900/70 hover:text-rose-600"
-                    :icon="['fas', 'fa-close']"
-                  />
-                </button>
+                <div>
+                  <button
+                    type="button"
+                    class="box-content rounded-none border-none hover:no-underline hover:opacity-75 focus:opacity-100 focus:shadow-none focus:outline-none"
+                    @click="closeModal"
+                  >
+                    <font-awesome-icon
+                      class="w-6 h-6 text-gray-900/70 hover:text-rose-600"
+                      :icon="['fas', 'fa-close']"
+                    />
+                  </button>
+                </div>
               </div>
 
               <button
-                class="flex items-center space-x-1"
+                class="flex items-center space-x-1 pt-2"
                 v-if="
                   isShowingFilters === false && !isRequestingAllInactiveStatus
                 "
                 @click="isShowingFilters = !isShowingFilters"
               >
                 <span class="font-semibold">Filtros</span>
-                <font-awesome-icon class="w-5 h-5" :icon="['fas', 'fa-plus']" />
+                <font-awesome-icon class="w-5 h-5" :icon="['fas', 'fa-eye']" />
               </button>
 
               <transition name="fade">
-                <div>
+                <div class="pt-2">
                   <button
                     class="float-left flex items-center space-x-1"
                     v-if="
@@ -52,7 +54,7 @@
                     <span class="font-semibold">Filtros</span>
                     <font-awesome-icon
                       class="w-5 h-5"
-                      :icon="['fas', 'fa-minus']"
+                      :icon="['fas', 'fa-eye-slash']"
                     />
                   </button>
                   <form
@@ -286,6 +288,8 @@ export default {
       isShowingFilters: true,
 
       alreadyRequestedList: false,
+
+      body: {},
     };
   },
   methods: {
@@ -345,6 +349,10 @@ export default {
      * Método que faz a requisição com base nos filtros de cards inativos
      */
     buscaCards() {
+      this.inativeCardsList = [];
+      this.dataRequest = {};
+      this.body = {};
+
       let scroll = this.$refs.scrollRef;
       scroll.scrollTop = 0;
 
@@ -365,7 +373,7 @@ export default {
         dataFinalFormatada = `${anoFinal}-${mesFinal}-${diaFinal}`;
       }
 
-      let body = {
+      this.body = {
         busca: this.search,
         status: this.statusSelected === "" ? null : this.statusSelected,
         dataInicial: dataInicialFormatada,
@@ -374,7 +382,7 @@ export default {
 
       this.isRequesting = true;
       this.axios
-        .post(`${window.API_V2}/pipeline/cards/inactive`, body)
+        .post(`${window.API_V2}/pipeline/cards/inactive`, this.body)
         .then((res) => {
           const data = res.data;
           this.inativeCardsList = data.data;
@@ -503,11 +511,14 @@ export default {
      */
     buscaCardsPaginacao(paginationUrl) {
       this.isRequestingMore = true;
-      
+
       // Linha para a url ficar certa de acordo com o proxy feito em desenvolvimento
-      let paginationDev = process.env.NODE_ENV === 'development' ? paginationUrl.replace("8585", "8080") : paginationUrl;
+      let paginationDev =
+        process.env.NODE_ENV === "development"
+          ? paginationUrl.replace("8585", "8080")
+          : paginationUrl;
       this.axios
-        .post(paginationDev)
+        .post(paginationDev, this.body)
         .then((res) => {
           const data = res.data;
           this.inativeCardsList = this.inativeCardsList.concat(data.data);
@@ -548,6 +559,8 @@ export default {
     list(newList, oldList) {
       this.getAllInactiveStatus();
       this.inativeCardsList = [];
+      this.dataRequest = {};
+      this.body = {};
     },
 
     /**

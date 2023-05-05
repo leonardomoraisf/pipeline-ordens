@@ -7,14 +7,14 @@
       >
         <a href="/app/vendas/nova-venda" class="text-base font-semibold"
           ><font-awesome-icon
-            class="w-10 h-10"
+            class="w-8 h-8"
             :icon="['fas', 'fa-arrow-left']"
         /></a>
       </button>
 
       <div class="flex flex-col align-middle items-center">
         <h1 class="text-2xl text-black font-bold">
-          Pipeline das ordens de serviços
+          Pipeline - Fluxo de trabalho
         </h1>
       </div>
 

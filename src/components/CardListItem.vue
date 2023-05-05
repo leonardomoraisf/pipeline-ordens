@@ -110,9 +110,7 @@
           :stroke-width="3"
           :stroke-color="corTextoCard"
           :underneath-stroke-color="colorStatus"
-          v-tooltip="
-            'Quando o tempo acabar, o card será finalizado!'
-          "
+          v-tooltip="'Quando o tempo acabar, o card será finalizado!'"
         />
 
         <div class="flex justify-between items-center">
@@ -192,9 +190,42 @@
       <div
         class="flex flex-col text-left p-2 justify-center h-full overflow-hidden"
       >
-        <div>
-          <p class="truncate text-xl break-all">Finalizado:</p>
-          <p class="truncate break-all">{{ diaLog }}, {{ dataHoraLog }}</p>
+        <div class="text-sm">
+          <div class="flex space-x-2">
+            <p class="truncate text-base break-all">Finalizado em</p>
+
+            <div
+              class="w-12 min-w-fit h-fit rounded-md text-center"
+              :class="{
+                'bg-green-600':
+                  diferencaDiasFinalizado >= 0 && diferencaDiasFinalizado < 3,
+                'bg-rose-600': diferencaDiasFinalizado >= 3,
+              }"
+            >
+              <span
+                class="text-white font-semibold"
+                v-if="diferencaDiasFinalizado <= 1"
+                >{{ diferencaDiasFinalizado }} dia</span
+              >
+              <span
+                class="text-white font-semibold"
+                v-if="diferencaDiasFinalizado > 1"
+                >{{ diferencaDiasFinalizado }} dias</span
+              >
+            </div>
+          </div>
+
+          <table>
+            <tr>
+              <td>Início: </td>
+              <td>{{ diaCard }}, {{ dataHoraCard }}</td>
+            </tr>
+            <tr>
+              <td>Fim: </td>
+              <td>{{ diaLog }}, {{ dataHoraLog }}</td>
+            </tr>
+          </table>
+
         </div>
         <div>
           <p class="truncate w-full break-all">{{ cardLog.nome_pessoa }}</p>
@@ -268,6 +299,9 @@ export default {
           : JSON.parse(this.card.log)[0],
       dataHoraLog: "",
       diaLog: "",
+      diaCard: "",
+      dataHoraCard: "",
+      diferencaDiasFinalizado: 0,
     };
   },
   methods: {
@@ -344,6 +378,55 @@ export default {
         );
       });
     },
+
+    calculaInfosInInativeCardList() {
+      let diasDaSemana = [
+        "Domingo",
+        "Segunda-feira",
+        "Terça-feira",
+        "Quarta-feira",
+        "Quinta-feira",
+        "Sexta-feira",
+        "Sábado",
+      ];
+
+      var dataHoraLog = new Date(this.cardLog.data_hora_cadastro);
+      var diaDaSemanaHoraLog = diasDaSemana[dataHoraLog.getDay()];
+      this.diaLog = diaDaSemanaHoraLog;
+
+      const diaHoraLog = dataHoraLog.getDate();
+      const mesHoraLog = dataHoraLog.getMonth() + 1;
+      const anoHoraLog = dataHoraLog.getFullYear();
+      const dataFormatadaHoraLog =
+        diaHoraLog + "/" + mesHoraLog + "/" + anoHoraLog;
+      const horaHoraLog = dataHoraLog.toLocaleTimeString();
+      const dataHoraFormatadasHoraLog =
+        dataFormatadaHoraLog + " | " + horaHoraLog;
+      this.dataHoraLog = dataHoraFormatadasHoraLog;
+
+      var dataHoraCard = new Date(this.card.data_hora_cadastro);
+      var diaDaSemanaHoraCard = diasDaSemana[dataHoraCard.getDay()];
+      this.diaCard = diaDaSemanaHoraCard;
+
+      const diaHoraCard = dataHoraCard.getDate();
+      const mesHoraCard = dataHoraCard.getMonth() + 1;
+      const anoHoraCard = dataHoraCard.getFullYear();
+      const dataFormatadaHoraCard =
+        diaHoraCard + "/" + mesHoraCard + "/" + anoHoraCard;
+      const horaHoraCard = dataHoraCard.toLocaleTimeString();
+      const dataHoraFormatadasHoraCard =
+        dataFormatadaHoraCard + " | " + horaHoraCard;
+      this.dataHoraCard = dataHoraFormatadasHoraCard;
+
+      let diferencaFinalizado = Math.abs(
+        dataHoraLog.getTime() - dataHoraCard.getTime()
+      );
+      let diasFinalizado = Math.ceil(
+        diferencaFinalizado / (1000 * 60 * 60 * 24)
+      );
+
+      this.diferencaDiasFinalizado = diasFinalizado;
+    },
   },
   mounted() {
     this.calculaDiferencaDias();
@@ -359,31 +442,12 @@ export default {
     if (this.isToInative) {
       this.timeoutInativeCard = setTimeout(() => {
         this.cardToInative();
-      }, 60000);
+      }, 3000);
     }
 
     // Se estiver na lista de cards inativos, calcula qual o dia da semana que ele foi finalizado
     if (this.inInativeCardList) {
-      var data = new Date(this.cardLog.data_hora_cadastro);
-      let diasDaSemana = [
-        "Domingo",
-        "Segunda-feira",
-        "Terça-feira",
-        "Quarta-feira",
-        "Quinta-feira",
-        "Sexta-feira",
-        "Sábado",
-      ];
-      var diaDaSemana = diasDaSemana[data.getDay()];
-      this.diaLog = diaDaSemana;
-
-      const dia = data.getDate();
-      const mes = data.getMonth() + 1;
-      const ano = data.getFullYear();
-      const dataFormatada = dia + "/" + mes + "/" + ano;
-      const hora = data.toLocaleTimeString();
-      const dataHoraFormatadas = dataFormatada + " | " + hora;
-      this.dataHoraLog = dataHoraFormatadas;
+      this.calculaInfosInInativeCardList();
     }
   },
   beforeDestroy() {
@@ -404,9 +468,9 @@ export default {
      * @param {String} newValue
      * @param {String} oldValue
      */
-    "card.data_hora_registro": function(newValue, oldValue){
+    "card.data_hora_registro": function (newValue, oldValue) {
       this.calculaDiferencaDias();
-    }
+    },
   },
 };
 </script>
