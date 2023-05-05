@@ -307,7 +307,7 @@
                 @click="toggleModalInativeCards"
                 v-if="listBoards.length > 0"
                 class="pb-3 hover:cursor-pointer relative h-screen flex flex-col overflow-hidden px-2 mt-40 border-2 rounded-md border-dashed border-black/30 hover:border-black/50 text-black/30 hover:text-black/50"
-                v-tooltip="'Clique para visualizar os cards inativos'"
+                v-tooltip="'Clique para visualizar os cards finalizados'"
               >
                 <div class="px-2 flex-1 overflow-y-auto cards-scrollbar">
                   <draggable

@@ -111,7 +111,7 @@
           :stroke-color="corTextoCard"
           :underneath-stroke-color="colorStatus"
           v-tooltip="
-            'Quando o tempo acabar, o card será colocado como inativo!'
+            'Quando o tempo acabar, o card será finalizado!'
           "
         />
 
