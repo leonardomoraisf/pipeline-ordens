@@ -63,7 +63,7 @@
                     class="w-full flex flex-col justify-between xl:flex-row space-y-1 xl:space-x-2 pb-1 items-center"
                   >
                     <div class="w-full">
-                      <div class="relative hover:scale-105 transition-all">
+                      <div class="relative input-hover transition-all">
                         <div
                           class="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none"
                         >
@@ -84,7 +84,7 @@
 
                     <select
                       v-model="statusSelected"
-                      class="border py-4 pl-1 w-full rounded-full focus:outline-none hover:cursor-pointer hover:scale-105 transition-all"
+                      class="border py-4 pl-1 w-full rounded-full focus:outline-none hover:cursor-pointer input-hover transition-all"
                     >
                       <option value="" selected>Todos os status</option>
                       <option
@@ -110,7 +110,7 @@
                       </option>
                     </select>
 
-                    <div class="hover:scale-105 transition-all w-full">
+                    <div class="input-hover transition-all w-full">
                       <date-picker
                         v-model="date"
                         @change="setDate"
@@ -673,5 +673,9 @@ export default {
   padding: 2px;
   cursor: pointer;
   border-radius: 3px;
+}
+
+.input-hover:hover{
+  transform: scale(1.02);
 }
 </style>
