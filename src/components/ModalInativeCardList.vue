@@ -183,7 +183,7 @@
                   ></CardListItem>
 
                   <div
-                    class="flex-row justify-center"
+                    class="flex flex-row justify-center pt-2"
                     :class="{
                       visible: isRequestingMore,
                       invisible: !isRequestingMore,
