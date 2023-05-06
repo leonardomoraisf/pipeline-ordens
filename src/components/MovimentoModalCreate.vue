@@ -109,7 +109,7 @@ export default {
           id_status_pipeline: this.list.id_status,
         })
         .then((res) => {
-          if (res.data.status === 1) {
+          if (res.data.status === true) {
             this.toggleCardFormModal = !this.toggleCardFormModal;
             Toast.fire("Prontinho!", "", "success");
           } else {
