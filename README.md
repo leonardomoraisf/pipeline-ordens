@@ -1,9 +1,9 @@
 # pipeline
 
-Este projeto, é uma tela nova do sistema, que permite à empresa organizar seus serviços de maneira simpllis :)
-E está localizada na aba "extras".
+Este projeto permite à empresa organizar seus serviços de maneira simpllis :)
+Está localizada na aba "extras".
 
-Essa tela espera um array com seus status, e cada status com seus cards em json, exemplo: 
+Essa tela espera um json com seus status, e cada status com seus cards em json, exemplo: 
 
 [
     {
@@ -31,8 +31,7 @@ Essa tela espera um array com seus status, e cada status com seus cards em json,
     }
 ]
 
-Por último, a tela espera o id da empresa que está utilizando o pipeline. Ela remove esse id e utiliza para algumas coisas, como
-inscrição no pusher.
+Por último, a tela espera o id da empresa que está utilizando o pipeline. Ela remove esse id e utiliza para inscrição no pusher.
 
-Essa tela utiliza o tailwind para o css, além de css puro, ícones do FontAwesome e o axios para requisições na api.
+Essa tela utiliza o tailwind, além de css puro, ícones do FontAwesome e o axios para requisições na api.
 Sua api está na v2, e se encontra em /v2/pipeline/*
