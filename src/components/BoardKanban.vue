@@ -54,7 +54,7 @@
     <!-- main COM filtro de status -->
     <main
       class="flex-1 overflow-hidden"
-      v-if="!isRequesting && search.length === 0"
+      v-if="!isRequesting && search.length > 0"
     >
       <div class="flex flex-col h-full">
         <div class="flex-1 overflow-x-auto mt-8">
