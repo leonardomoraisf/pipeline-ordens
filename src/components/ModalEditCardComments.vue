@@ -49,6 +49,7 @@
                   }"
                   placeholder="Escreva aqui..."
                   maxlength="1000"
+                  :disabled="isSubmiting"
                 ></textarea>
               </div>
 

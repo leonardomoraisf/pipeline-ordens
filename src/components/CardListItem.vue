@@ -139,26 +139,40 @@
               </button>
             </div>
 
-            <div
-              v-if="diferencaDias !== 0 || diferencaDiasTotal !== 0"
-              class="w-12 h-6 rounded-md text-center"
-              :class="{
-                'bg-green-600': diferencaDias >= 0 && diferencaDias < 3,
-                'bg-rose-600': diferencaDias >= 3,
-              }"
-              v-tooltip.bottom="'Dias no status/Dias no pipeline'"
-            >
-              <span class="text-white font-semibold">{{ diferencaDias }}</span>
-              <span class="text-white font-semibold"
-                >/{{ diferencaDiasTotal }}d</span
+            <div v-if="!inInativeCardList">
+              <div
+                v-if="diferencaDias !== 0 || diferencaDiasTotal !== 0"
+                class="w-12 h-6 rounded-md text-center"
+                :class="{
+                  'bg-green-600': diferencaDias >= 0 && diferencaDias < 3,
+                  'bg-rose-600': diferencaDias >= 3,
+                }"
+                v-tooltip.bottom="'Dias no status/Dias no pipeline'"
               >
+                <span class="text-white font-semibold">{{
+                  diferencaDias
+                }}</span>
+                <span class="text-white font-semibold"
+                  >/{{ diferencaDiasTotal }}d</span
+                >
+              </div>
+
+              <div
+                v-if="diferencaDias === 0 && diferencaDiasTotal === 0"
+                class="w-12 h-6 rounded-md text-center bg-green-600"
+              >
+                <span class="text-white font-semibold">Hoje</span>
+              </div>
             </div>
 
             <div
-              v-if="diferencaDias === 0 && diferencaDiasTotal === 0"
-              class="w-12 h-6 rounded-md text-center bg-green-600"
+              v-if="inInativeCardList"
+              class="w-12 h-6 rounded-md text-center bg-slate-500"
+              v-tooltip.bottom="'Dias no pipeline'"
             >
-              <span class="text-white font-semibold">Hoje</span>
+              <span class="text-white font-semibold"
+                >{{ diferencaDiasTotal }}d</span
+              >
             </div>
           </div>
 
@@ -217,15 +231,14 @@
 
           <table>
             <tr>
-              <td>Início: </td>
+              <td>Início:</td>
               <td>{{ diaCard }}, {{ dataHoraCard }}</td>
             </tr>
             <tr>
-              <td>Fim: </td>
+              <td>Fim:</td>
               <td>{{ diaLog }}, {{ dataHoraLog }}</td>
             </tr>
           </table>
-
         </div>
         <div>
           <p class="truncate w-full break-all">{{ cardLog.nome_pessoa }}</p>
