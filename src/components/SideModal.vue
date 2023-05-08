@@ -18,7 +18,7 @@
                         isEdit === 0 ? regStatusColor : editStatusColor,
                     }"
                     :class="{ shake: animated }"
-                    @click="toggleInputColor = !toggleInputColor"
+                    @click="toggleInputColor = !isSubmiting ? !toggleInputColor : toggleInputColor"
                     class="group relative cursor-pointer hover:scale-125 z-10 flex items-center justify-center w-6 h-6 p-6 rounded-full shrink-0 group-hover:scale-110 status-circle"
                   >
                     <p
@@ -86,6 +86,7 @@
                           'border-red-500': editStatusName.length > maxLength,
                         }"
                         maxlength="50"
+                        :disabled="isSubmiting"
                       />
                       <p
                         class="fixed top-4 right-5 font-semibold text-sm text-gray-500"
@@ -262,6 +263,8 @@ export default {
      * Método para confirmar a inativação do status
      */
     confirmDeleteStatus() {
+      if(this.isSubmiting) return;
+      
       this.toggleInputColor = !this.toggleInputColor;
       if (this.cards.length > 0) {
         ToastCenter5.fire(
@@ -463,6 +466,7 @@ export default {
     onSubmit(ev) {
       this.isSubmiting = true;
       this.isShowingError = false;
+      this.toggleInputColor = false;
 
       if (this.isEdit === 1) {
         // Salvar
@@ -503,7 +507,6 @@ export default {
         this.axios
           .put(`${window.API_V2}/pipeline/status/${this.list.id_status}/edit`, body)
           .then((res) => {
-            this.$emit("statusEdited", body);
             this.$emit("closeModal");
             this.backupEditStatusName = this.list.nome;
             this.backupEditStatusColor = this.list.color;

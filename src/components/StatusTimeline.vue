@@ -94,7 +94,6 @@
       @closeModal="closeModalEditStatusFunc"
       :colorStatusText="corTextoStatus"
       :animated="animated"
-      @statusEdited="onStatusEdited"
       ref="sideModalEdit"
       :ajustarCorTexto="ajustarCorTexto"
       @statusDeleted="onStatusDeleted"
@@ -127,13 +126,6 @@ export default {
     };
   },
   methods: {
-    /**
-     * Emite o status editado
-     * @param {Object} edit
-     */
-    onStatusEdited(edit) {
-      this.$emit("changeListInfo", edit);
-    },
 
     /**
      * Método para emitir o status deletado

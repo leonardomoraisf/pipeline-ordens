@@ -57,6 +57,3 @@ new Vue({
   store,
   render: (h) => h(App),
 }).$mount("#app");
-
-// TO DO - ALTERAR COMENTÁRIO NA LISTA DE CARDS INATIVOS PELO PUSHER
-// TO DO - CONSERTAR COR DO STATUS EDITADO
