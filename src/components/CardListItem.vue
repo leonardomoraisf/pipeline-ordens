@@ -28,7 +28,7 @@
           "
         >
           <button
-            class="text-base text-black font-semibold bg-white hover:scale-105 hover:bg-gray-200 p-1 rounded-md transition-all"
+            class="text-base text-black font-semibold bg-white hover:scale-105 hover:text-green-500 hover:bg-gray-200 p-1 rounded-md transition-all"
             @click="$emit('turnCardActive', card)"
           >
             Reativar
@@ -36,17 +36,18 @@
         </div>
 
         <div
-          v-if="(inInativeCardList && !existeStatus) || statusInativo"
+          v-if="(inInativeCardList && !existeStatus) || statusInativo &&
+            card.movimento_ativo === 1"
           class="absolute top-2 right-2 flex flex-col gap-1"
         >
           <button
             @click="deleteCard"
-            class="bg-red-500 rounded-md hover:bg-red-400 p-1 transition-all hover:scale-105 text-white"
+            class="text-base text-black font-semibold bg-white hover:text-red-500 hover:scale-105 hover:bg-gray-200 p-1 rounded-md transition-all"
           >
             Deletar
           </button>
           <button
-            class="text-base text-black font-semibold bg-white hover:scale-105 hover:bg-gray-200 p-1 rounded-md transition-all"
+            class="text-base text-black font-semibold bg-white hover:scale-105 hover:text-green-500 hover:bg-gray-200 p-1 rounded-md transition-all"
             @click="$emit('turnCardActive', card)"
             v-tooltip.bottom="
               'Se reativar esse card, ele voltará para o status 1!'
@@ -167,10 +168,11 @@
 
             <div
               v-if="inInativeCardList"
-              class="w-12 h-6 rounded-md text-center bg-slate-500"
+              class="w-fit rounded-md text-center"
               v-tooltip.bottom="'Dias no pipeline'"
             >
-              <span class="text-white font-semibold"
+              <span class="font-semibold"
+              :class="{color: corTextoCard}"
                 >{{ diferencaDiasTotal }}d</span
               >
             </div>
@@ -191,7 +193,7 @@
           <div v-if="inInativeCardList" class="absolute top-2 right-2">
             <button
               @click="deleteCard"
-              class="bg-rose-500 rounded-md hover:bg-rose-400 p-2 transition-colors text-white"
+              class="bg-rose-500 rounded-md hover:bg-rose-400 hover:scale-105 p-2 transition-all text-white font-semibold"
             >
               Deletar
             </button>
@@ -212,8 +214,8 @@
               class="w-12 min-w-fit h-fit rounded-md text-center"
               :class="{
                 'bg-green-600':
-                  diferencaDiasFinalizado >= 0 && diferencaDiasFinalizado < 3,
-                'bg-rose-600': diferencaDiasFinalizado >= 3,
+                  diferencaDiasFinalizado >= 0 && diferencaDiasFinalizado < 5,
+                'bg-rose-600': diferencaDiasFinalizado >= 5,
               }"
             >
               <span
