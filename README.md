@@ -170,4 +170,4 @@ Obrigado!
 
 ## Licença
 
-Esse projeto é licenciado pelo MIT License - veja em [LICENSE.md](https://github.com/leonardomoraisf/https://github.com/leonardomoraisf/pipeline-ordens/blob/main/LICENSE.md) para detalhes.
+Esse projeto é licenciado pelo MIT License - veja em [LICENSE.md](https://github.com/leonardomoraisf/pipeline-ordens/blob/main/README.md) para detalhes.
