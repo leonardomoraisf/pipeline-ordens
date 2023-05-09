@@ -56,6 +56,7 @@ $ cd pipeline-ordens
 ```
 
 **Instalando dependências**
+NPM 9.4.0
 
 ```
 $ npm install
