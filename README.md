@@ -4,7 +4,7 @@ Este projeto é uma tela que permite ao usuário controlar seu fluxo de trabalho
 conseguindo criar status e gerenciar os cards de acordo com a etapa em que aquele
 serviço/venda está.
 Se a empresa possuir um status criado, qualquer orçamento, consignado ou venda feita 
-pela empresa, será criado também um card nessa tela, facilitando a organização e controle
+pela empresa será criado também um card nessa tela, facilitando a organização e controle
 de onde está aquele movimento.
 Um card é criado se, e somente se, a empresa possui ao menos um status ativo, e/ou setar o
 s_id_status_pipeline no back-end.
