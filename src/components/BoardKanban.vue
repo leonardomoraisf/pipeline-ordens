@@ -486,6 +486,8 @@ export default {
       cardsToChangePos: [],
 
       cardIsNowActive: {},
+
+      onlineStatus: true
     };
   },
   computed: {
@@ -993,6 +995,28 @@ export default {
 
       return corTexto;
     },
+
+    /**
+     * Método para verificar e enviar o Toast caso a conexão tenha caído
+     */
+    verificaOfflineStatus(){
+      this.onlineStatus = navigator.onLine;
+
+      if(this.onlineStatus === false){
+        ToastConfirmCenter.fire("Eita!", "Parece que você perdeu sua conexão com a internet. Quaisquer modificações feitas no pipeline não serão salvas!", "warning");
+      }
+    },
+
+    /**
+     * Método para verificar e enviar o Toast caso a conexão tenha retornado
+     */
+    verificaOnlineStatus(){
+      this.onlineStatus = navigator.onLine;
+
+      if(this.onlineStatus === true){
+        ToastConfirmCenter.fire("Opa!", "Sua conexão voltou!", "success");
+      }
+    }
   },
   mounted() {
     this.setList();
@@ -1004,6 +1028,10 @@ export default {
     let dia = ("0" + dataAtual.getDate()).slice(-2);
     let dataFormatada = `${ano}-${mes}-${dia}`;
     this.dataHoje = dataFormatada;
+
+    // Adiciona os eventListeners de internet off e on, para verificar e avisar ao usuário
+    window.addEventListener('online', this.verificaOnlineStatus);
+    window.addEventListener('offline', this.verificaOfflineStatus);
   },
 };
 </script>

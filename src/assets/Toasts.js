@@ -42,3 +42,9 @@ const ToastCenter5 = Swal.mixin({
   showConfirmButton: false
 });
 window.ToastCenter5 = ToastCenter5;
+
+const ToastConfirmCenter = Swal.mixin({
+  position: "center",
+  showConfirmButton: false
+});
+window.ToastConfirmCenter = ToastConfirmCenter;
