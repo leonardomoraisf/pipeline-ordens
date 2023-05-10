@@ -86,7 +86,7 @@
             />
 
             <div class="flex flex-col rounded-md py-2 max-h-full w-72">
-              <!-- Essa div abaixo aparece assim que o usuário cria mais de três status, 
+              <!-- Essa div abaixo aparece assim que o usuário cria mais de três status,
                                     pois já, pelo menos aparentemente, aprendeu a usar -->
               <div
                 class="relative pb-8 hover:cursor-pointer text-black/50 hover:text-black/70 hover:scale-110 add"
@@ -250,7 +250,7 @@
             />
 
             <div class="flex flex-col rounded-md py-2 max-h-full w-72">
-              <!-- Essa div abaixo aparece assim que o usuário cria mais de três status, 
+              <!-- Essa div abaixo aparece assim que o usuário cria mais de três status,
                                     pois já, pelo menos aparentemente, aprendeu a usar -->
               <div
                 class="relative pb-8 hover:cursor-pointer text-black/50 hover:text-black/70 hover:scale-110 add"
@@ -962,13 +962,6 @@ export default {
               }
             });
           }
-        });
-
-        // Espera o Pusher ser autenticado 100% para mostrar a tela
-        await new Promise((resolve) => {
-          this.pipelinePusher.bind("pusher:subscription_succeeded", () => {
-            resolve();
-          });
         });
       } catch (err) {
         console.log(err);
