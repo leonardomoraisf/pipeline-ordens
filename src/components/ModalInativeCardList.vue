@@ -12,7 +12,7 @@
             @scroll="onScroll"
           >
             <div
-              class="sticky top-0 z-50 bg-white rounded-t-md border-b-2 border-neutral-100 border-opacity-100 px-4 py-2 dark:border-opacity-50"
+              class="sticky top-0 z-50 bg-white rounded-t-md border-b-2 border-neutral-100 border-opacity-100 px-2 dark:border-opacity-50"
             >
               <div class="flex flex-shrink-0 items-center justify-between py-2">
                 <h5 class="text-2xl text-black">Cards finalizados</h5>
@@ -162,7 +162,7 @@
 
             <div class="h-screen flex flex-row bg-white">
               <div class="w-full py-2">
-                <ul class="space-y-3 px-4" v-if="!isRequesting">
+                <ul class="space-y-3 px-2" v-if="!isRequesting">
                   <CardListItem
                     ref="list"
                     v-for="card in inativeCardsList"

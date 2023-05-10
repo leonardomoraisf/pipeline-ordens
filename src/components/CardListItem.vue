@@ -8,7 +8,7 @@
   >
     <div
       :style="{ backgroundColor: colorStatus }"
-      class="group relative p-2 shadow rounded-md text-left"
+      class="group relative p-2 shadow rounded-md text-left h-fit"
       :class="{ 'w-3/5': inInativeCardList }"
     >
       <div
@@ -19,7 +19,7 @@
         :style="{ color: corTextoCard }"
       >
         <div
-          class="absolute top-3 right-3"
+          class="absolute top-1 right-1"
           v-if="
             inInativeCardList &&
             existeStatus &&
@@ -28,7 +28,7 @@
           "
         >
           <button
-            class="text-base text-black font-semibold bg-white hover:scale-105 hover:text-green-500 hover:bg-gray-200 p-1 rounded-md transition-all"
+            class="md:text-base text-sm text-black font-semibold bg-white hover:scale-105 hover:text-green-500 hover:bg-gray-200 p-1 rounded-md transition-all"
             @click="$emit('turnCardActive', card)"
           >
             Reativar
@@ -38,7 +38,7 @@
         <div
           v-if="(inInativeCardList && !existeStatus) || statusInativo &&
             card.movimento_ativo === 1"
-          class="absolute top-2 right-2 flex flex-col gap-1"
+          class="absolute top-1 right-1 flex flex-col gap-1"
         >
           <button
             @click="deleteCard"
@@ -69,7 +69,7 @@
 
         <div class="space-y-1 overflow-hidden whitespace-nowrap text-ellipsis">
           <p
-            class="text-base px-1 w-max rounded-md truncate"
+            class="md:text-base text-sm px-1 w-max rounded-md truncate"
             :class="{
               'bg-black/30': corTextoCard === '#FFFFFF',
               'bg-white/30': corTextoCard === '#000000',
@@ -78,7 +78,7 @@
             {{ card.nome !== null ? card.nome : "Consumidor" }}
           </p>
           <p
-            class="text-xs px-1 w-max rounded-md truncate"
+            class="md:text-xs text-xs px-1 w-max rounded-md truncate"
             :class="{
               'bg-black/30': corTextoCard === '#FFFFFF',
               'bg-white/30': corTextoCard === '#000000',
@@ -95,7 +95,7 @@
           >
             {{ tiposMovimento[card.tipo] }}({{ card.id_movimento }})
           </p>
-          <p v-if="inInativeCardList" class="text-base font-normal truncate">
+          <p v-if="inInativeCardList" class="md:text-base font-normal truncate text-sm">
             <b>Status<span v-if="statusInativo"> inativo</span>:</b>
             {{ card.statusName }}
           </p>
@@ -168,18 +168,18 @@
 
             <div
               v-if="inInativeCardList"
-              class="w-fit rounded-md text-center"
+              class="w-fit rounded-md text-center md:text-base text-sm"
               v-tooltip.bottom="'Dias no pipeline'"
             >
               <span class="font-semibold"
               :class="{color: corTextoCard}"
-                >{{ diferencaDiasTotal }}d</span
+                >{{ diferencaDiasTotal === 0 ? "Hoje" :  diferencaDiasTotal+"d"}}</span
               >
             </div>
           </div>
 
           <div class="text-ellipsis overflow-hidden">
-            <p class="font-normal truncate">R$ {{ valorFormatado }}</p>
+            <p class="font-normal truncate md:text-base text-sm">R$ {{ valorFormatado }}</p>
           </div>
         </div>
 
@@ -204,14 +204,14 @@
 
     <div v-if="inInativeCardList" class="w-2/5">
       <div
-        class="flex flex-col text-left p-2 justify-center h-full overflow-hidden"
+        class="flex flex-col md:pl-2 pl-1 justify-center text-left h-full overflow-hidden"
       >
-        <div class="text-sm">
-          <div class="flex space-x-2">
-            <p class="truncate text-base break-all">Finalizado em</p>
+        <div>
+          <div class="flex flex-wrap space-x-1 items-center">
+            <span class="md:text-base text-sm">Finalizado em</span>
 
             <div
-              class="w-12 min-w-fit h-fit rounded-md text-center"
+              class="px-1 rounded-md"
               :class="{
                 'bg-green-600':
                   diferencaDiasFinalizado >= 0 && diferencaDiasFinalizado < 5,
@@ -219,31 +219,31 @@
               }"
             >
               <span
-                class="text-white font-semibold"
+                class="text-white font-semibold md:text-base text-sm"
                 v-if="diferencaDiasFinalizado <= 1"
                 >{{ diferencaDiasFinalizado }} dia</span
               >
               <span
-                class="text-white font-semibold"
+                class="text-white font-semibold md:text-base text-sm"
                 v-if="diferencaDiasFinalizado > 1"
                 >{{ diferencaDiasFinalizado }} dias</span
               >
             </div>
           </div>
 
-          <table class="truncate w-full break-all">
+          <table class="w-full truncate md:text-base text-xs">
             <tr>
               <td>Início:</td>
-              <td>{{ diaCard }}, {{ dataHoraCard }}</td>
+              <td>{{ diaCard }} {{ dataHoraCard }}</td>
             </tr>
             <tr>
               <td>Fim:</td>
-              <td>{{ diaLog }}, {{ dataHoraLog }}</td>
+              <td>{{ diaLog }} {{ dataHoraLog }}</td>
             </tr>
           </table>
         </div>
-        <div>
-          <p class="truncate w-full break-all">{{ cardLog.nome_pessoa }}</p>
+        <div class="flex flex-wrap">
+          <span class="md:text-base text-xs truncate">{{ cardLog.nome_pessoa }}</span>
         </div>
       </div>
     </div>
@@ -396,13 +396,13 @@ export default {
 
     calculaInfosInInativeCardList() {
       let diasDaSemana = [
-        "Domingo",
-        "Segunda-feira",
-        "Terça-feira",
-        "Quarta-feira",
-        "Quinta-feira",
-        "Sexta-feira",
-        "Sábado",
+        "Dom",
+        "Seg",
+        "Terç",
+        "Qua",
+        "Qui",
+        "Sex",
+        "Sáb",
       ];
 
       var dataHoraLog = new Date(this.cardLog.data_hora_cadastro);
@@ -411,12 +411,11 @@ export default {
 
       const diaHoraLog = dataHoraLog.getDate();
       const mesHoraLog = dataHoraLog.getMonth() + 1;
-      const anoHoraLog = dataHoraLog.getFullYear();
       const dataFormatadaHoraLog =
-        diaHoraLog + "/" + mesHoraLog + "/" + anoHoraLog;
-      const horaHoraLog = dataHoraLog.toLocaleTimeString();
+        diaHoraLog + "/" + mesHoraLog;
+      const horaHoraLog = dataHoraLog.toLocaleTimeString([], {timeStyle: 'short'});
       const dataHoraFormatadasHoraLog =
-        dataFormatadaHoraLog + " | " + horaHoraLog;
+        dataFormatadaHoraLog + "," + horaHoraLog;
       this.dataHoraLog = dataHoraFormatadasHoraLog;
 
       var dataHoraCard = new Date(this.card.data_hora_cadastro);
@@ -425,12 +424,11 @@ export default {
 
       const diaHoraCard = dataHoraCard.getDate();
       const mesHoraCard = dataHoraCard.getMonth() + 1;
-      const anoHoraCard = dataHoraCard.getFullYear();
       const dataFormatadaHoraCard =
-        diaHoraCard + "/" + mesHoraCard + "/" + anoHoraCard;
-      const horaHoraCard = dataHoraCard.toLocaleTimeString();
+        diaHoraCard + "/" + mesHoraCard;
+      const horaHoraCard = dataHoraCard.toLocaleTimeString([], {timeStyle: 'short'});
       const dataHoraFormatadasHoraCard =
-        dataFormatadaHoraCard + " | " + horaHoraCard;
+        dataFormatadaHoraCard + "," + horaHoraCard;
       this.dataHoraCard = dataHoraFormatadasHoraCard;
 
       let diferencaFinalizado = Math.abs(
