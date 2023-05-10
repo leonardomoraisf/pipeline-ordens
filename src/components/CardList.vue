@@ -23,7 +23,7 @@
     >
     </MovimentoModalCreate>
 
-    <div class="pb-3 flex flex-col overflow-hidden mt-4 px-2">
+    <div class="flex flex-col overflow-hidden mt-4 px-2">
       <div class="px-2 flex-1 overflow-y-auto cards-scrollbar">
         <draggable
           v-model="cards"
@@ -373,7 +373,7 @@ export default {
         return;
       }
 
-      // Se não existe na lista, mas está ativo e com o mesmo id_status, emite o card como reativado, para chamar 
+      // Se não existe na lista, mas está ativo e com o mesmo id_status, emite o card como reativado, para chamar
       // a funcção de adicionar o card
       if (
         cardIndex === -1 &&
