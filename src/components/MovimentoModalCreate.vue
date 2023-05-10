@@ -4,7 +4,7 @@
       <button
         type="button"
         @click="openModal"
-        class="mt-6 w-full flex justify-center items-center py-6 border-2 rounded-md border-dashed hover:cursor-pointer border-black/30 hover:border-black/50 text-black/30 hover:text-black/50 hover:scale-105 add-card"
+        class="mt-4 w-full flex justify-center items-center py-6 border-2 rounded-md border-dashed hover:cursor-pointer border-black/30 hover:border-black/50 text-black/30 hover:text-black/50 hover:scale-105 add-card"
       >
         <font-awesome-icon class="w-5 h-5" :icon="['fas', 'fa-plus']" />
         <span class="font-semibold ml-1">Adicionar</span>

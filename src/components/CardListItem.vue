@@ -8,11 +8,11 @@
   >
     <div
       :style="{ backgroundColor: colorStatus }"
-      class="group relative p-3 shadow rounded-md border-b border-gray-300 text-left"
+      class="group relative p-2 shadow rounded-md text-left"
       :class="{ 'w-3/5': inInativeCardList }"
     >
       <div
-        class="h-28 flex flex-col justify-between"
+        class="h-fit flex flex-col justify-between"
         :class="{
           'hover:cursor-grab': !inInativeCardList && !inModalEditComments,
         }"

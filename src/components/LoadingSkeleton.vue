@@ -1,7 +1,7 @@
 <template>
   <main class="flex-1 overflow-hidden">
     <div class="flex flex-col h-full overflow-hidden">
-      <div class="flex-1 overflow-hidden mt-8">
+      <div class="flex-1 overflow-hidden 2xl:mt-8 mt-2">
         <div class="inline-flex h-full items-start px-4 pb-4">
           <div class="w-72 flex flex-col rounded-md py-2 max-h-full">
             <div>

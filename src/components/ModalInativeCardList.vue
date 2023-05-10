@@ -84,7 +84,7 @@
 
                     <select
                       v-model="statusSelected"
-                      class="border py-4 pl-1 w-full rounded-full focus:outline-none hover:cursor-pointer input-hover transition-all"
+                      class="border py-4 pl-1 w-full 2xl:w-fit xl:w-fit l:w-fit  rounded-full focus:outline-none hover:cursor-pointer input-hover transition-all"
                     >
                       <option value="" selected>Todos os status</option>
                       <option
@@ -110,13 +110,13 @@
                       </option>
                     </select>
 
-                    <div class="input-hover transition-all w-full">
+                    <div class="input-hover transition-all w-full 2xl:w-fit xl:w-fit l:w-fit ">
                       <date-picker
                         v-model="date"
                         @change="setDate"
                         :format="'DD/MM/YYYY'"
                         :placeholder="'Data inicial - Data final'"
-                        :input-class="'w-full py-4 pl-2 focus:outline-none border rounded-full'"
+                        :input-class="'w-full 2xl:w-fit xl:w-fit l:w-fit py-4 px-2 focus:outline-none border rounded-full'"
                         range
                       ></date-picker>
                     </div>
@@ -632,28 +632,22 @@ export default {
   position: fixed;
   top: 0;
   right: 0;
-  width: 45%;
+  width: 50%;
 }
 
 @media (max-width: 1536px) {
   .modal {
-    width: 45%;
+    width: 60%;
   }
 }
 
 @media (max-width: 1280px) {
   .modal {
-    width: 55%;
-  }
-}
-
-@media (max-width: 1024px) {
-  .modal {
     width: 70%;
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .modal {
     width: 100%;
   }
