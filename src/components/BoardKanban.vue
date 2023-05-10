@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col h-screen bg-white relative text-center">
-    <div class="shrink-0 p-4 flex justify-between space-x-1 lg:block">
+    <div class="shrink-0 p-4 flex justify-between space-x-1 2xl:block">
       <button
         class="hover:scale-125 transition-all lg:float-left"
         v-tooltip.bottom="'Voltar'"
@@ -17,16 +17,47 @@
       </div>
 
       <button
-        class="block xl:hidden 2xl:hidden lg:hidden float-right"
+        class="block 2xl:hidden float-right"
         @click="toggleModalFilterStatus = !toggleModalFilterStatus"
         :class="{ invisible: toggleModalFilterStatus }"
       >
         <font-awesome-icon class="w-10 h-10" :icon="['fas', 'fa-bars']" />
       </button>
 
+      <transition name="modal">
+        <div
+          class="z-40 overflow-x-hidden overflow-y-auto flex justify-center items-center fixed top-4 right-4 w-fit 2xl:hidden"
+          v-if="toggleModalFilterStatus"
+        >
+          <div class="relative mx-auto w-full">
+            <div class="w-full rounded-md">
+              <button
+                class="float-right"
+                @click="toggleModalFilterStatus = !toggleModalFilterStatus"
+              >
+                <font-awesome-icon
+                  class="w-10 h-10"
+                  :icon="['fas', 'fa-close']"
+                />
+              </button>
+              <div
+                class="shrink-0 flex justify-center bg-gray-200 px-4 py-3 container mx-auto rounded-md"
+              >
+                <input
+                  class="shadow appearance-none border rounded w-full py-6 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline text-base"
+                  v-model="search"
+                  type="text"
+                  placeholder="Filtre por nome do status"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </transition>
+
       <transition name="fade">
         <div
-          class="fixed top-2 right-2 hidden lg:block"
+          class="fixed top-2 right-2 hidden 2xl:block"
           v-if="isRequestingEditCard"
           v-tooltip.bottom-start="'Não feche a página! Fazendo mudanças...'"
         >
@@ -39,7 +70,7 @@
     </div>
 
     <div
-      class="shrink-0 lg:flex justify-center bg-white px-4 py-3 container mx-auto hidden"
+      class="shrink-0 2xl:flex justify-center bg-white px-4 py-3 container mx-auto hidden"
     >
       <input
         class="shadow appearance-none border rounded w-1/2 py-6 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline text-xl"
@@ -378,37 +409,6 @@
       </div>
       <vue-confirm-dialog></vue-confirm-dialog>
     </main>
-
-    <transition name="modal">
-      <div
-        class="z-40 overflow-x-hidden overflow-y-auto flex justify-center items-center fixed top-4 right-4 w-fit lg:hidden"
-        v-if="toggleModalFilterStatus"
-      >
-        <div class="relative mx-auto w-full">
-          <div class="w-full rounded-md">
-            <button
-              class="float-right"
-              @click="toggleModalFilterStatus = !toggleModalFilterStatus"
-            >
-              <font-awesome-icon
-                class="w-10 h-10"
-                :icon="['fas', 'fa-close']"
-              />
-            </button>
-            <div
-              class="shrink-0 flex justify-center bg-gray-200 px-4 py-3 container mx-auto rounded-md"
-            >
-              <input
-                class="shadow appearance-none border rounded w-full py-6 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline text-base"
-                v-model="search"
-                type="text"
-                placeholder="Filtre por nome do status"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </transition>
   </div>
 </template>
 
@@ -487,7 +487,7 @@ export default {
 
       cardIsNowActive: {},
 
-      onlineStatus: true
+      onlineStatus: true,
     };
   },
   computed: {
@@ -999,24 +999,28 @@ export default {
     /**
      * Método para verificar e enviar o Toast caso a conexão tenha caído
      */
-    verificaOfflineStatus(){
+    verificaOfflineStatus() {
       this.onlineStatus = navigator.onLine;
 
-      if(this.onlineStatus === false){
-        ToastConfirmCenter.fire("Eita!", "Parece que você perdeu sua conexão com a internet. Quaisquer modificações feitas no pipeline não serão salvas!", "warning");
+      if (this.onlineStatus === false) {
+        ToastConfirmCenter.fire(
+          "Eita!",
+          "Parece que você perdeu sua conexão com a internet. Quaisquer modificações feitas no pipeline não serão salvas!",
+          "warning"
+        );
       }
     },
 
     /**
      * Método para verificar e enviar o Toast caso a conexão tenha retornado
      */
-    verificaOnlineStatus(){
+    verificaOnlineStatus() {
       this.onlineStatus = navigator.onLine;
 
-      if(this.onlineStatus === true){
+      if (this.onlineStatus === true) {
         ToastConfirmCenter.fire("Opa!", "Sua conexão voltou!", "success");
       }
-    }
+    },
   },
   mounted() {
     this.setList();
@@ -1030,8 +1034,8 @@ export default {
     this.dataHoje = dataFormatada;
 
     // Adiciona os eventListeners de internet off e on, para verificar e avisar ao usuário
-    window.addEventListener('online', this.verificaOnlineStatus);
-    window.addEventListener('offline', this.verificaOfflineStatus);
+    window.addEventListener("online", this.verificaOnlineStatus);
+    window.addEventListener("offline", this.verificaOfflineStatus);
   },
 };
 </script>
