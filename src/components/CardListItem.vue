@@ -15,6 +15,7 @@
         class="h-fit flex flex-col justify-between"
         :class="{
           'hover:cursor-grab': !inInativeCardList && !inModalEditComments,
+          'h-28': inativeCardsList
         }"
         :style="{ color: corTextoCard }"
       >
