@@ -963,6 +963,13 @@ export default {
             });
           }
         });
+
+        // Espera o Pusher ser autenticado 100% para mostrar a tela
+        await new Promise((resolve) => {
+          this.pipelinePusher.bind("pusher:subscription_succeeded", () => {
+            resolve();
+          });
+        });
       } catch (err) {
         console.log(err);
       } finally {
