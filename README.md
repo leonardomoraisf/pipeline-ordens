@@ -3,7 +3,7 @@
 Este projeto é uma tela que permite ao usuário controlar seu fluxo de trabalho,
 conseguindo criar status e gerenciar os cards de acordo com a etapa em que aquele
 serviço/venda está.
-Se a empresa possuir um status criado, qualquer orçamento, consignado ou venda feita 
+Se a empresa possuir um status criado, qualquer orçamento, consignado ou venda feita
 pela empresa será criado também um card nessa tela, facilitando a organização e controle
 de onde está aquele movimento.
 Um card é criado se, e somente se, a empresa possui ao menos um status ativo, e/ou setar o
@@ -20,7 +20,7 @@ Por: Leonardo Morais Franca
 ## Funcionalidades
 
 - Cards
-    - Criar através da tela iframe 
+    - Criar através da tela iframe
     - Mover entre status
     - Mover entre posição
     - Editar comentários
@@ -68,6 +68,11 @@ No arquivo "vue.config.js", altere a linha outputDir de: '../../Blegon/dev_envir
 Caso queira buildar o projeto sem colocá-lo na pasta do sistema, altere essa linha para o caminho exato até a pasta "public".
 O index "html" do projeto será criado automaticamente, assim como os assets.
 
+**IMPORTANTE!!!**
+
+O projeto necessita que o debug do Laravel esteja inativado!
+Cado esteja ativo a tela não conseguirá reagir ao Pusher.
+
 **Rodando o projeto local DEV**
 
 O projeto será aberto na porta padrão do seu NodeJs e necessita do sistema up no docker.
@@ -112,11 +117,11 @@ Isso tudo é configurado no arquivo "vue.config.js"
 
 **Funcionamento das telas**
 
-No componente principal "BoardKanban", é onde acontece a requisição da lista de status com cards 
-e a inscrição ao pusher logo após, a tela só permite qualquer modificação após as 
+No componente principal "BoardKanban", é onde acontece a requisição da lista de status com cards
+e a inscrição ao pusher logo após, a tela só permite qualquer modificação após as
 duas requisições terminarem.
 
-O projeto espera um json com status e cada status com seus respectivos cards em json, exemplo: 
+O projeto espera um json com status e cada status com seus respectivos cards em json, exemplo:
 [
     {
         "id_status": 128,

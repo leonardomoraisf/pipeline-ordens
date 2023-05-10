@@ -971,7 +971,7 @@ export default {
     },
 
     /**
-     * Método que pega uma cor em HEX e retorna uma cor de texo que fica com contraste
+     * Método que pega uma cor em HEX e retorna uma cor de texto que fica com contraste
      * @param {String} background
      */
     ajustarCorTexto(background) {
