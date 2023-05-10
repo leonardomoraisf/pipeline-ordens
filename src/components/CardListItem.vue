@@ -103,12 +103,12 @@
 
         <circular-count-down-timer
           v-if="isToInative"
-          class="absolute top-1 right-3"
+          class="absolute top-0 right-3 text-xs font-semibold"
           :circles="circles"
           :stepLength="circles.stepLength"
           :main-circle-id="circles.id || '1'"
           :fill-color="colorStatus"
-          :stroke-width="3"
+          :stroke-width="2"
           :stroke-color="corTextoCard"
           :underneath-stroke-color="colorStatus"
           v-tooltip="'Quando o tempo acabar, o card será finalizado!'"
@@ -300,7 +300,7 @@ export default {
         {
           id: "1",
           steps: 60,
-          size: 45,
+          size: 40,
           value: 60,
           stepLength: -1,
           label: "segundos",
