@@ -411,8 +411,9 @@ export default {
 
       const diaHoraLog = dataHoraLog.getDate();
       const mesHoraLog = dataHoraLog.getMonth() + 1;
+      const anoHoraLog = dataHoraLog.getFullYear();
       const dataFormatadaHoraLog =
-        diaHoraLog + "/" + mesHoraLog;
+        diaHoraLog + "/" + mesHoraLog + "/" + anoHoraLog;
       const horaHoraLog = dataHoraLog.toLocaleTimeString([], {timeStyle: 'short'});
       const dataHoraFormatadasHoraLog =
         dataFormatadaHoraLog + "," + horaHoraLog;
@@ -424,8 +425,9 @@ export default {
 
       const diaHoraCard = dataHoraCard.getDate();
       const mesHoraCard = dataHoraCard.getMonth() + 1;
+      const anoHoraCard = dataHoraCard.getFullYear();
       const dataFormatadaHoraCard =
-        diaHoraCard + "/" + mesHoraCard;
+        diaHoraCard + "/" + mesHoraCard + "/" + anoHoraCard;
       const horaHoraCard = dataHoraCard.toLocaleTimeString([], {timeStyle: 'short'});
       const dataHoraFormatadasHoraCard =
         dataFormatadaHoraCard + "," + horaHoraCard;
