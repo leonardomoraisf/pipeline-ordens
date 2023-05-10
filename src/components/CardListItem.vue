@@ -231,7 +231,7 @@
             </div>
           </div>
 
-          <table>
+          <table class="truncate w-full break-all">
             <tr>
               <td>Início:</td>
               <td>{{ diaCard }}, {{ dataHoraCard }}</td>
