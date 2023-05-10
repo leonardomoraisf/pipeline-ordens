@@ -62,7 +62,13 @@ NPM 9.4.0
 $ npm install
 ```
 
-**Rodando o projeto local**
+**Configurando o Vue**
+
+No arquivo "vue.config.js", altere a linha outputDir de: '../../Blegon/dev_environment/core/public' para '../../public'.
+Caso queira buildar o projeto sem colocá-lo na pasta do sistema, altere essa linha para o caminho exato até a pasta "public".
+O index "html" do projeto será criado automaticamente, assim como os assets.
+
+**Rodando o projeto local DEV**
 
 O projeto será aberto na porta padrão do seu NodeJs e necessita do sistema up no docker.
 Ele fará um proxy na porta 8585, porta padrão do sistema Simpllis.
