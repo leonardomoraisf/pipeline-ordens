@@ -185,7 +185,7 @@
                     ref="listInativeRef"
                     tag="ul"
                     @change="onChange"
-                    v-if="showingCardsToInative"
+                    v-show="showingCardsToInative"
                   >
                     <CardListItem
                       v-for="card in cardsToInativeList"
@@ -942,6 +942,3 @@ export default {
   border-radius: 5px;
 }
 </style>
-
-<style src="../assets/all.css"></style>
-<style src="../assets/tooltip.css"></style>

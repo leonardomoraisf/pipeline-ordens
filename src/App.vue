@@ -10,3 +10,6 @@
 </template>
 
 <style></style>
+
+<style src="../assets/all.css"></style>
+<style src="../assets/tooltip.css"></style>
