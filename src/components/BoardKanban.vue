@@ -371,14 +371,11 @@ export default {
 
         if (card.timer === 60) {
           this.cardsToInativeList.forEach((card, index) => {
-            if(card === undefined) {
-                this.cardsToInativeList.slice(index,1);
+            if (card === undefined) {
+              this.cardsToInativeList.slice(index, 1);
             }
           });
-          this.showingCardsToInative = false;
-          setTimeout(() => {
-            this.showingCardsToInative = true;
-          }, 100);
+          this.$forceUpdate();
         }
       }
     },
