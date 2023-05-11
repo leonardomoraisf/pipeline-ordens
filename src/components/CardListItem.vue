@@ -461,7 +461,7 @@ export default {
     if (this.isToInative) {
       this.intervalInativeCard = setInterval(() => {
         this.card.timer += 1;
-        if (this.currentTime >= 60) this.cardToInative();
+        if (this.card.timer >= 60) this.cardToInative();
       }, 1000);
     }
 
