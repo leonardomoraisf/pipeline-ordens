@@ -18,7 +18,11 @@
                         isEdit === 0 ? regStatusColor : editStatusColor,
                     }"
                     :class="{ shake: animated }"
-                    @click="toggleInputColor = !isSubmiting ? !toggleInputColor : toggleInputColor"
+                    @click="
+                      toggleInputColor = !isSubmiting
+                        ? !toggleInputColor
+                        : toggleInputColor
+                    "
                     class="group relative cursor-pointer hover:scale-125 z-10 flex items-center justify-center w-6 h-6 p-6 rounded-full shrink-0 group-hover:scale-110 status-circle"
                   >
                     <p
@@ -263,8 +267,8 @@ export default {
      * Método para confirmar a inativação do status
      */
     confirmDeleteStatus() {
-      if(this.isSubmiting) return;
-      
+      if (this.isSubmiting) return;
+
       this.toggleInputColor = !this.toggleInputColor;
       if (this.cards.length > 0) {
         ToastCenter5.fire(
@@ -306,7 +310,10 @@ export default {
       };
 
       this.axios
-        .put(`${window.API_V2}/pipeline/status/${this.list.id_status}/edit`, body)
+        .put(
+          `${window.API_V2}/pipeline/status/${this.list.id_status}/edit`,
+          body
+        )
         .then((res) => {
           this.$emit("closeModal");
           this.isDeletingStatus = !this.isDeletingStatus;
@@ -320,7 +327,7 @@ export default {
           this.errorMessage = err.response.data.message;
         });
     },
-    
+
     /**
      * Método que pega uma cor em rgb e transforma em hex
      */
@@ -505,7 +512,10 @@ export default {
         }
 
         this.axios
-          .put(`${window.API_V2}/pipeline/status/${this.list.id_status}/edit`, body)
+          .put(
+            `${window.API_V2}/pipeline/status/${this.list.id_status}/edit`,
+            body
+          )
           .then((res) => {
             this.$emit("closeModal");
             this.backupEditStatusName = this.list.nome;
@@ -513,13 +523,12 @@ export default {
             Toast.fire(res.data.message, "Atualizando pipeline...", "success");
           })
           .catch((err) => {
-            
             this.isShowingError = true;
             this.errorMessage = err.response.data.message;
           })
           .finally(() => {
             this.isSubmiting = false;
-          })
+          });
       }
 
       if (this.isEdit === 0) {
@@ -569,7 +578,7 @@ export default {
           })
           .finally(() => {
             this.isSubmiting = false;
-          })
+          });
       }
     },
   },

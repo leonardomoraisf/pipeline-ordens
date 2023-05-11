@@ -14,7 +14,7 @@
       <div
         class="h-fit flex flex-col justify-between"
         :class="{
-          'hover:cursor-grab': !inInativeCardList && !inModalEditComments
+          'hover:cursor-grab': !inInativeCardList && !inModalEditComments,
         }"
         :style="{ color: corTextoCard }"
       >
@@ -36,8 +36,10 @@
         </div>
 
         <div
-          v-if="(inInativeCardList && !existeStatus) || statusInativo &&
-            card.movimento_ativo === 1"
+          v-if="
+            (inInativeCardList && !existeStatus) ||
+            (statusInativo && card.movimento_ativo === 1)
+          "
           class="absolute top-1 right-1 flex flex-col gap-1"
         >
           <button
@@ -95,7 +97,10 @@
           >
             {{ tiposMovimento[card.tipo] }}({{ card.id_movimento }})
           </p>
-          <p v-if="inInativeCardList" class="md:text-base font-normal truncate text-sm">
+          <p
+            v-if="inInativeCardList"
+            class="md:text-base font-normal truncate text-sm"
+          >
             <b>Status<span v-if="statusInativo"> inativo</span>:</b>
             {{ card.statusName }}
           </p>
@@ -171,15 +176,16 @@
               class="w-fit rounded-md text-center md:text-base text-sm"
               v-tooltip.bottom="'Dias no pipeline'"
             >
-              <span class="font-semibold"
-              :class="{color: corTextoCard}"
-                >{{ diferencaDiasTotal === 0 ? "Hoje" :  diferencaDiasTotal+"d"}}</span
-              >
+              <span class="font-semibold" :class="{ color: corTextoCard }">{{
+                diferencaDiasTotal === 0 ? "Hoje" : diferencaDiasTotal + "d"
+              }}</span>
             </div>
           </div>
 
           <div class="text-ellipsis overflow-hidden">
-            <p class="font-normal truncate md:text-base text-sm">R$ {{ valorFormatado }}</p>
+            <p class="font-normal truncate md:text-base text-sm">
+              R$ {{ valorFormatado }}
+            </p>
           </div>
         </div>
 
@@ -243,7 +249,9 @@
           </table>
         </div>
         <div class="flex flex-wrap">
-          <span class="md:text-base text-xs truncate">{{ cardLog.nome_pessoa }}</span>
+          <span class="md:text-base text-xs truncate">{{
+            cardLog.nome_pessoa
+          }}</span>
         </div>
       </div>
     </div>
@@ -299,9 +307,9 @@ export default {
       circles: [
         {
           id: "1",
-          steps: 60,
+          steps: 10,
           size: 40,
-          value: 60,
+          value: 10,
           stepLength: -1,
           label: "segundos",
           dependentCircles: ["1"],
@@ -395,15 +403,7 @@ export default {
     },
 
     calculaInfosInInativeCardList() {
-      let diasDaSemana = [
-        "Dom",
-        "Seg",
-        "Terç",
-        "Qua",
-        "Qui",
-        "Sex",
-        "Sáb",
-      ];
+      let diasDaSemana = ["Dom", "Seg", "Terç", "Qua", "Qui", "Sex", "Sáb"];
 
       var dataHoraLog = new Date(this.cardLog.data_hora_cadastro);
       var diaDaSemanaHoraLog = diasDaSemana[dataHoraLog.getDay()];
@@ -414,7 +414,9 @@ export default {
       const anoHoraLog = dataHoraLog.getFullYear();
       const dataFormatadaHoraLog =
         diaHoraLog + "/" + mesHoraLog + "/" + anoHoraLog;
-      const horaHoraLog = dataHoraLog.toLocaleTimeString([], {timeStyle: 'short'});
+      const horaHoraLog = dataHoraLog.toLocaleTimeString([], {
+        timeStyle: "short",
+      });
       const dataHoraFormatadasHoraLog =
         dataFormatadaHoraLog + "," + horaHoraLog;
       this.dataHoraLog = dataHoraFormatadasHoraLog;
@@ -428,7 +430,9 @@ export default {
       const anoHoraCard = dataHoraCard.getFullYear();
       const dataFormatadaHoraCard =
         diaHoraCard + "/" + mesHoraCard + "/" + anoHoraCard;
-      const horaHoraCard = dataHoraCard.toLocaleTimeString([], {timeStyle: 'short'});
+      const horaHoraCard = dataHoraCard.toLocaleTimeString([], {
+        timeStyle: "short",
+      });
       const dataHoraFormatadasHoraCard =
         dataFormatadaHoraCard + "," + horaHoraCard;
       this.dataHoraCard = dataHoraFormatadasHoraCard;
@@ -455,9 +459,10 @@ export default {
 
     // Se o card foi montado na lista de para inativo, começa a contar 60 segundos
     if (this.isToInative) {
-      this.timeoutInativeCard = setTimeout(() => {
-        this.cardToInative();
-      }, 60000);
+      this.intervalInativeCard = setInterval(() => {
+        this.card.timer += 1;
+        if (this.currentTime >= 60) this.cardToInative();
+      }, 1000);
     }
 
     // Se estiver na lista de cards inativos, calcula qual o dia da semana que ele foi finalizado
@@ -466,8 +471,8 @@ export default {
     }
   },
   beforeDestroy() {
-    // Limpa o timeout se ele foi colocado como inativo ou retirado da lista para inativo
-    clearTimeout(this.timeoutInativeCard);
+    // Limpa o interval se ele foi colocado como inativo ou retirado da lista para inativo
+    clearInterval(this.intervalInativeCard);
   },
   watch: {
     /**

@@ -231,7 +231,7 @@ export default {
         posicao = nextCard.posicao / 2;
       }
 
-      if(card.id_status !== this.list.id_status){
+      if (card.id_status !== this.list.id_status) {
         card.data_hora_registro = `${this.dataHoje}T00:00:00`;
       }
       card.id_status = this.list.id_status;
@@ -246,7 +246,10 @@ export default {
       };
 
       this.$emit("newRequest", () => {
-        return this.axios.put(`${window.API_V2}/pipeline/cards/${card.id_card}/edit`, body);
+        return this.axios.put(
+          `${window.API_V2}/pipeline/cards/${card.id_card}/edit`,
+          body
+        );
       });
     },
 
@@ -388,7 +391,7 @@ export default {
           "info"
         );
 
-        this.$emit('cardReativado', editedCard);
+        this.$emit("cardReativado", editedCard);
         await this.verificaAdicionaCard(editedCard);
         return;
       }

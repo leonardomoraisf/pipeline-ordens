@@ -4,10 +4,7 @@
       class="group mb-0 relative hover:cursor-pointer"
       @click="toggleModalEditStatusFunc"
     >
-      <div
-        class="flex items-center"
-        v-if="ordem === 1 && lastList.ordem !== 1"
-      >
+      <div class="flex items-center" v-if="ordem === 1 && lastList.ordem !== 1">
         <div class="flex w-full h-0 bg-gray-700"></div>
         <div
           :style="{ backgroundColor: list.color }"
@@ -20,10 +17,7 @@
         <div class="flex w-full h-0.5 bg-gray-700"></div>
       </div>
 
-      <div
-        class="flex items-center"
-        v-if="ordem === 1 && lastList.ordem === 1"
-      >
+      <div class="flex items-center" v-if="ordem === 1 && lastList.ordem === 1">
         <div class="flex w-full h-0 bg-gray-700"></div>
         <div
           :style="{ backgroundColor: list.color }"
@@ -117,16 +111,15 @@ export default {
     corTextoStatus: String,
     lastList: Object,
     ajustarCorTexto: Function,
-    cards: Array
+    cards: Array,
   },
   data() {
     return {
       toggleStatusEditModal: ref(false),
-      animated: ref(false)
+      animated: ref(false),
     };
   },
   methods: {
-
     /**
      * Método para emitir o status deletado
      * @param {Object} list
@@ -152,7 +145,7 @@ export default {
     closeModalEditStatusFunc() {
       this.toggleStatusEditModal = !this.toggleStatusEditModal;
     },
-  }
+  },
 };
 </script>
 

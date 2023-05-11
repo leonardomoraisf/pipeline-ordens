@@ -183,7 +183,7 @@ export default {
         this.$emit("closeModalEditComments");
       }
     },
-    
+
     /**
      * Método que faz a requisição de edição dos comentários do card
      * @param {Event} ev

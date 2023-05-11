@@ -84,7 +84,7 @@
 
                     <select
                       v-model="statusSelected"
-                      class="border py-4 pl-1 w-full 2xl:w-fit xl:w-fit l:w-fit  rounded-full focus:outline-none hover:cursor-pointer input-hover transition-all"
+                      class="border py-4 pl-1 w-full 2xl:w-fit xl:w-fit l:w-fit rounded-full focus:outline-none hover:cursor-pointer input-hover transition-all"
                     >
                       <option value="" selected>Todos os status</option>
                       <option
@@ -110,7 +110,9 @@
                       </option>
                     </select>
 
-                    <div class="input-hover transition-all w-full 2xl:w-fit xl:w-fit l:w-fit ">
+                    <div
+                      class="input-hover transition-all w-full 2xl:w-fit xl:w-fit l:w-fit"
+                    >
                       <date-picker
                         v-model="date"
                         @change="setDate"
@@ -669,7 +671,7 @@ export default {
   border-radius: 3px;
 }
 
-.input-hover:hover{
+.input-hover:hover {
   transform: scale(1.02);
 }
 </style>

@@ -83,168 +83,6 @@
     <LoadingSkeleton v-if="isRequesting"></LoadingSkeleton>
 
     <!-- main COM filtro de status -->
-    <main
-      class="flex-1 overflow-hidden"
-      v-if="!isRequesting && search.length > 0"
-    >
-      <div class="flex flex-col h-full">
-        <div class="flex-1 overflow-x-auto 2xl:mt-4 mt-2">
-          <div class="inline-flex h-full items-start px-4">
-            <CardList
-              v-for="list in filteredList"
-              :key="list.id_status"
-              :list="list"
-              :lastList="lastList"
-              :ordem="list.ordem"
-              class="w-72 flex flex-col rounded-md pt-2 max-h-full"
-              :ajustarCorTexto="ajustarCorTexto"
-              :idEmpresa="idEmpresa"
-              :newCard="newCard"
-              :editedCard="editedCard"
-              @statusDeleted="onStatusDeleted"
-              :dataHoje="dataHoje"
-              @cardInWrongList="onCardInWrongList"
-              :pipelinePusher="pipelinePusher"
-              :editedCardStatus="editedCardStatus"
-              @turnCardActive="onTurnCardActive"
-              :tiposMovimento="tiposMovimento"
-              :pusherSessionID="pusherSessionID"
-              :animaElementSumindo="animaElementSumindo"
-              :isChangingCardPos="isChangingCardPos"
-              @changeCardPos="onChangeCardPos"
-              @newRequest="onNewRequest"
-              @cardReativado="onCardReativado"
-            />
-
-            <div class="flex flex-col rounded-md py-2 max-h-full w-72">
-              <!-- Essa div abaixo aparece assim que o usuário cria mais de três status,
-                                    pois já, pelo menos aparentemente, aprendeu a usar -->
-              <div
-                class="relative pb-8 hover:cursor-pointer text-black/50 hover:text-black/70 hover:scale-110 add"
-                @click="toggleModalCreateStatusFunc"
-                v-if="listBoards.length > 3"
-                v-tooltip.top="'Adicione um novo status'"
-              >
-                <div class="flex h-8 max-h-8 items-center justify-center mt-3">
-                  <div
-                    class="z-10 flex items-center justify-center w-6 h-6 rounded-full border-2 border-dashed border-black/70 p-6 shrink-0"
-                  >
-                    <font-awesome-icon :icon="['fas', 'fa-plus']" />
-                  </div>
-                </div>
-              </div>
-
-              <div
-                class="relative pb-8 hover:cursor-pointer text-black/50 hover:text-black/70 hover:scale-110 add"
-                @click="toggleModalCreateStatusFunc"
-                v-if="listBoards.length <= 3"
-              >
-                <div class="flex h-8 max-h-8 items-center justify-center mt-3">
-                  <div
-                    class="z-10 flex items-center justify-center w-6 h-6 rounded-full border-2 border-dashed border-black/70 p-6 shrink-0"
-                  >
-                    <font-awesome-icon :icon="['fas', 'fa-plus']" />
-                  </div>
-                </div>
-
-                <div
-                  class="flex justify-center text-center absolute bottom-0 w-full"
-                >
-                  <h3 class="text-base font-semibold leading-3">
-                    Adicione um novo status
-                  </h3>
-                </div>
-              </div>
-
-              <SideModal
-                :list="{ id_status: 0 }"
-                :lastList="lastList"
-                :toggleModal="isShowingModalCreateStatus"
-                @closeModal="toggleModalCreateStatusFunc"
-                :animated="animated"
-                :colorStatusText="'#FFFFFF'"
-                ref="sideModalCreate"
-                :ajustarCorTexto="ajustarCorTexto"
-                class="mb-4"
-              >
-              </SideModal>
-
-              <div
-                @click="toggleModalInativeCards"
-                v-if="listBoards.length > 0"
-                class="pb-3 hover:cursor-pointer relative h-screen flex flex-col overflow-hidden px-2 mt-36 border-2 rounded-md border-dashed border-black/30 hover:border-black/50 text-black/30 hover:text-black/50"
-                v-tooltip="'Clique para visualizar os cards finalizados'"
-              >
-                <div class="px-2 flex-1 overflow-y-auto cards-scrollbar">
-                  <draggable
-                    v-model="cardsToInativeList"
-                    v-bind="dragOptions"
-                    class="space-y-3 pb-24 h-full draggable pt-2"
-                    ref="listInativeRef"
-                    tag="ul"
-                  >
-                    <CardListItem
-                      v-for="card in cardsToInativeList"
-                      :key="card.id_card"
-                      :card="card"
-                      :colorStatus="'#71717A'"
-                      :ajustarCorTexto="ajustarCorTexto"
-                      :corTextoCard="'#FFFFFF'"
-                      :dataHoje="dataHoje"
-                      :isToInative="true"
-                      @putCardToInative="onPutCardToInative"
-                      @openModalEditComments="toggleModalEditComments"
-                      @newRequest="onNewRequest"
-                      :tiposMovimento="tiposMovimento"
-                      :pusherSessionID="pusherSessionID"
-                    />
-                    <div
-                      class="absolute inset-0 flex items-center justify-center trash"
-                      slot="header"
-                    >
-                      <p class="text-xl px-1">
-                        Para remover cards do pipeline, arraste para cá
-                      </p>
-                    </div>
-                  </draggable>
-                </div>
-              </div>
-
-              <ModalEditCardComments
-                :cardIsEditing="cardIsEditing"
-                :toggleModal="isShowingModalEditComments"
-                :colorStatus="'#71717A'"
-                :corTextoCard="'#FFFFFF'"
-                :inInativeCards="false"
-                ref="modalEditCommentsRef"
-                @closeModalEditComments="toggleModalEditComments"
-                :dataHoje="dataHoje"
-                :tiposMovimento="tiposMovimento"
-                @editComment="onEditComment"
-                :pusherSessionID="pusherSessionID"
-              ></ModalEditCardComments>
-
-              <ModalInativeCardList
-                :list="listBoards"
-                :toggleModal="isShowingModalInativeCardList"
-                :dataHoje="dataHoje"
-                @closeModalInativeCardList="toggleModalInativeCards"
-                @openModalEditComments="toggleModalEditComments"
-                @turnCardActive="onTurnCardActive"
-                :ajustarCorTexto="ajustarCorTexto"
-                @cardDeleted="onCardDeleted"
-                :tiposMovimento="tiposMovimento"
-                :animaElementSumindo="animaElementSumindo"
-                :editedCardComment="editedCardComment"
-                :cardIsNowActive="cardIsNowActive"
-              >
-              </ModalInativeCardList>
-            </div>
-          </div>
-        </div>
-      </div>
-      <vue-confirm-dialog></vue-confirm-dialog>
-    </main>
 
     <!-- main SEM filtro de status -->
     <main
@@ -346,6 +184,8 @@
                     class="space-y-3 pb-24 h-full draggable pt-2"
                     ref="listInativeRef"
                     tag="ul"
+                    @change="onChange"
+                    v-if="showingCardsToInative"
                   >
                     <CardListItem
                       v-for="card in cardsToInativeList"
@@ -488,6 +328,8 @@ export default {
       cardIsNowActive: {},
 
       onlineStatus: true,
+
+      showingCardsToInative: true,
     };
   },
   computed: {
@@ -513,6 +355,29 @@ export default {
     },
   },
   methods: {
+    /**
+     * Método para prevenir que o card com o timer em 10 volte para a lista visualmente
+     * @param {Event} e
+     */
+    onChange(e) {
+      if (e.added) {
+        const card = e.added.element;
+        card.timer = 0;
+        card.indexInative = e.added.newIndex;
+      }
+      if (e.moved) {
+        const card = e.moved.element;
+        card.indexInative = e.moved.newIndex;
+
+        if (card.timer === 60) {
+          this.cardsToInativeList.splice(card.indexInative, 1);
+          this.showingCardsToInative = false;
+          setTimeout(() => {
+            this.showingCardsToInative = true;
+          }, 100);
+        }
+      }
+    },
     /**
      * Atualiza a propriedade "cardIsNowActive" com o objeto "card" que representa um card reativado.
      * @param {Object} card - Objeto que representa um cartão reativado.
