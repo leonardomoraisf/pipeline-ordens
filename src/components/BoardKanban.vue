@@ -370,7 +370,7 @@ export default {
         card.indexInative = e.moved.newIndex;
 
         if (card.timer === 60) {
-          this.cardsToInativeList.array.forEach((card, index) => {
+          this.cardsToInativeList.forEach((card, index) => {
             if(card === undefined) {
                 this.cardsToInativeList.slice(index,1);
             }
