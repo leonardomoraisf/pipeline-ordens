@@ -85,10 +85,7 @@
     <LoadingSkeleton v-if="isRequesting"></LoadingSkeleton>
 
     <!-- main SEM filtro de status -->
-    <main
-      class="flex-1 overflow-hidden"
-      v-if="!isRequesting"
-    >
+    <main class="flex-1 overflow-hidden" v-if="!isRequesting">
       <div class="flex flex-col h-full">
         <div class="flex-1 overflow-x-auto 2xl:mt-4 mt-2">
           <div class="inline-flex h-full items-start px-4">
@@ -236,12 +233,15 @@
                 @closeModalInativeCardList="toggleModalInativeCards"
                 @openModalEditComments="toggleModalEditComments"
                 @turnCardActive="onTurnCardActive"
+                @changeCardPos="onChangeCardPos"
+                @newRequest="onNewRequest"
                 :ajustarCorTexto="ajustarCorTexto"
                 @cardDeleted="onCardDeleted"
                 :tiposMovimento="tiposMovimento"
                 :animaElementSumindo="animaElementSumindo"
                 :editedCardComment="editedCardComment"
                 :cardIsNowActive="cardIsNowActive"
+                :pusherSessionID="pusherSessionID"
               >
               </ModalInativeCardList>
             </div>
@@ -359,8 +359,12 @@ export default {
     /**
      * Método para avisar que a filtragem por status está inativa temporariamente
      */
-    avisoInput(){
-        ToastTopStart5.fire("Opa!", "A filtragem por status está inativa temporariamente!", "info");
+    avisoInput() {
+      ToastTopStart5.fire(
+        "Opa!",
+        "A filtragem por status está inativa temporariamente!",
+        "info"
+      );
     },
 
     /**
@@ -407,6 +411,7 @@ export default {
         }
       }
     },
+
     /**
      * Atualiza a propriedade "cardIsNowActive" com o objeto "card" que representa um card reativado.
      * @param {Object} card - Objeto que representa um cartão reativado.
@@ -531,48 +536,8 @@ export default {
     /**
      * Método chamado quando um card inativo é ativado novamente
      * @param {Object} card
-     * @param {boolean} fromPusher - Parâmetro opcional que indica se o evento foi disparado pelo Pusher
      */
-    onTurnCardActive(card, fromPusher = false) {
-      // Procura o índice do status do card na lista de status dos quadros
-      let statusIndex = this.listBoards.findIndex(
-        (obj) => obj.id_status === card.id_status
-      );
-
-      // Se o status não for encontrado, exibe uma mensagem de erro e retorna
-      if (statusIndex === -1) {
-        const firstStatus = this.listBoards[0];
-
-        card.id_status = firstStatus.id_status;
-      }
-
-      // Exibe uma mensagem de sucesso para o usuário
-      ToastTopStart5.fire(
-        "Sucesso!",
-        "O card " +
-          this.tiposMovimento[card.tipo] +
-          "(" +
-          card.id_movimento +
-          ") está ativo novamente.",
-        "success"
-      );
-
-      // Se o evento não foi disparado pelo Pusher, faz uma requisição PUT para atualizar o card no servidor
-      if (fromPusher === false) {
-        let body = {
-          id_status: card.id_status,
-          posicao: card.posicao,
-          ativo: 1,
-          comentarios: card.comentarios,
-        };
-
-        this.axios
-          .put(`${window.API_V2}/pipeline/cards/${card.id_card}/edit`, body)
-          .then((res) => {})
-          .catch((err) => {
-            ToastTopStart5.fire("Erro!", err.response.data.message, "error");
-          });
-      }
+    onTurnCardActive(card) {
 
       // Define o card como o novo card a ser adicionado à lista correta
       this.newCard = card;

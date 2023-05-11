@@ -267,6 +267,7 @@ export default {
       type: Object,
       default: () => ({}),
     },
+    pusherSessionID: Number,
   },
   data() {
     return {
@@ -316,11 +317,7 @@ export default {
       this.$emit("cardDeleted", card);
     },
 
-    /**
-     * Método assíncrono que é ativo quando o card é tornado ativo novamente
-     * @param {Object} card
-     */
-    async onTurnCardActive(card) {
+    async animaCardToActiveSumindo(card) {
       const list = this.$refs.list;
 
       var elementIndex = list.findIndex(
@@ -336,7 +333,44 @@ export default {
       // remove o card da lista atual
       await this.$set(this.inativeCardsList, elementIndex, card);
       await this.inativeCardsList.splice(elementIndex, 1);
-      await this.$emit("turnCardActive", card);
+    },
+
+    /**
+     * Método assíncrono que é ativo quando o card é tornado ativo novamente
+     * @param {Object} card
+     * @param {Boolean} fromPusher Se vier do pusher não faz a request
+     */
+    async onTurnCardActive(card, fromPusher = false) {
+      if (!fromPusher) {
+        var body = {
+          id_status: card.id_status,
+          posicao: card.posicao,
+          ativo: 1,
+          comentarios: card.comentarios,
+          pusherSessionID: this.pusherSessionID,
+        };
+
+        let statusIndex = this.list.findIndex(
+          (obj) => obj.id_status === card.id_status
+        );
+        if (statusIndex === -1) {
+          let firstListIdStatus = this.list[0].id_status;
+          body.id_status = firstListIdStatus;
+          card.id_status = firstListIdStatus;
+        }
+
+        this.$emit("newRequest", () => {
+          return this.axios.put(
+            `${window.API_V2}/pipeline/cards/${card.id_card}/edit`,
+            body
+          );
+        });
+      }
+
+      this.$emit("turnCardActive", card);
+      this.$emit("changeCardPos", () => {
+        return this.animaCardToActiveSumindo(card);
+      });
     },
 
     /**
@@ -586,7 +620,7 @@ export default {
     cardIsNowActive(newCard, oldCard) {
       this.inativeCardsList.forEach((card) => {
         if (newCard.id_card === card.id_card) {
-          this.onTurnCardActive(newCard);
+          this.onTurnCardActive(newCard, true);
         }
       });
     },

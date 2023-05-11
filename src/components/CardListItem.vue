@@ -29,7 +29,8 @@
         >
           <button
             class="md:text-base text-sm text-black font-semibold bg-white hover:scale-105 hover:text-green-500 hover:bg-gray-200 p-1 rounded-md transition-all"
-            @click="$emit('turnCardActive', card)"
+            @click="onClickToActive"
+            v-if="!alreadyClickedToActive"
           >
             Reativar
           </button>
@@ -43,14 +44,16 @@
           class="absolute top-1 right-1 flex flex-col gap-1"
         >
           <button
+            v-if="!alreadyClickedToActive"
             @click="deleteCard"
             class="text-base text-black font-semibold bg-white hover:text-red-500 hover:scale-105 hover:bg-gray-200 p-1 rounded-md transition-all"
           >
             Deletar
           </button>
           <button
+            v-if="!alreadyClickedToActive"
             class="text-base text-black font-semibold bg-white hover:scale-105 hover:text-green-500 hover:bg-gray-200 p-1 rounded-md transition-all"
-            @click="$emit('turnCardActive', card)"
+            @click="onClickToActive"
             v-tooltip.bottom="
               'Se reativar esse card, ele voltará para o status 1!'
             "
@@ -324,9 +327,15 @@ export default {
       diaCard: "",
       dataHoraCard: "",
       diferencaDiasFinalizado: 0,
+      alreadyClickedToActive: false
     };
   },
   methods: {
+    onClickToActive(){
+        this.alreadyClickedToActive = true;
+        this.$emit('turnCardActive', this.card)
+    },
+
     /**
      * Método para deletar o card, caso seu status esteja inativo
      */
@@ -461,7 +470,7 @@ export default {
       this.intervalInativeCard = setInterval(() => {
         this.card.timer -= 1;
         this.$forceUpdate();
-        if (this.card.timer <= 0) this.cardToInative();
+        if (this.card.timer <= 55) this.cardToInative();
       }, 1000);
     }
 
