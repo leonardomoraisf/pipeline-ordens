@@ -307,9 +307,9 @@ export default {
       circles: [
         {
           id: "1",
-          steps: 10,
+          steps: 60,
           size: 40,
-          value: 10,
+          value: 60,
           stepLength: -1,
           label: "segundos",
           dependentCircles: ["1"],
