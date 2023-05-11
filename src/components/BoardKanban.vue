@@ -87,7 +87,7 @@
     <!-- main SEM filtro de status -->
     <main
       class="flex-1 overflow-hidden"
-      v-if="!isRequesting && search.length === 0"
+      v-if="!isRequesting"
     >
       <div class="flex flex-col h-full">
         <div class="flex-1 overflow-x-auto 2xl:mt-4 mt-2">
