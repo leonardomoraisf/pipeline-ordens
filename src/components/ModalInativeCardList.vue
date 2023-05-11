@@ -136,7 +136,7 @@
               </transition>
 
               <div
-                class="flex justify-center w-full"
+                class="flex justify-center w-full pb-2"
                 v-if="isRequestingAllInactiveStatus"
               >
                 <div class="hollow-dots-spinner">

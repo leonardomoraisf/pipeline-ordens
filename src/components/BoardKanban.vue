@@ -116,6 +116,7 @@
               @changeCardPos="onChangeCardPos"
               @newRequest="onNewRequest"
               @cardReativado="onCardReativado"
+              @wrongCardInToInactive="onWrongCardInToInactive"
             />
 
             <div class="flex flex-col rounded-md py-2 max-h-full w-72">
@@ -185,7 +186,7 @@
                     ref="listInativeRef"
                     tag="ul"
                     @change="onChange"
-                    v-show="showingCardsToInative"
+                    v-if="showingCardsToInative"
                   >
                     <CardListItem
                       v-for="card in cardsToInativeList"
@@ -356,29 +357,46 @@ export default {
   },
   methods: {
     /**
+     * Método chamado quando um card com timer 0 é colocado em uma lista novamente
+     */
+    onWrongCardInToInactive() {
+      this.resetDraggableInactiveCards();
+    },
+
+    /**
+     * Método que esconde e mostra o componente draggable dos cards para inativo
+     * fazendo com que ele "resete"
+     */
+    async resetDraggableInactiveCards() {
+      this.showingCardsToInative = false;
+      setTimeout(() => {
+        this.showingCardsToInative = true;
+      }, 1);
+    },
+
+    /**
      * Método para prevenir que o card com o timer em 10 volte para a lista visualmente
      * @param {Event} e
      */
     onChange(e) {
+      const item = e.added || e.moved;
       if (e.added) {
-        const card = e.added.element;
-        card.timer = 0;
+        const card = item.element;
+        card.timer = 60;
         card.indexInative = e.added.newIndex;
       }
       if (e.moved) {
-        const card = e.moved.element;
+        const card = item.element;
         card.indexInative = e.moved.newIndex;
 
-        if (card.timer === 60) {
+        if (card.timer <= 0) {
           this.cardsToInativeList.forEach((card, index) => {
             if (card === undefined) {
               this.cardsToInativeList.slice(index, 1);
             }
           });
-          this.showingCardsToInative = false;
-          setTimeout(() => {
-            this.showingCardsToInative = true;
-          }, 100);
+
+          this.resetDraggableInactiveCards();
         }
       }
     },

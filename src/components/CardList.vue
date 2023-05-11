@@ -201,6 +201,21 @@ export default {
     },
 
     /**
+     * Método para verificar se o card possui timer e se ele está 0
+     * se sim, remove o card
+     * @param {Object} card
+     */
+    async verificaTimerCard(card) {
+      if (card.timer === 0) {
+        const index = this.cards.findIndex(
+          (obj) => obj.id_card === card.id_card
+        );
+        this.cards.splice(index, 1);
+        this.$emit('wrongCardInToInactive');
+      }
+    },
+
+    /**
      * Método que é acionado quando acontece alguma mudança de status ou posição de cards do componente draggable
      * @param {Event} e
      */
@@ -220,6 +235,8 @@ export default {
       const prevCard = this.cards[index - 1];
       const nextCard = this.cards[index + 1];
       const card = this.cards[index];
+
+      this.verificaTimerCard(card);
 
       let posicao = card.posicao;
 

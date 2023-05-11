@@ -1,15 +1,15 @@
 <template>
   <li
-    class="drag-card"
+    class="drag-card flex-col md:flex-row"
     :class="{
       'card-list': !inModalEditComments && !inInativeCardList,
-      flex: inInativeCardList,
+      'flex': inInativeCardList
     }"
   >
     <div
       :style="{ backgroundColor: colorStatus }"
       class="group relative p-2 shadow rounded-md text-left h-fit"
-      :class="{ 'w-3/5': inInativeCardList }"
+      :class="{'md:w-3/5': inInativeCardList}"
     >
       <div
         class="h-fit flex flex-col justify-between"
@@ -106,18 +106,14 @@
           </p>
         </div>
 
-        <circular-count-down-timer
+        <div
           v-if="isToInative"
-          class="absolute top-0 right-3 text-xs font-semibold"
-          :circles="circles"
-          :stepLength="circles.stepLength"
-          :main-circle-id="circles.id || '1'"
-          :fill-color="colorStatus"
-          :stroke-width="2"
-          :stroke-color="corTextoCard"
-          :underneath-stroke-color="colorStatus"
+          class="absolute top-0 right-1 text-sm font-semibold flex flex-col items-center"
           v-tooltip="'Quando o tempo acabar, o card será finalizado!'"
-        />
+        >
+          <span class="text-lg"> {{ card.timer }} </span>
+          <span>segundos</span>
+        </div>
 
         <div class="flex justify-between items-center">
           <div class="flex items-center">
@@ -208,7 +204,7 @@
       </div>
     </div>
 
-    <div v-if="inInativeCardList" class="w-2/5">
+    <div v-if="inInativeCardList" class="mt-1 md:mt-0">
       <div
         class="flex flex-col md:pl-2 pl-1 justify-center text-left h-full overflow-hidden"
       >
@@ -254,6 +250,9 @@
           }}</span>
         </div>
       </div>
+    </div>
+
+     <div v-if="inInativeCardList" class="block md:hidden border border-gray-500 mb-2 mt-1">
     </div>
   </li>
 </template>
@@ -459,9 +458,15 @@ export default {
 
     // Se o card foi montado na lista de para inativo, começa a contar 60 segundos
     if (this.isToInative) {
+      var alreadyUpdated = false;
       this.intervalInativeCard = setInterval(() => {
-        this.card.timer += 1;
-        if (this.card.timer >= 60) this.cardToInative();
+        if (alreadyUpdated === false) {
+          this.$forceUpdate();
+          alreadyUpdated = true;
+        }
+        this.card.timer -= 1;
+        this.$forceUpdate();
+        if (this.card.timer <= 0) this.cardToInative();
       }, 1000);
     }
 
