@@ -375,7 +375,10 @@ export default {
               this.cardsToInativeList.slice(index, 1);
             }
           });
-          this.$forceUpdate();
+          this.showingCardsToInative = false;
+          setTimeout(() => {
+            this.showingCardsToInative = true;
+          }, 100);
         }
       }
     },
