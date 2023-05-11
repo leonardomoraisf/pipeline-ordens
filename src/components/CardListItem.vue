@@ -458,12 +458,7 @@ export default {
 
     // Se o card foi montado na lista de para inativo, começa a contar 60 segundos
     if (this.isToInative) {
-      var alreadyUpdated = false;
       this.intervalInativeCard = setInterval(() => {
-        if (alreadyUpdated === false) {
-          this.$forceUpdate();
-          alreadyUpdated = true;
-        }
         this.card.timer -= 1;
         this.$forceUpdate();
         if (this.card.timer <= 0) this.cardToInative();
