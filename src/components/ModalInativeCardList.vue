@@ -368,6 +368,7 @@ export default {
         });
       }
 
+      card.ativo = 1;
       this.$emit("turnCardActive", card);
       this.$emit("changeCardPos", () => {
         return this.animaCardToActiveSumindo(card);
