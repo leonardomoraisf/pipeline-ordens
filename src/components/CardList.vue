@@ -61,6 +61,7 @@
       :tiposMovimento="tiposMovimento"
       @editComment="onEditComment"
       :pusherSessionID="pusherSessionID"
+      @newRequest="emitRequest"
     ></ModalEditCardComments>
   </div>
 </template>
@@ -130,6 +131,11 @@ export default {
     this.corTextoStatus = this.ajustarCorTexto(this.list.color);
   },
   methods: {
+
+    emitRequest(request) {
+        this.$emit('newRequest', request);
+    },
+
     /**
      * Método que seta o comentário do card que teve ser comentário editado
      * @param {Object} card

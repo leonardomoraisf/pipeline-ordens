@@ -219,20 +219,15 @@ export default {
         comentarios: this.cardComentarios,
       };
 
-      const response = await apiService.card.edit(
-        this.cardIsEditing.id_card,
-        body
-      );
+      this.$emit("newRequest", () => {
+        return this.axios.put(
+          `${window.API_V2}/pipeline/cards/${card.id_card}/edit`,
+          body
+        );
+      });
+
       this.isSubmiting = false;
-
-      if (response.error || response.trace) {
-        this.errorMessage = response.message;
-        this.isShowingError = true;
-
-        return;
-      }
-
-      Toast.fire(response.message, "", "success");
+      Toast.fire("Sucesso!", "O comentário do seu card será salvo!", "success");
       this.isShowingError = false;
       this.$emit("closeModalEditComments");
       this.$emit("editComment", card);

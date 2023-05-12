@@ -224,6 +224,7 @@
                 :tiposMovimento="tiposMovimento"
                 @editComment="onEditComment"
                 :pusherSessionID="pusherSessionID"
+                @newRequest="onNewRequest"
               ></ModalEditCardComments>
 
               <ModalInativeCardList
