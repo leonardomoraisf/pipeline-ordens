@@ -3,13 +3,13 @@
     class="drag-card flex-col md:flex-row"
     :class="{
       'card-list': !inModalEditComments && !inInativeCardList,
-      'flex': inInativeCardList
+      flex: inInativeCardList,
     }"
   >
     <div
       :style="{ backgroundColor: colorStatus }"
       class="group relative p-2 shadow rounded-md text-left h-fit"
-      :class="{'md:w-3/5': inInativeCardList}"
+      :class="{ 'md:w-3/5': inInativeCardList }"
     >
       <div
         class="h-fit flex flex-col justify-between"
@@ -255,13 +255,16 @@
       </div>
     </div>
 
-     <div v-if="inInativeCardList" class="block md:hidden border border-gray-500 mb-2 mt-1">
-    </div>
+    <div
+      v-if="inInativeCardList"
+      class="block md:hidden border border-gray-500 mb-2 mt-1"
+    ></div>
   </li>
 </template>
 
 <script>
 import { ref, nextTick } from "vue";
+import apiService from "../services/apiService";
 
 export default {
   name: "CardListItem",
@@ -327,31 +330,32 @@ export default {
       diaCard: "",
       dataHoraCard: "",
       diferencaDiasFinalizado: 0,
-      alreadyClickedToActive: false
+      alreadyClickedToActive: false,
     };
   },
   methods: {
-    onClickToActive(){
-        this.alreadyClickedToActive = true;
-        this.$emit('turnCardActive', this.card)
+    onClickToActive() {
+      this.alreadyClickedToActive = true;
+      this.$emit("turnCardActive", this.card);
     },
 
     /**
      * Método para deletar o card, caso seu status esteja inativo
      */
-    deleteCard() {
+    async deleteCard() {
       this.isDeleting = true;
-      this.axios
-        .delete(`${window.API_V2}/pipeline/cards/${this.card.id_card}/delete`)
-        .then((res) => {
-          this.isDeleting = false;
-          this.$emit("cardDeleted", this.card);
-          ToastTopStart5.fire("Sucesso!", res.data.message, "success");
-        })
-        .catch((err) => {
-          this.isDeleting = true;
-          ToastTopStart5.fire("Erro!", err.response.data.message, "error");
-        });
+
+      const response = await apiService.card.delete(this.card.id_card);
+      this.isDeleting = false;
+
+      if (response.error || response.trace) {
+        ToastTopStart5.fire("Erro!", response.message, "error");
+
+        return;
+      }
+
+      this.$emit("cardDeleted", this.card);
+      ToastTopStart5.fire("Sucesso!", response.message, "success");
     },
 
     /**

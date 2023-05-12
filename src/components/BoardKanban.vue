@@ -262,6 +262,7 @@ import { ref, nextTick } from "vue";
 import ModalEditCardComments from "./ModalEditCardComments.vue";
 import CardListItem from "./CardListItem.vue";
 import ModalInativeCardList from "./ModalInativeCardList.vue";
+import apiService from "../services/apiService";
 
 export default {
   name: "BoardKanban",
@@ -538,7 +539,6 @@ export default {
      * @param {Object} card
      */
     onTurnCardActive(card) {
-
       // Define o card como o novo card a ser adicionado à lista correta
       this.newCard = card;
     },
@@ -591,17 +591,19 @@ export default {
 
         if (cardIndex === -1) return;
 
-        const childrenList = this.$refs.listInativeRef.$children;
-        const childrenIndex = childrenList.findIndex(
-          (obj) => obj.card.id_card === card.id_card
-        );
-        const element = childrenList[childrenIndex].$el;
+        this.onChangeCardPos(async () => {
+          const childrenList = this.$refs.listInativeRef.$children;
+          const childrenIndex = childrenList.findIndex(
+            (obj) => obj.card.id_card === card.id_card
+          );
+          const element = childrenList[childrenIndex].$el;
 
-        await new Promise((resolve) => {
-          this.animaElementSumindo(element, resolve);
+          await new Promise((resolve) => {
+            this.animaElementSumindo(element, resolve);
+          });
+
+          await this.cardsToInativeList.splice(cardIndex, 1);
         });
-
-        await this.cardsToInativeList.splice(cardIndex, 1);
       });
     },
 
@@ -648,48 +650,47 @@ export default {
     /**
      * Método para requisitar e setar a lista de status e cards
      */
-    setList() {
+    async setList() {
       this.isRequesting = true;
-      this.axios
-        .get(`${window.API_V2}/pipeline/list`)
-        .then((res) => {
-          this.listBoards = res.data;
 
-          // Remove o último índice que contém de qual empresa é essa lista, esse
-          // dado é usado para cadastrar os canais do Pusher
-          this.idEmpresa =
-            this.listBoards[this.listBoards.length - 1].id_empresa;
-          this.listBoards.splice(this.listBoards.length - 1, 1);
+      const response = await apiService.pipeline.list();
 
-          // Calcula e adiciona a ordem para cada status
-          if (this.listBoards.length > 0) {
-            let ordem = 1;
-            this.listBoards.forEach((status) => {
-              if (status.cards !== null) {
-                status.cards = JSON.parse(status.cards);
-              } else if (status.cards === null) {
-                status.cards = [];
-              }
-              status["ordem"] = ordem;
-              ordem++;
-            });
+      if (response.error || response.trace) {
+        ToastTopStart5.fire("Erro!", response.message, "error");
+        return;
+      }
+      this.listBoards = response;
 
-            // Pega qual é a última lista, para fazer os cálculos da linhas entre os status
-            this.lastList = this.listBoards[this.listBoards.length - 1];
+      // Remove o último índice que contém de qual empresa é essa lista, esse
+      // dado é usado para cadastrar os canais do Pusher
+      this.idEmpresa = this.listBoards[this.listBoards.length - 1].id_empresa;
+      this.listBoards.splice(this.listBoards.length - 1, 1);
+
+      // Calcula e adiciona a ordem para cada status
+      if (this.listBoards.length > 0) {
+        let ordem = 1;
+        this.listBoards.forEach((status) => {
+          if (status.cards !== null) {
+            status.cards = JSON.parse(status.cards);
+          } else if (status.cards === null) {
+            status.cards = [];
           }
-
-          // da a ordem da última lista como 0, caso não tenha listas na resposta
-          if (this.listBoards.length === 0) {
-            this.lastList = {
-              ordem: 0,
-            };
-          }
-
-          this.bindChannels();
-        })
-        .catch((err) => {
-          ToastTopStart5.fire("Erro!", err.response.data.message, "error");
+          status["ordem"] = ordem;
+          ordem++;
         });
+
+        // Pega qual é a última lista, para fazer os cálculos da linhas entre os status
+        this.lastList = this.listBoards[this.listBoards.length - 1];
+      }
+
+      // da a ordem da última lista como 0, caso não tenha listas na resposta
+      if (this.listBoards.length === 0) {
+        this.lastList = {
+          ordem: 0,
+        };
+      }
+
+      this.bindChannels();
     },
 
     async calculaOrdem() {

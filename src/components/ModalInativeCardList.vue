@@ -242,6 +242,7 @@ dayjs.extend(isBetween);
 import DatePicker from "vue2-datepicker";
 import "vue2-datepicker/index.css";
 import "vue2-datepicker/locale/pt-br";
+import apiService from "../services/apiService";
 
 export default {
   name: "ModalInativeCardList",
@@ -384,7 +385,7 @@ export default {
     /**
      * Método que faz a requisição com base nos filtros de cards inativos
      */
-    buscaCards() {
+    async buscaCards() {
       this.inativeCardsList = [];
       this.dataRequest = {};
       this.body = {};
@@ -417,26 +418,25 @@ export default {
       };
 
       this.isRequesting = true;
-      this.axios
-        .post(`${window.API_V2}/pipeline/cards/inactive`, this.body)
-        .then((res) => {
-          const data = res.data;
-          this.inativeCardsList = data.data;
 
-          delete data.data;
+      var response = await apiService.card.getInactive(this.body);
+      this.isRequesting = false;
 
-          this.dataRequest = data;
+      if (response.error || response.trace) {
+        ToastTopStart5.fire("Erro!", response.message, "error");
 
-          this.adicionaInfos();
+        return;
+      }
 
-          this.alreadyRequestedList = true;
-        })
-        .catch((err) => {
-          ToastTopStart5.fire("Erro!", err.response.data.message, "error");
-        })
-        .then(() => {
-          this.isRequesting = false;
-        });
+      this.inativeCardsList = response.data;
+
+      delete response.data;
+
+      this.dataRequest = response;
+
+      this.adicionaInfos();
+
+      this.alreadyRequestedList = true;
     },
 
     /**
@@ -508,18 +508,20 @@ export default {
     /**
      * Método que requisita todos os status inativos da empresa
      */
-    getAllInactiveStatus() {
+    async getAllInactiveStatus() {
       this.isRequestingAllInactiveStatus = true;
       this.alreadyRequestedAllInactiveStatus = true;
-      this.axios
-        .get(`${window.API_V2}/pipeline/status/inactive`)
-        .then((res) => {
-          this.allInactiveStatus = res.data;
-          this.isRequestingAllInactiveStatus = false;
-        })
-        .catch((err) => {
-          ToastTopStart5.fire("Erro!", err.response.data.message, "error");
-        });
+
+      const response = await apiService.status.getAllInactive();
+
+      if (response.error || response.trace) {
+        ToastTopStart5.fire("Erro!", response.message, "error");
+
+        return;
+      }
+
+      this.allInactiveStatus = response;
+      this.isRequestingAllInactiveStatus = false;
     },
 
     /**
@@ -545,7 +547,7 @@ export default {
     /**
      * Método para buscar resultados paginados
      */
-    buscaCardsPaginacao(paginationUrl) {
+    async buscaCardsPaginacao(paginationUrl) {
       this.isRequestingMore = true;
 
       // Linha para a url ficar certa de acordo com o proxy feito em desenvolvimento
@@ -553,24 +555,26 @@ export default {
         process.env.NODE_ENV === "development"
           ? paginationUrl.replace("8585", "8080")
           : paginationUrl;
-      this.axios
-        .post(paginationDev, this.body)
-        .then((res) => {
-          const data = res.data;
-          this.inativeCardsList = this.inativeCardsList.concat(data.data);
 
-          delete data.data;
+      var response = await apiService.pipeline.anonymousPost(
+        paginationDev,
+        this.body
+      );
 
-          this.dataRequest = data;
+      this.isRequestingMore = false;
+      if (response.error || response.trace) {
+        ToastTopStart5.fire("Erro!", response.message, "error");
 
-          this.adicionaInfos();
-        })
-        .catch((err) => {
-          ToastTopStart5.fire("Erro!", err.response.data.message, "error");
-        })
-        .then(() => {
-          this.isRequestingMore = false;
-        });
+        return;
+      }
+
+      this.inativeCardsList = this.inativeCardsList.concat(response.data);
+
+      delete response.data;
+
+      this.dataRequest = response;
+
+      this.adicionaInfos();
     },
   },
   watch: {

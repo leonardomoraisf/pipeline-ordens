@@ -110,6 +110,7 @@
 <script>
 import { ref, nextTick } from "vue";
 import CardListItem from "./CardListItem.vue";
+import apiService from "../services/apiService";
 
 export default {
   name: "ModalEditCardComments",
@@ -188,7 +189,7 @@ export default {
      * Método que faz a requisição de edição dos comentários do card
      * @param {Event} ev
      */
-    onSubmit(ev) {
+    async onSubmit(ev) {
       this.isSubmiting = true;
       this.isShowingError = false;
 
@@ -218,24 +219,23 @@ export default {
         comentarios: this.cardComentarios,
       };
 
-      this.axios
-        .put(
-          `${window.API_V2}/pipeline/cards/${this.cardIsEditing.id_card}/edit`,
-          body
-        )
-        .then((res) => {
-          Toast.fire(res.data.message, "", "success");
-          this.isShowingError = false;
-          this.$emit("closeModalEditComments");
-          this.$emit("editComment", card);
-        })
-        .catch((err) => {
-          this.errorMessage = err.response.data.message;
-          this.isShowingError = true;
-        })
-        .finally(() => {
-          this.isSubmiting = false;
-        });
+      const response = await apiService.card.edit(
+        this.cardIsEditing.id_card,
+        body
+      );
+      this.isSubmiting = false;
+
+      if (response.error || response.trace) {
+        this.errorMessage = response.message;
+        this.isShowingError = true;
+
+        return;
+      }
+
+      Toast.fire(response.message, "", "success");
+      this.isShowingError = false;
+      this.$emit("closeModalEditComments");
+      this.$emit("editComment", card);
     },
   },
   watch: {

@@ -64,6 +64,7 @@
 
 <script>
 import { ref } from "vue";
+import apiService from "../services/apiService";
 
 export default {
   name: "MovimentoModalCreate",
@@ -97,30 +98,29 @@ export default {
     /**
      * Método para abrir a modal de criação de vendas
      */
-    openModal() {
+    async openModal() {
       this.clickCancel = !this.clickCancel;
       ToastCenter.fire(
         "Abrindo...",
         "Já, já você poderá criar novos cards!",
         "info"
       );
-      this.axios
-        .post(`${window.API_V2}/pipeline/setId`, {
-          id_status_pipeline: this.list.id_status,
-        })
-        .then((res) => {
-          if (res.data.status === true) {
-            this.toggleCardFormModal = !this.toggleCardFormModal;
-            Toast.fire("Prontinho!", "", "success");
-          } else {
-            Toast.fire(res.data.message, "...", "error");
-            this.clickCancel = !this.clickCancel;
-          }
-        })
-        .catch((err) => {
-          ToastTopStart5.fire("Erro!", err.response.data.message, "error");
-          this.clickCancel = !this.clickCancel;
-        });
+
+      const response = await apiService.pipeline.setIdPipeline({
+        id_status_pipeline: this.list.id_status,
+      });
+
+      if (response.error || response.trace) {
+        ToastTopStart5.fire("Erro!", err.response.data.message, "error");
+        this.clickCancel = !this.clickCancel;
+
+        return;
+      }
+
+      if (response.status) {
+        this.toggleCardFormModal = !this.toggleCardFormModal;
+        Toast.fire("Prontinho!", "", "success");
+      }
     },
 
     /**

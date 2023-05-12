@@ -205,6 +205,7 @@
 <script>
 import { ref, nextTick } from "vue";
 import { ColorPicker } from "vue-color-gradient-picker";
+import apiService from "../services/apiService";
 
 export default {
   name: "SideModal",
@@ -301,7 +302,7 @@ export default {
     /**
      * Método chamado quando um status é inativado
      */
-    deleteStatus() {
+    async deleteStatus() {
       this.isDeletingStatus = !this.isDeletingStatus;
 
       let body = {
@@ -309,23 +310,20 @@ export default {
         ativo: 0,
       };
 
-      this.axios
-        .put(
-          `${window.API_V2}/pipeline/status/${this.list.id_status}/edit`,
-          body
-        )
-        .then((res) => {
-          this.$emit("closeModal");
-          this.isDeletingStatus = !this.isDeletingStatus;
-          Toast.fire(res.data.message, "Atualizando pipeline...", "success");
-          this.$emit("statusDeleted", this.list);
-        })
-        .catch((err) => {
-          this.isDeletingStatus = !this.isDeletingStatus;
-          this.isSubmiting = false;
-          this.isShowingError = true;
-          this.errorMessage = err.response.data.message;
-        });
+      const response = await apiService.status.edit(this.list.id_status, body);
+
+      this.isDeletingStatus = !this.isDeletingStatus;
+      if (response.statusCode) {
+        this.isSubmiting = false;
+        this.isShowingError = true;
+        this.errorMessage = response.message;
+
+        return;
+      }
+
+      this.$emit("closeModal");
+      Toast.fire(response.message, "Atualizando pipeline...", "success");
+      this.$emit("statusDeleted", this.list);
     },
 
     /**
@@ -470,7 +468,7 @@ export default {
      * Método que faz o submit dependendo se é uma edição ou criação de status
      * @param {Event} ev
      */
-    onSubmit(ev) {
+    async onSubmit(ev) {
       this.isSubmiting = true;
       this.isShowingError = false;
       this.toggleInputColor = false;
@@ -501,6 +499,10 @@ export default {
           color: this.editStatusColor,
         };
 
+        delete body.cards;
+        delete body.id_status;
+        delete body.ordem;
+
         if (
           this.editStatusName === this.backupEditStatusName &&
           this.editStatusColor === this.backupEditStatusColor
@@ -511,24 +513,23 @@ export default {
           return;
         }
 
-        this.axios
-          .put(
-            `${window.API_V2}/pipeline/status/${this.list.id_status}/edit`,
-            body
-          )
-          .then((res) => {
-            this.$emit("closeModal");
-            this.backupEditStatusName = this.list.nome;
-            this.backupEditStatusColor = this.list.color;
-            Toast.fire(res.data.message, "Atualizando pipeline...", "success");
-          })
-          .catch((err) => {
-            this.isShowingError = true;
-            this.errorMessage = err.response.data.message;
-          })
-          .finally(() => {
-            this.isSubmiting = false;
-          });
+        const response = await apiService.status.edit(
+          this.list.id_status,
+          body
+        );
+        this.isSubmiting = false;
+
+        if (response.error || response.trace) {
+          this.isShowingError = true;
+          this.errorMessage = response.message;
+
+          return;
+        }
+
+        this.$emit("closeModal");
+        this.backupEditStatusName = this.list.nome;
+        this.backupEditStatusColor = this.list.color;
+        Toast.fire(response.message, "Atualizando pipeline...", "success");
       }
 
       if (this.isEdit === 0) {
@@ -556,29 +557,28 @@ export default {
           color: this.regStatusColor,
         };
 
-        this.axios
-          .post(`${window.API_V2}/pipeline/status/create`, body)
-          .then((res) => {
-            this.$refs.regStatusNameRef.value = "";
-            this.regColor = {
-              red: 37,
-              green: 99,
-              blue: 235,
-              alpha: 1,
-            };
-            this.$emit("closeModal");
-            this.colorStatusTextRef = this.colorStatusText;
-            this.regStatusName = "";
-            this.regStatusColor = "#2563eb";
-            Toast.fire(res.data.message, "Atualizando pipeline...", "success");
-          })
-          .catch((err) => {
-            this.isShowingError = true;
-            this.errorMessage = err.response.data.message;
-          })
-          .finally(() => {
-            this.isSubmiting = false;
-          });
+        const response = await apiService.status.create(body);
+        this.isSubmiting = false;
+
+        if (response.error || response.trace) {
+          this.isShowingError = true;
+          this.errorMessage = response.message;
+
+          return;
+        }
+
+        this.$refs.regStatusNameRef.value = "";
+        this.regColor = {
+          red: 37,
+          green: 99,
+          blue: 235,
+          alpha: 1,
+        };
+        this.$emit("closeModal");
+        this.colorStatusTextRef = this.colorStatusText;
+        this.regStatusName = "";
+        this.regStatusColor = "#2563eb";
+        Toast.fire(response.message, "Atualizando pipeline...", "success");
       }
     },
   },
