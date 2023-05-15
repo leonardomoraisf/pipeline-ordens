@@ -272,10 +272,10 @@ export default {
     },
     "pipelineStore.editedCardWAction": async function (newCard, oldCard) {
       if (newCard.acao === "removed") {
-        this.removeCard(card);
+        this.removeCard(newCard);
       }
       if (newCard.acao === "added") {
-        this.addCard(card);
+        this.addCard(newCard);
       }
     },
 

@@ -374,6 +374,10 @@ export default {
     },
   },
   watch: {
+    "status.color": function(newValue, oldValue) {
+        this.corTextoStatus = globalHelper.ajustarCorTexto(newValue);
+    },
+
     /**
      * Método para escutar o card recebido pelo canal new-cards e adicioná-lo na lista
      * @param {Object} newCard
