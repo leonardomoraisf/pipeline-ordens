@@ -98,7 +98,9 @@
               'bg-white/30': corTextoCard === '#000000',
             }"
           >
-            {{ tiposMovimento[card.tipo] }}({{ card.id_movimento }})
+            {{ pipelineStore.tiposMovimento[card.tipo] }}({{
+              card.id_movimento
+            }})
           </p>
           <p
             v-if="inInativeCardList"
@@ -124,7 +126,7 @@
               v-if="!inModalEditComments"
               class="hover:scale-125 transition-transform mr-2"
             >
-              <button @click.stop="$emit('openModalEditComments', card)">
+              <button @click.stop="toggleModalEditCardComments">
                 <span
                   class="material-symbols-outlined opacity-70 pt-2"
                   v-if="
@@ -268,12 +270,12 @@ import apiService from "../services/apiService";
 
 export default {
   name: "CardListItem",
+  inject: ["globalStore", "pipelineStore"],
   components: {},
   props: {
     card: Object,
     colorStatus: String,
     corTextoCard: String,
-    dataHoje: String,
     isToInative: {
       type: Boolean,
       default: false,
@@ -294,8 +296,6 @@ export default {
       type: Boolean,
       default: false,
     },
-    tiposMovimento: Object,
-    pusherSessionID: Number,
   },
   data() {
     return {
@@ -309,17 +309,6 @@ export default {
       diferencaDias: 0,
       toggleModal: ref(false),
       diferencaDiasTotal: 0,
-      circles: [
-        {
-          id: "1",
-          steps: 60,
-          size: 40,
-          value: 60,
-          stepLength: -1,
-          label: "segundos",
-          dependentCircles: ["1"],
-        },
-      ],
       isDeleting: ref(false),
       cardLog:
         this.card.log === null || this.card.log === undefined
@@ -334,6 +323,15 @@ export default {
     };
   },
   methods: {
+    toggleModalEditCardComments() {
+      this.pipelineStore.editingCard = {
+        ...this.card,
+        colorStatus: this.colorStatus,
+        corTextoCard: this.corTextoCard,
+      };
+      this.pipelineStore.isShowingModalEditCardComments = true;
+    },
+
     onClickToActive() {
       this.alreadyClickedToActive = true;
       this.$emit("turnCardActive", this.card);
@@ -354,15 +352,14 @@ export default {
         return;
       }
 
-      this.$emit("cardDeleted", this.card);
-      ToastTopStart5.fire("Sucesso!", response.message, "success");
+      this.$emit("deleteCard", this.card.id_card, response.message);
     },
 
     /**
      * Método que calcula a diferença de dias que o card está no status e no pipeline
      */
     calculaDiferencaDias() {
-      let dataHoje = new Date(this.dataHoje);
+      let dataHoje = new Date(this.globalStore.actualDateFormatted);
 
       let dataCard = new Date(this.card.data_hora_registro.substring(0, 10));
       let diferenca = Math.abs(dataHoje.getTime() - dataCard.getTime());
@@ -384,11 +381,11 @@ export default {
      * Método chamado após 60 segundos que o card está na lista para inativo
      * ele emite um evento para ser colocado como inativo e um evento de nova requisição
      */
-    cardToInative() {
+    cardToInactive() {
       ToastTopStart5.fire(
         "Sucesso!",
         "O card " +
-          this.tiposMovimento[this.card.tipo] +
+          this.pipelineStore.tiposMovimento[this.card.tipo] +
           "(" +
           this.card.id_movimento +
           ") será colocado como inativo.",
@@ -400,17 +397,27 @@ export default {
         posicao: this.card.posicao,
         ativo: 0,
         comentarios: this.card.comentarios,
-        pusherSessionID: this.pusherSessionID,
+        pusherSessionID: this.pipelineStore.pusherSessionID,
       };
 
       let card = { ...this.card, ativo: 0 };
 
-      this.$emit("putCardToInative", card);
-      this.$emit("newRequest", () => {
-        return this.axios.put(
-          `${window.API_V2}/pipeline/cards/${card.id_card}/edit`,
-          body
-        );
+      this.$emit("cardToInactive", card);
+
+      if (this.card.acao && this.card.acao === "added") return;
+
+      this.globalStore.addNewRequest(() => {
+        return this.axios
+          .put(`${window.API_V2}/pipeline/cards/${card.id_card}/edit`, body)
+          .then((res) => {
+            var data = {
+              card: card,
+            };
+            this.pipelineStore.pusherChannel.trigger(
+              "client-card-editado",
+              data
+            );
+          });
       });
     },
 
@@ -474,7 +481,10 @@ export default {
       this.intervalInativeCard = setInterval(() => {
         this.card.timer -= 1;
         this.$forceUpdate();
-        if (this.card.timer <= 55) this.cardToInative();
+        if (this.card.timer <= 0) {
+          this.cardToInactive();
+          clearInterval(this.intervalInativeCard);
+        }
       }, 1000);
     }
 
@@ -496,6 +506,7 @@ export default {
     card(newCard, oldCard) {
       this.calculaDiferencaDias();
     },
+
     /**
      * Escuta a informação data_hora_registro para calcular a data novamente
      * @param {String} newValue

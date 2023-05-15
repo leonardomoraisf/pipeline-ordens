@@ -3,18 +3,16 @@
     <Transition name="modal">
       <div
         class="z-50 overflow-x-hidden overflow-y-auto flex justify-center items-center modal"
-        v-if="toggleModal"
+        v-if="pipelineStore.isShowingModalEditCardComments"
       >
         <div class="relative mx-auto w-full">
           <div class="bg-white w-full rounded-md h-screen p-3">
             <ul>
               <CardListItem
-                :card="cardIsEditing"
-                :colorStatus="colorStatus"
-                :corTextoCard="corTextoCard"
-                :dataHoje="dataHoje"
+                :card="pipelineStore.editingCard"
+                :colorStatus="pipelineStore.editingCard.colorStatus"
+                :corTextoCard="pipelineStore.editingCard.corTextoCard"
                 :inModalEditComments="true"
-                :tiposMovimento="tiposMovimento"
               ></CardListItem>
             </ul>
 
@@ -100,7 +98,7 @@
     <Transition name="fade" appear>
       <div
         class="absolute inset-0 z-40 bg-black/30"
-        v-if="toggleModal"
+        v-if="pipelineStore.isShowingModalEditCardComments"
         @click="closeModal"
       ></div>
     </Transition>
@@ -110,36 +108,12 @@
 <script>
 import { ref, nextTick } from "vue";
 import CardListItem from "./CardListItem.vue";
-import apiService from "../services/apiService";
 
 export default {
   name: "ModalEditCardComments",
+  inject: ["globalStore", "pipelineStore"],
   components: {
     CardListItem,
-  },
-  props: {
-    cardIsEditing: {
-      type: Object,
-      default: () => ({
-        celulares: null,
-        comentarios: "",
-        data_hora_cadastro: "0000-00-00T00:00:00",
-        data_hora_registro: "0000-00-00T00:00:00",
-        id_card: 0,
-        id_status: 0,
-        nome: "",
-        posicao: 0,
-        telefones: null,
-        valor: 0,
-      }),
-    },
-    toggleModal: Boolean,
-    colorStatus: String,
-    corTextoCard: String,
-    inInativeCards: Boolean,
-    dataHoje: String,
-    tiposMovimento: Object,
-    pusherSessionID: Number,
   },
   data() {
     return {
@@ -147,7 +121,7 @@ export default {
       isShowingError: ref(false),
       errorMessage: "",
       cardComentarios: "",
-      backupCardComentarios: this.cardIsEditing.comentarios,
+      backupCardComentarios: "",
       maxLength: 1000,
     };
   },
@@ -160,7 +134,7 @@ export default {
       if (this.isSubmiting === true) return;
       if (this.backupCardComentarios !== this.cardComentarios) {
         this.$confirm({
-          message: "Você fez altereções! Deseja mantê-las?",
+          message: "Você fez alterações! Deseja mantê-las?",
           button: {
             no: "Não, descartar",
             yes: "Sim",
@@ -174,14 +148,16 @@ export default {
             } else {
               this.errorMessage = "";
               this.isShowingError = false;
-              this.$emit("closeModalEditComments");
+              this.pipelineStore.isShowingModalEditCardComments =
+                !this.pipelineStore.isShowingModalEditCardComments;
             }
           },
         });
       } else {
         this.errorMessage = "";
         this.isShowingError = false;
-        this.$emit("closeModalEditComments");
+        this.pipelineStore.isShowingModalEditCardComments =
+          !this.pipelineStore.isShowingModalEditCardComments;
       }
     },
 
@@ -207,39 +183,45 @@ export default {
       }
 
       const body = {
-        id_status: this.cardIsEditing.id_status,
-        posicao: this.cardIsEditing.posicao,
-        ativo: this.cardIsEditing.ativo,
+        id_status: this.pipelineStore.editingCard.id_status,
+        posicao: this.pipelineStore.editingCard.posicao,
+        ativo: this.pipelineStore.editingCard.ativo,
         comentarios: this.cardComentarios,
-        pusherSessionID: this.pusherSessionID,
+        pusherSessionID: this.pipelineStore.pusherSessionID,
       };
 
       const card = {
-        id_card: this.cardIsEditing.id_card,
+        id_card: this.pipelineStore.editingCard.id_card,
         comentarios: this.cardComentarios,
       };
 
-      this.$emit("newRequest", () => {
-        return this.axios.put(
-          `${window.API_V2}/pipeline/cards/${card.id_card}/edit`,
-          body
-        );
+      this.globalStore.addNewRequest(() => {
+        return this.axios
+          .put(`${window.API_V2}/pipeline/cards/${card.id_card}/edit`, body)
+          .then((res) => {
+            let data = {
+              card: {
+                ...this.pipelineStore.editingCard,
+                comentarios: this.cardComentarios,
+              },
+            };
+            this.pipelineStore.pusherChannel.trigger(
+              "client-card-editado",
+              data
+            );
+          });
       });
 
       this.isSubmiting = false;
       Toast.fire("Sucesso!", "O comentário do seu card será salvo!", "success");
-      this.isShowingError = false;
-      this.$emit("closeModalEditComments");
-      this.$emit("editComment", card);
+      this.pipelineStore.lastEditedCard = {
+        ...card,
+      };
+      this.pipelineStore.isShowingModalEditCardComments = false;
     },
   },
   watch: {
-    /**
-     * Método que escuta o novo card e seta o comentário de acordo com o que vier
-     * @param {Object} newCard
-     * @param {Object} newCard
-     */
-    cardIsEditing(newCard, oldCard) {
+    "pipelineStore.editingCard": function (newCard, oldCard) {
       this.cardComentarios =
         newCard.comentarios !== null ? newCard.comentarios : "";
       this.backupCardComentarios =

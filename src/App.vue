@@ -9,5 +9,26 @@
   </div>
 </template>
 
-<style src="./assets/all.css"></style>
-<style src="./assets/tooltip.css"></style>
+<script>
+import { usePipelineStore } from "@/stores/pipelineStore";
+import { useGlobalStore } from "@/stores/globalStore";
+
+export default {
+  data() {
+    return {
+      pipelineStore: usePipelineStore(),
+      globalStore: useGlobalStore(),
+    };
+  },
+  provide() {
+    return {
+      pipelineStore: this.pipelineStore,
+      globalStore: this.globalStore,
+    };
+  },
+  created() {
+    this.pipelineStore.setList();
+    this.globalStore.startNecessary();
+  },
+};
+</script>

@@ -1,7 +1,6 @@
 import Vue from "vue";
 import App from "./App.vue";
 import router from "./router";
-import store from "./store";
 import "./assets/tailwind.css";
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
@@ -14,6 +13,7 @@ import axiosService from "./services/axiosService";
 import { VTooltip, VPopover, VClosePopover } from 'v-tooltip';
 import VueConfirmDialog from 'vue-confirm-dialog';
 import CircularCountDownTimer from 'vue-circular-count-down-timer';
+import { createPinia, PiniaVuePlugin } from 'pinia';
 
 library.add(fas);
 library.add(far);
@@ -25,14 +25,6 @@ Vue.use(VueSweetalert2);
 
 Vue.use(CircularCountDownTimer);
 
-Vue.use(require('vue-pusher'), {
-  api_key: process.env.NODE_ENV === 'development' ? process.env.VUE_APP_PUSHER_API_KEY : window.PUSHER_APP_KEY,
-  options: {
-    cluster: process.env.NODE_ENV === 'development' ? 'sa1' : window.PUSHER_APP_CLUSTER,
-    authEndpoint: "/api/pusher/auth",
-  }
-});
-
 Vue.directive('tooltip', VTooltip);
 Vue.directive('close-popover', VClosePopover);
 Vue.component('v-popover', VPopover);
@@ -40,7 +32,12 @@ Vue.component('v-popover', VPopover);
 Vue.use(VueConfirmDialog);
 Vue.component('vue-confirm-dialog', VueConfirmDialog.default);
 
+Vue.use(PiniaVuePlugin)
+const pinia = createPinia();
+
 import './assets/Toasts';
+import './assets/all.css';
+import './assets/tooltip.css';
 
 Vue.config.productionTip = false;
 
@@ -54,6 +51,6 @@ if(process.env.NODE_ENV === 'development'){
 
 new Vue({
   router,
-  store,
+  pinia,
   render: (h) => h(App),
 }).$mount("#app");

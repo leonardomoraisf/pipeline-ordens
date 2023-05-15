@@ -3,7 +3,7 @@
     <transition name="modal">
       <div
         class="z-50 overflow-x-hidden overflow-y-hidden flex justify-center items-center modal"
-        v-if="toggleModal"
+        v-if="pipelineStore.isShowingModalInactiveCardList"
       >
         <div class="relative mx-auto w-full">
           <div
@@ -88,7 +88,7 @@
                     >
                       <option value="" selected>Todos os status</option>
                       <option
-                        v-for="status in list"
+                        v-for="status in pipelineStore.list"
                         :value="status.id_status"
                         :key="status.id_status"
                       >
@@ -167,21 +167,15 @@
                 <ul class="space-y-3 px-2" v-if="!isRequesting">
                   <CardListItem
                     ref="list"
-                    v-for="card in inativeCardsList"
+                    v-for="card in pipelineStore.inactiveCardList"
                     :key="card.id_card"
                     :card="card"
+                    :inInativeCardList="true"
                     :colorStatus="card.colorStatus"
                     :corTextoCard="card.corTextoCard"
-                    :dataHoje="dataHoje"
-                    :inInativeCardList="true"
-                    @openModalEditComments="
-                      $emit('openModalEditComments', card)
-                    "
-                    @turnCardActive="onTurnCardActive"
                     :existeStatus="card.existeStatus"
-                    @cardDeleted="onDeleteCard"
                     :statusInativo="card.statusInativo"
-                    :tiposMovimento="tiposMovimento"
+                    @turnCardActive="onTurnCardActive"
                   ></CardListItem>
 
                   <div
@@ -211,7 +205,7 @@
                   class="flex flex-col justify-center items-center"
                   v-if="
                     alreadyRequestedList &&
-                    inativeCardsList.length === 0 &&
+                    pipelineStore.inactiveCardList.length === 0 &&
                     !isRequesting
                   "
                 >
@@ -225,7 +219,7 @@
     </transition>
     <Transition name="fade" appear>
       <div
-        v-if="toggleModal"
+        v-if="pipelineStore.isShowingModalInactiveCardList"
         class="absolute inset-0 z-40 bg-black/30"
         @click="closeModal"
       ></div>
@@ -234,7 +228,7 @@
 </template>
 
 <script>
-import { ref, nextTick } from "vue";
+import { ref } from "vue";
 import CardListItem from "./CardListItem.vue";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
@@ -243,32 +237,15 @@ import DatePicker from "vue2-datepicker";
 import "vue2-datepicker/index.css";
 import "vue2-datepicker/locale/pt-br";
 import apiService from "../services/apiService";
+import { globalHelper } from "@/helpers/global";
+import { pipelineHelper } from "@/helpers/pipeline";
 
 export default {
-  name: "ModalInativeCardList",
+  name: "ModalInactiveCardList",
+  inject: ["globalStore", "pipelineStore"],
   components: {
     CardListItem,
     DatePicker,
-  },
-  props: {
-    toggleModal: {
-      type: Boolean,
-      default: ref(false),
-    },
-    dataHoje: String,
-    list: Array,
-    ajustarCorTexto: Function,
-    tiposMovimento: Object,
-    animaElementSumindo: Function,
-    editedCardComment: {
-      type: Object,
-      default: () => ({}),
-    },
-    cardIsNowActive: {
-      type: Object,
-      default: () => ({}),
-    },
-    pusherSessionID: Number,
   },
   data() {
     return {
@@ -277,8 +254,6 @@ export default {
       endDate: null,
       search: "",
       statusSelected: "",
-      // Lista da requisição de cards inativos
-      inativeCardsList: [],
       dataRequest: {},
       isRequesting: ref(false),
       isRequestingMore: ref(false),
@@ -310,12 +285,11 @@ export default {
       let element = list[elementIndex].$el;
 
       await new Promise((resolve) => {
-        this.animaElementSumindo(element, resolve, false);
+        pipelineHelper.animaElementSumindo(element, resolve, false);
       });
 
       // remove o card da lista atual
-      this.inativeCardsList.splice(elementIndex, 1);
-      this.$emit("cardDeleted", card);
+      this.pipelineStore.inactiveCardList.splice(elementIndex, 1);
     },
 
     async animaCardToActiveSumindo(card) {
@@ -328,12 +302,12 @@ export default {
       let element = list[elementIndex].$el;
 
       await new Promise((resolve) => {
-        this.animaElementSumindo(element, resolve, false);
+        pipelineHelper.animaElementSumindo(element, resolve, false);
       });
 
-      // remove o card da lista atual
-      await this.$set(this.inativeCardsList, elementIndex, card);
-      await this.inativeCardsList.splice(elementIndex, 1);
+      card.data_hora_registro = `${this.globalStore.actualDateFormatted}T00:00:00`;
+      await this.pipelineStore.inactiveCardList.splice(elementIndex, 1);
+      this.pipelineStore.newCard = card;
     },
 
     /**
@@ -348,29 +322,40 @@ export default {
           posicao: card.posicao,
           ativo: 1,
           comentarios: card.comentarios,
-          pusherSessionID: this.pusherSessionID,
+          pusherSessionID: this.pipelineStore.pusherSessionID,
         };
 
-        let statusIndex = this.list.findIndex(
-          (obj) => obj.id_status === card.id_status
+        let statusIndex = this.pipelineStore.list.findIndex(
+          (status) => status.id_status === card.id_status
         );
         if (statusIndex === -1) {
-          let firstListIdStatus = this.list[0].id_status;
+          let firstListIdStatus = this.pipelineStore.list[0].id_status;
           body.id_status = firstListIdStatus;
           card.id_status = firstListIdStatus;
         }
 
-        this.$emit("newRequest", () => {
-          return this.axios.put(
-            `${window.API_V2}/pipeline/cards/${card.id_card}/edit`,
-            body
-          );
+        delete body.pusherSessionID;
+
+        this.globalStore.addNewRequest(() => {
+          return this.axios
+            .put(`${window.API_V2}/pipeline/cards/${card.id_card}/edit`, body)
+            .then((res) => {
+              let data = {
+                card: {
+                  ...card,
+                  ativo: 1,
+                },
+              };
+              this.pipelineStore.pusherChannel.trigger(
+                "client-card-editado",
+                data
+              );
+            });
         });
       }
 
       card.ativo = 1;
-      this.$emit("turnCardActive", card);
-      this.$emit("changeCardPos", () => {
+      this.pipelineStore.addNewFunc(() => {
         return this.animaCardToActiveSumindo(card);
       });
     },
@@ -387,7 +372,7 @@ export default {
      * Método que faz a requisição com base nos filtros de cards inativos
      */
     async buscaCards() {
-      this.inativeCardsList = [];
+      this.pipelineStore.inactiveCardList = [];
       this.dataRequest = {};
       this.body = {};
 
@@ -429,7 +414,7 @@ export default {
         return;
       }
 
-      this.inativeCardsList = response.data;
+      this.pipelineStore.inactiveCardList = response.data;
 
       delete response.data;
 
@@ -445,7 +430,8 @@ export default {
      */
     closeModal() {
       this.limpaFiltros();
-      this.$emit("closeModalInativeCardList");
+      this.pipelineStore.isShowingModalInactiveCardList =
+        !this.pipelineStore.isShowingModalInactiveCardList;
     },
 
     /**
@@ -454,22 +440,23 @@ export default {
      * de acordo com seu status
      */
     adicionaInfos() {
-      this.inativeCardsList.forEach((card) => {
+      if (this.pipelineStore.inactiveCardList.length <= 0) return;
+      this.pipelineStore.inactiveCardList.forEach((card) => {
         card.posicao = parseFloat(card.posicao);
         card.valor = parseFloat(card.valor);
 
-        var statusIndex = this.list.findIndex(
+        var statusIndex = this.pipelineStore.list.findIndex(
           (obj) => obj.id_status === card.id_status
         );
 
         // Se existe o status na lista principal
         if (statusIndex !== -1) {
-          let status = this.list[statusIndex];
+          let status = this.pipelineStore.list[statusIndex];
           let statusName = status.nome;
           let colorStatus = status.color;
           card.statusName = statusName;
           card.colorStatus = colorStatus;
-          card.corTextoCard = this.ajustarCorTexto(colorStatus);
+          card.corTextoCard = globalHelper.ajustarCorTexto(colorStatus);
         } else {
           // Se não existe verifica se é o status que está inativo
 
@@ -482,7 +469,7 @@ export default {
             let colorStatus = status.color;
             card.statusName = statusName;
             card.colorStatus = colorStatus;
-            card.corTextoCard = this.ajustarCorTexto(colorStatus);
+            card.corTextoCard = globalHelper.ajustarCorTexto(colorStatus);
             card.statusInativo = true;
           } else {
             card.statusName = "Removido do pipeline";
@@ -569,7 +556,8 @@ export default {
         return;
       }
 
-      this.inativeCardsList = this.inativeCardsList.concat(response.data);
+      this.pipelineStore.inactiveCardList =
+        this.pipelineStore.inactiveCardList.concat(response.data);
 
       delete response.data;
 
@@ -584,10 +572,14 @@ export default {
      * @param {Boolean} newValue
      * @param {Boolean} oldValue
      */
-    toggleModal(newValue, oldValue) {
+    "pipelineStore.isShowingModalInactiveCardList": async function (
+      newValue,
+      oldValue
+    ) {
       if (newValue === true && oldValue === false) {
         if (this.alreadyRequestedAllInactiveStatus === false) {
-          this.getAllInactiveStatus();
+          await this.getAllInactiveStatus();
+          this.adicionaInfos();
         }
       }
     },
@@ -597,9 +589,9 @@ export default {
      * @param {Array} newList
      * @param {Array} oldList
      */
-    list(newList, oldList) {
+    "pipelineStore.list": function (newList, oldList) {
       this.getAllInactiveStatus();
-      this.inativeCardsList = [];
+      this.pipelineStore.inactiveCardList = [];
       this.dataRequest = {};
       this.body = {};
     },
@@ -609,8 +601,21 @@ export default {
      * @param {Object} newCard
      * @param {Object} oldCard
      */
-    editedCardComment(newCard, oldCard) {
-      this.inativeCardsList.forEach((card) => {
+    "pipelineStore.editedCard": function (newCard, oldCard) {
+      this.pipelineStore.inactiveCardList.forEach((card) => {
+        if (newCard.id_card === card.id_card) {
+          card.comentarios = newCard.comentarios;
+        }
+      });
+    },
+
+    /**
+     * Método que escuta um card que teve seu comentário editado, para alterar na lista atual
+     * @param {Object} newCard
+     * @param {Object} oldCard
+     */
+    "pipelineStore.editedCardStatus": function (newCard, oldCard) {
+      this.pipelineStore.inactiveCardList.forEach((card) => {
         if (newCard.id_card === card.id_card) {
           card.comentarios = newCard.comentarios;
         }
@@ -622,8 +627,8 @@ export default {
      * @param {Object} newCard
      * @param {Object} oldCard
      */
-    cardIsNowActive(newCard, oldCard) {
-      this.inativeCardsList.forEach((card) => {
+    "pipelineStore.newCard": function (newCard, oldCard) {
+      this.pipelineStore.inactiveCardList.forEach((card) => {
         if (newCard.id_card === card.id_card) {
           this.onTurnCardActive(newCard, true);
         }

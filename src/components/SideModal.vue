@@ -30,14 +30,14 @@
                       class="text-xl"
                       :style="{ color: colorStatusTextRef }"
                     >
-                      {{ lastList.ordem + 1 }}
+                      {{ pipelineStore.lastList.ordem + 1 }}
                     </p>
                     <p
                       v-if="isEdit === 1"
                       class="text-xl"
                       :style="{ color: colorStatusTextRef }"
                     >
-                      {{ list.ordem }}
+                      {{ status.ordem }}
                     </p>
                     <button
                       type="button"
@@ -206,41 +206,46 @@
 import { ref, nextTick } from "vue";
 import { ColorPicker } from "vue-color-gradient-picker";
 import apiService from "../services/apiService";
+import { globalHelper } from "@/helpers/global";
 
 export default {
   name: "SideModal",
+  inject: ["globalStore", "pipelineStore"],
   components: {
     ColorPicker,
   },
   props: {
-    list: Object,
-    lastList: Object,
+    status: Object,
     toggleModal: {
       type: Boolean,
       default: ref(false),
     },
     colorStatusText: String,
     animated: Boolean,
-    ajustarCorTexto: Function,
-    cards: Array,
+    cards: {
+      type: Array,
+      default: () => {
+        [];
+      },
+    },
   },
   data() {
     return {
-      isEdit: this.list.id_status !== 0 ? 1 : 0,
-      bgStatusCircle: this.list.color ? this.list.color : "#2563eb",
+      isEdit: this.status.id_status !== 0 ? 1 : 0,
+      bgStatusCircle: this.status.color ? this.status.color : "#2563eb",
       isSubmiting: ref(false),
       isShowingError: ref(false),
       errorMessage: "",
       editStatusName: "",
-      buttonName: this.list.id_status !== 0 ? "Salvar" : "Adicionar",
+      buttonName: this.status.id_status !== 0 ? "Salvar" : "Adicionar",
       toggleInputColor: ref(false),
       maxLength: 50,
       regStatusName: "",
       regStatusColor: "#2563eb",
-      editStatusName: this.list.nome,
-      editStatusColor: this.list.color,
-      backupEditStatusName: this.list.nome,
-      backupEditStatusColor: this.list.color,
+      editStatusName: this.status.nome,
+      editStatusColor: this.status.color,
+      backupEditStatusName: this.status.nome,
+      backupEditStatusColor: this.status.color,
       regColor: {
         red: 37,
         green: 99,
@@ -260,7 +265,9 @@ export default {
   mounted() {
     // Se for edição ajusta o texto de acordo com o bg do status
     if (this.isEdit === 1) {
-      this.colorStatusTextRef = this.ajustarCorTexto(this.editStatusColor);
+      this.colorStatusTextRef = globalHelper.ajustarCorTexto(
+        this.editStatusColor
+      );
     }
   },
   methods: {
@@ -306,11 +313,14 @@ export default {
       this.isDeletingStatus = !this.isDeletingStatus;
 
       let body = {
-        ...this.list,
+        ...this.status,
         ativo: 0,
       };
 
-      const response = await apiService.status.edit(this.list.id_status, body);
+      const response = await apiService.status.edit(
+        this.status.id_status,
+        body
+      );
 
       this.isDeletingStatus = !this.isDeletingStatus;
       if (response.statusCode) {
@@ -321,24 +331,10 @@ export default {
         return;
       }
 
+      this.pipelineStore.removeStatus(this.status.id_status);
+
       this.$emit("closeModal");
       Toast.fire(response.message, "Atualizando pipeline...", "success");
-      this.$emit("statusDeleted", this.list);
-    },
-
-    /**
-     * Método que pega uma cor em rgb e transforma em hex
-     */
-    rgb2hex(rgb) {
-      rgb = rgb.match(
-        /^rgba?[\s+]?\([\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?/i
-      );
-      return rgb && rgb.length === 4
-        ? "#" +
-            ("0" + parseInt(rgb[1], 10).toString(16)).slice(-2) +
-            ("0" + parseInt(rgb[2], 10).toString(16)).slice(-2) +
-            ("0" + parseInt(rgb[3], 10).toString(16)).slice(-2)
-        : "";
     },
 
     /**
@@ -347,7 +343,7 @@ export default {
      * @param {String} name
      */
     onChange(attrs, name) {
-      let color = this.rgb2hex(attrs.style);
+      let color = globalHelper.rgb2hex(attrs.style);
 
       if (this.isEdit === 0) {
         this.regStatusColor = color;
@@ -355,7 +351,7 @@ export default {
         this.regColor.green = attrs.green;
         this.regColor.blue = attrs.blue;
         this.regColor.alpha = attrs.alpha;
-        this.colorStatusTextRef = this.ajustarCorTexto(color);
+        this.colorStatusTextRef = globalHelper.ajustarCorTexto(color);
       }
 
       if (this.isEdit === 1) {
@@ -364,7 +360,7 @@ export default {
         this.editColor.green = attrs.green;
         this.editColor.blue = attrs.blue;
         this.editColor.alpha = attrs.alpha;
-        this.colorStatusTextRef = this.ajustarCorTexto(color);
+        this.colorStatusTextRef = globalHelper.ajustarCorTexto(color);
       }
     },
 
@@ -416,10 +412,10 @@ export default {
               if (confirm) {
               } else {
                 this.toggleInputColor = false;
-                this.editStatusName = this.list.nome;
-                this.editStatusColor = this.list.color;
-                this.backupEditStatusName = this.list.nome;
-                this.backupEditStatusColor = this.list.color;
+                this.editStatusName = this.status.nome;
+                this.editStatusColor = this.status.color;
+                this.backupEditStatusName = this.status.nome;
+                this.backupEditStatusColor = this.status.color;
                 this.colorStatusTextRef = this.colorStatusText;
                 this.isShowingError = false;
                 this.errorMessage = "";
@@ -494,9 +490,10 @@ export default {
         }
 
         let body = {
-          ...this.list,
+          ...this.status,
           nome: this.editStatusName,
           color: this.editStatusColor,
+          pusherSessionID: this.pipelineStore.pusherSessionID,
         };
 
         delete body.cards;
@@ -514,9 +511,10 @@ export default {
         }
 
         const response = await apiService.status.edit(
-          this.list.id_status,
+          this.status.id_status,
           body
         );
+
         this.isSubmiting = false;
 
         if (response.error || response.trace) {
@@ -526,9 +524,23 @@ export default {
           return;
         }
 
+        this.pipelineStore.editStatus({
+          id_status: this.status.id_status,
+          nome: body.nome,
+          color: body.color,
+        });
+
+        let data = {
+          status: {
+            id_status: this.status.id_status,
+            ...body,
+          },
+        };
+        this.pipelineStore.pusherChannel.trigger("client-status-editado", data);
+
         this.$emit("closeModal");
-        this.backupEditStatusName = this.list.nome;
-        this.backupEditStatusColor = this.list.color;
+        this.backupEditStatusName = this.status.nome;
+        this.backupEditStatusColor = this.status.color;
         Toast.fire(response.message, "Atualizando pipeline...", "success");
       }
 
@@ -555,6 +567,7 @@ export default {
         let body = {
           nome: this.regStatusName,
           color: this.regStatusColor,
+          pusherSessionID: this.pipelineStore.pusherSessionID,
         };
 
         const response = await apiService.status.create(body);
@@ -566,6 +579,16 @@ export default {
 
           return;
         }
+
+        this.pipelineStore.addStatus(response.id_status, body);
+
+        let data = {
+          status: {
+            id_status: response.id_status,
+            ...body,
+          },
+        };
+        this.pipelineStore.pusherChannel.trigger("client-status-criado", data);
 
         this.$refs.regStatusNameRef.value = "";
         this.regColor = {
@@ -583,24 +606,28 @@ export default {
     },
   },
   watch: {
+    "status.nome"(novoNome, nomeAntigo) {
+      this.editStatusName = novoNome;
+      this.backupEditStatusName = novoNome;
+    },
+
+    "status.color"(novaCor, corAntiga) {
+      this.editStatusColor = novaCor;
+      this.backupEditStatusColor = novaCor;
+    },
+
     /**
      * Método que escuta a modal abrir e fechar para verificar se é edit
      * e transformar o valor do bg hex para rgb e setar no componente de escolher cor
      */
     toggleModal(newValue, oldValue) {
       if (newValue === true && oldValue === false && this.isEdit === 1) {
-        let hex = this.list.color.replace(/#/g, "");
-        var aRgbHex = hex.match(/.{1,2}/g);
-        var aRgb = [
-          parseInt(aRgbHex[0], 16),
-          parseInt(aRgbHex[1], 16),
-          parseInt(aRgbHex[2], 16),
-        ];
+        let aRgb = globalHelper.hex2rgb(this.status.color);
 
         this.editColor = {
-          red: aRgb[0],
-          green: aRgb[1],
-          blue: aRgb[2],
+          red: aRgb.r,
+          green: aRgb.g,
+          blue: aRgb.b,
           alpha: 1,
         };
       }

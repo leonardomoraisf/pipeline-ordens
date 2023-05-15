@@ -1,17 +1,17 @@
 <template>
   <div>
-    <BoardKanban></BoardKanban>
+    <Board></Board>
   </div>
 </template>
 
 <script>
 // @ is an alias to /src
-import BoardKanban from "@/components/BoardKanban";
+import Board from "@/components/Board";
 
 export default {
   name: "HomeView",
   components: {
-    BoardKanban,
+    Board,
   }
 };
 </script>

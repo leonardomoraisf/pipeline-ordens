@@ -70,8 +70,7 @@ export default {
   name: "MovimentoModalCreate",
   components: {},
   props: {
-    list: Object,
-    cards: Array,
+    status: Object,
     pipelinePusher: Object,
   },
   data() {
@@ -107,11 +106,11 @@ export default {
       );
 
       const response = await apiService.pipeline.setIdPipeline({
-        id_status_pipeline: this.list.id_status,
+        id_status_pipeline: this.status.id_status,
       });
 
       if (response.error || response.trace) {
-        ToastTopStart5.fire("Erro!", err.response.data.message, "error");
+        ToastTopStart5.fire("Erro!", response.message, "error");
         this.clickCancel = !this.clickCancel;
 
         return;

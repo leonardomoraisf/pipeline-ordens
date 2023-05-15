@@ -1,27 +1,16 @@
 <template>
   <div>
     <StatusTimeline
-      :list="list"
-      :ordem="ordem"
+      :status="status"
       :corTextoStatus="corTextoStatus"
-      :lastList="lastList"
-      :ajustarCorTexto="ajustarCorTexto"
-      @statusDeleted="$emit('statusDeleted', list)"
       :cards="cards"
-    >
-    </StatusTimeline>
+    />
 
     <div class="text-center">
       <p class="text-xl font-semibold text-gray-500">{{ cards.length }}</p>
     </div>
 
-    <MovimentoModalCreate
-      :list="list"
-      :cards="cards"
-      class="px-2"
-      :pipelinePusher="pipelinePusher"
-    >
-    </MovimentoModalCreate>
+    <MovimentoModalCreate :status="status" class="px-2" />
 
     <div class="flex flex-col overflow-hidden mt-4 px-2">
       <div class="px-2 flex-1 overflow-y-auto cards-scrollbar">
@@ -37,32 +26,14 @@
             v-for="card in cards"
             :key="card.id_card"
             :card="card"
-            :colorStatus="list.color"
+            :colorStatus="status.color"
             :corTextoCard="corTextoStatus"
-            :dataHoje="dataHoje"
             :isToInative="false"
             @openModalEditComments="toggleModalEditComments"
-            :tiposMovimento="tiposMovimento"
-            :pusherSessionID="pusherSessionID"
           />
         </draggable>
       </div>
     </div>
-
-    <ModalEditCardComments
-      :cardIsEditing="cardIsEditing"
-      :toggleModal="isShowingModalEditComments"
-      :colorStatus="list.color"
-      :corTextoCard="corTextoStatus"
-      :inInativeCards="false"
-      ref="modalEditCommentsRef"
-      @closeModalEditComments="toggleModalEditComments"
-      :dataHoje="dataHoje"
-      :tiposMovimento="tiposMovimento"
-      @editComment="onEditComment"
-      :pusherSessionID="pusherSessionID"
-      @newRequest="emitRequest"
-    ></ModalEditCardComments>
   </div>
 </template>
 
@@ -73,9 +44,12 @@ import CardListItem from "./CardListItem.vue";
 import { ref, nextTick } from "vue";
 import StatusTimeline from "./StatusTimeline.vue";
 import ModalEditCardComments from "./ModalEditCardComments.vue";
+import { globalHelper } from "@/helpers/global";
+import { pipelineHelper } from "@/helpers/pipeline";
 
 export default {
   name: "CardList",
+  inject: ["globalStore", "pipelineStore"],
   components: {
     draggable,
     MovimentoModalCreate,
@@ -84,34 +58,13 @@ export default {
     ModalEditCardComments,
   },
   props: {
-    list: Object,
-    lastList: Object,
-    ajustarCorTexto: Function,
-    idEmpresa: Number,
-    dataHoje: String,
-    newCard: {
-      type: Object,
-      default: () => ({}),
-    },
-    editedCard: {
-      type: Object,
-      default: () => ({}),
-    },
-    editedCardStatus: {
-      type: Object,
-      default: () => ({}),
-    },
-    pipelinePusher: Object,
-    tiposMovimento: Object,
-    pusherSessionID: Number,
-    animaElementSumindo: Function,
-    ordem: Number,
+    status: Object,
   },
   data() {
     return {
-      cards: ref(this.list.cards),
+      cards: ref(this.status.cards),
       corTextoStatus: "",
-      isShowingModalEditComments: ref(false),
+      isShowingModalEditComments: false,
       cardIsEditing: {},
     };
   },
@@ -128,28 +81,9 @@ export default {
     },
   },
   mounted() {
-    this.corTextoStatus = this.ajustarCorTexto(this.list.color);
+    this.corTextoStatus = globalHelper.ajustarCorTexto(this.status.color);
   },
   methods: {
-
-    emitRequest(request) {
-        this.$emit('newRequest', request);
-    },
-
-    /**
-     * Método que seta o comentário do card que teve ser comentário editado
-     * @param {Object} card
-     */
-    onEditComment(card) {
-      let cardIndex = this.cards.findIndex(
-        (obj) => obj.id_card === card.id_card
-      );
-
-      if (cardIndex !== -1) {
-        this.cards[cardIndex].comentarios = card.comentarios;
-      }
-    },
-
     /**
      * Método chamado para abrir a modal de edição de comentários de um card que está na lista
      * para transformar o card em inative
@@ -186,24 +120,7 @@ export default {
       );
       const element = childrenList[childrenIndex].$el;
 
-      element.style.transition = "all 0.5s ease";
-
-      element.style.transform = "scale(0)";
-      element.style.opacity = "0";
-
-      setTimeout(() => {
-        element.style.transform = "scale(1.02)";
-        element.style.opacity = "0.8";
-      }, 500);
-
-      element.scrollIntoView({
-        behavior: "smooth",
-      });
-
-      setTimeout(() => {
-        element.style.transform = "scale(1)";
-        element.style.opacity = "1";
-      }, 1000);
+      pipelineHelper.animaElementAparecendo(element);
     },
 
     /**
@@ -211,14 +128,17 @@ export default {
      * se sim, remove o card
      * @param {Object} card
      */
-    async verificaTimerCard(card) {
+    verificaTimerCard(card) {
       if (card.timer === 0) {
         const index = this.cards.findIndex(
           (obj) => obj.id_card === card.id_card
         );
         this.cards.splice(index, 1);
-        this.$emit('wrongCardInToInactive');
+        this.pipelineStore.updateListInactive = true;
+        setTimeout(() => (this.pipelineStore.updateListInactive = false), 1);
+        return true;
       }
+      return false;
     },
 
     /**
@@ -242,7 +162,8 @@ export default {
       const nextCard = this.cards[index + 1];
       const card = this.cards[index];
 
-      this.verificaTimerCard(card);
+      let result = this.verificaTimerCard(card);
+      if (result === true) return;
 
       let posicao = card.posicao;
 
@@ -254,25 +175,32 @@ export default {
         posicao = nextCard.posicao / 2;
       }
 
-      if (card.id_status !== this.list.id_status) {
-        card.data_hora_registro = `${this.dataHoje}T00:00:00`;
+      var event = "client-card-editado";
+
+      if (card.id_status !== this.status.id_status) {
+        card.data_hora_registro = `${this.globalStore.actualDateFormatted}T00:00:00`;
+        event = "client-card-editado-status";
       }
-      card.id_status = this.list.id_status;
+      card.id_status = this.status.id_status;
       card.posicao = posicao;
 
       const body = {
-        id_status: this.list.id_status,
-        posicao,
+        id_status: this.status.id_status,
+        posicao: posicao,
         ativo: 1,
         comentarios: card.comentarios,
-        pusherSessionID: this.pusherSessionID,
+        pusherSessionID: this.pipelineStore.pusherSessionID,
       };
 
-      this.$emit("newRequest", () => {
-        return this.axios.put(
-          `${window.API_V2}/pipeline/cards/${card.id_card}/edit`,
-          body
-        );
+      this.globalStore.addNewRequest(() => {
+        return this.axios
+          .put(`${window.API_V2}/pipeline/cards/${card.id_card}/edit`, body)
+          .then((res) => {
+            var data = {
+              card: card,
+            };
+            this.pipelineStore.pusherChannel.trigger(event, data);
+          });
       });
     },
 
@@ -288,7 +216,7 @@ export default {
      * @param {Object} newCard
      */
     verificaAdicionaCard(newCard) {
-      if (newCard.id_status === this.list.id_status) {
+      if (newCard.id_status === this.status.id_status) {
         const cardIndex = this.cards.findIndex(
           (obj) => obj.id_card === newCard.id_card
         );
@@ -324,7 +252,7 @@ export default {
         if (editedCard.id_status !== card.id_status) {
           ToastTopEnd5.fire(
             "Opa!",
-            `O card ${this.tiposMovimento[editedCard.tipo]}(${
+            `O card ${this.pipelineStore.tiposMovimento[editedCard.tipo]}(${
               editedCard.id_movimento
             }) mudou de status!`,
             "info"
@@ -338,11 +266,11 @@ export default {
           const element = await childrenList[childrenIndex].$el;
 
           await new Promise((resolve) => {
-            this.animaElementSumindo(element, resolve);
+            pipelineHelper.animaElementSumindo(element, resolve);
           });
 
           await this.cards.splice(cardIndex, 1);
-          await this.$emit("cardInWrongList", editedCard);
+          this.pipelineStore.newCard = editedCard;
           return;
         } else if (editedCard.id_status === card.id_status) return;
       }
@@ -362,7 +290,7 @@ export default {
       if (cardIndex !== -1 && editedCard.ativo === 1) {
         ToastTopEnd5.fire(
           "Opa!",
-          `O card ${this.tiposMovimento[editedCard.tipo]}(${
+          `O card ${this.pipelineStore.tiposMovimento[editedCard.tipo]}(${
             editedCard.id_movimento
           }) atualizado!`,
           "info"
@@ -378,7 +306,7 @@ export default {
         // Se existe na lista mas o ativo é 0, o card tem que sumir
         ToastTopEnd5.fire(
           "Opa!",
-          `O card ${this.tiposMovimento[editedCard.tipo]}(${
+          `O card ${this.pipelineStore.tiposMovimento[editedCard.tipo]}(${
             editedCard.id_movimento
           }) foi inativado!`,
           "info"
@@ -392,7 +320,7 @@ export default {
         const element = await childrenList[childrenIndex].$el;
 
         await new Promise((resolve) => {
-          this.animaElementSumindo(element, resolve);
+          pipelineHelper.animaElementSumindo(element, resolve);
         });
 
         await this.cards.splice(cardIndex, 1);
@@ -400,42 +328,58 @@ export default {
       }
 
       // Se não existe na lista, mas está ativo e com o mesmo id_status, emite o card como reativado, para chamar
-      // a funcção de adicionar o card
+      // a função de adicionar o card
       if (
         cardIndex === -1 &&
         editedCard.ativo === 1 &&
-        editedCard.id_status === this.list.id_status
+        editedCard.id_status === this.status.id_status
       ) {
+        let result = await this.pipelineStore.verificaCardInToInactive(
+          editedCard.id_card
+        );
+        if (result) return;
+
         ToastTopEnd5.fire(
           "Opa!",
-          `O card ${this.tiposMovimento[editedCard.tipo]}(${
+          `O card ${this.pipelineStore.tiposMovimento[editedCard.tipo]}(${
             editedCard.id_movimento
           }) foi reativado!`,
           "info"
         );
 
-        this.$emit("cardReativado", editedCard);
+        this.pipelineStore.newCard = editedCard;
         await this.verificaAdicionaCard(editedCard);
         return;
       }
     },
+
+    async removeCard(card) {
+      // Procura card na lista pelo seu id
+      const cardIndex = await this.cards.findIndex(
+        (obj) => obj.id_card === card.id_card
+      );
+
+      // anima o card sumindo
+      const childrenList = await this.$refs.list.$children;
+      const childrenIndex = await childrenList.findIndex(
+        (obj) => obj.card.id_card === card.id_card
+      );
+      const element = await childrenList[childrenIndex].$el;
+
+      await new Promise((resolve) => {
+        pipelineHelper.animaElementSumindo(element, resolve);
+      });
+
+      this.cards.splice(cardIndex, 1);
+    },
   },
   watch: {
-    /**
-     * Escuta a cor da lista mudar para ajustar a cor do texto automaticamente
-     * @param {String} novoValor
-     * @param {String} valorAntigo
-     */
-    "list.color": function (novoValor, valorAntigo) {
-      this.corTextoStatus = this.ajustarCorTexto(novoValor);
-    },
-
     /**
      * Método para escutar o card recebido pelo canal new-cards e adicioná-lo na lista
      * @param {Object} newCard
      * @param {Object} oldCard
      */
-    newCard(newCard, oldCard) {
+    "pipelineStore.newCard"(newCard, oldCard) {
       this.addNewCard(newCard);
     },
 
@@ -444,7 +388,7 @@ export default {
      * @param {Object} newEditedCard
      * @param {Object} oldEditedCard
      */
-    editedCard(newEditedCard, oldEditedCard) {
+    "pipelineStore.editedCard"(newEditedCard, oldEditedCard) {
       this.verificaEditedCard(newEditedCard);
     },
 
@@ -454,10 +398,35 @@ export default {
      * @param {Object} newEditedCard
      * @param {Object} oldEditedCard
      */
-    editedCardStatus(newEditedCardStatus, oldEditedCardStatus) {
-      this.$emit("changeCardPos", () => {
+    "pipelineStore.editedCardStatus"(newEditedCardStatus, oldEditedCardStatus) {
+      this.pipelineStore.addNewFunc(() => {
         return this.verificaEditedCardStatus(newEditedCardStatus);
       });
+    },
+
+    "pipelineStore.lastEditedCard": function (newEditedCard, oldEditedCard) {
+      this.cards.forEach((card) => {
+        if (card.id_card === newEditedCard.id_card) {
+          card.comentarios = newEditedCard.comentarios;
+        }
+      });
+    },
+
+    "pipelineStore.editedCardWAction": async function (newCard, oldCard) {
+      if (newCard.acao === "removed") {
+        if (newCard.id_status !== this.status.id_status) return;
+
+        this.pipelineStore.addNewFunc(async () => {
+          await this.onCardCreated(newCard);
+        });
+      }
+      if (newCard.acao === "added") {
+        if (newCard.id_status !== this.status.id_status) return;
+
+        this.pipelineStore.addNewFunc(async () => {
+          await this.removeCard(newCard);
+        });
+      }
     },
   },
 };

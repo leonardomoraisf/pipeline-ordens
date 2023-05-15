@@ -3,6 +3,9 @@ import axiosService from "./axiosService";
 const axios = axiosService;
 
 var response = {};
+const throwError = (msg) => {
+    ToastTopStart5.fire("Erro!", msg, "error");
+};
 
 const apiService = {
 
@@ -14,10 +17,16 @@ const apiService = {
                     response = res.data;
                 })
                 .catch(err => {
-                    response = {
-                        error: true, message: err.message
-                    }
+                    throwError(err.message);
+                    return {
+                        error: true,
+                        message: err.message
+                    };
                 });
+
+            if (response.error || response.trace) {
+                throwError(response.message);
+            }
 
             return response;
         },
@@ -29,10 +38,16 @@ const apiService = {
                     response = res.data;
                 })
                 .catch(err => {
-                    response = {
-                        error: true, message: err.message
-                    }
+                    throwError(err.message);
+                    return {
+                        error: true,
+                        message: err.message
+                    };
                 });
+
+            if (response.error || response.trace) {
+                throwError(response.message);
+            }
 
             return response;
         },
@@ -44,10 +59,16 @@ const apiService = {
                     response = res.data;
                 })
                 .catch(err => {
-                    response = {
-                        error: true, message: err.message
-                    }
+                    throwError(err.message);
+                    return {
+                        error: true,
+                        message: err.message
+                    };
                 });
+
+            if (response.error || response.trace) {
+                throwError(response.message);
+            }
 
             return response;
         },
@@ -61,10 +82,16 @@ const apiService = {
                     response = res.data;
                 })
                 .catch(err => {
-                    response = {
-                        error: true, message: err.message
-                    }
+                    throwError(err.message);
+                    return {
+                        error: true,
+                        message: err.message
+                    };
                 });
+
+            if (response.error || response.trace) {
+                throwError(response.message);
+            }
 
             return response;
         },
@@ -76,10 +103,16 @@ const apiService = {
                     response = res.data;
                 })
                 .catch(err => {
-                    response = {
-                        error: true, message: err.message
-                    }
+                    throwError(err.message);
+                    return {
+                        error: true,
+                        message: err.message
+                    };
                 });
+
+            if (response.error || response.trace) {
+                throwError(response.message);
+            }
 
             return response;
         },
@@ -91,10 +124,16 @@ const apiService = {
                     response = res.data;
                 })
                 .catch(err => {
-                    response = {
-                        error: true, message: err.message
-                    }
+                    throwError(err.message);
+                    return {
+                        error: true,
+                        message: err.message
+                    };
                 });
+
+            if (response.error || response.trace) {
+                throwError(response.message);
+            }
 
             return response;
         },
@@ -104,16 +143,22 @@ const apiService = {
         edit: async (idCard, data) => {
 
             await axios.put(`${window.API_V2}/pipeline/cards/${idCard}/edit`, data)
-            .then(res => {
-                response = res.data;
-            })
-            .catch(err => {
-                response = {
-                    error: true, message: err.message
-                }
-            });
+                .then(res => {
+                    response = res.data;
+                })
+                .catch(err => {
+                    throwError(err.message);
+                    return {
+                        error: true,
+                        message: err.message
+                    };
+                });
 
-        return response;
+            if (response.error || response.trace) {
+                throwError(response.message);
+            }
+
+            return response;
         },
 
         getInactive: async (data) => {
@@ -123,13 +168,40 @@ const apiService = {
                     response = res.data;
                 })
                 .catch(err => {
-                    response = {
-                        error: true, message: err.message
-                    }
+                    throwError(err.message);
+                    return {
+                        error: true,
+                        message: err.message
+                    };
                 });
+
+            if (response.error || response.trace) {
+                throwError(response.message);
+            }
 
             return response;
         },
+
+        delete: async(idCard) => {
+
+            await axios.delete(`${window.API_V2}/pipeline/cards/${idCard}/delete`)
+                .then(res => {
+                    response = res.data;
+                })
+                .catch(err => {
+                    throwError(err.message);
+                    return {
+                        error: true,
+                        message: err.message
+                    };
+                });
+
+            if (response.error || response.trace) {
+                throwError(response.message);
+            }
+
+            return response;
+        }
     }
 
 }
