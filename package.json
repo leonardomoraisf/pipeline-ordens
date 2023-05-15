@@ -23,6 +23,7 @@
     "core-js": "^3.8.3",
     "dayjs": "^1.11.7",
     "node-polyfill-webpack-plugin": "^2.0.1",
+    "pinia": "^2.0.36",
     "pusher-js": "^8.0.2",
     "simplebar": "^6.2.1",
     "tailwindcss": "^3",
