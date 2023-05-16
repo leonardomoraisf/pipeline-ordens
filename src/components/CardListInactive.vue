@@ -306,4 +306,20 @@ export default {
 </script>
 
 <style scoped>
+::-webkit-scrollbar {
+  background-color: transparent;
+  width: 0px;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #aeaeae;
+  border-radius: 5px;
+}
+
+.cards-scrollbar:hover::-webkit-scrollbar {
+  width: 5px;
+}
+
 </style>

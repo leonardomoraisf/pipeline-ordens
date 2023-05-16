@@ -292,7 +292,8 @@ export default {
       ToastTopStart5.fire("Sucesso!", msg, "success");
 
       // remove o card da lista atual
-      this.pipelineStore.inactiveCardList.slice(elementIndex, 1);
+      let cardIndex = this.pipelineStore.inactiveCardList.findIndex((obj) => obj.id_card === idCard);
+      this.pipelineStore.inactiveCardList.splice(cardIndex, 1);
     },
 
     async animaCardToActiveSumindo(card) {
@@ -309,7 +310,10 @@ export default {
       });
 
       card.data_hora_registro = `${this.globalStore.actualDateFormatted}T00:00:00`;
-      await this.pipelineStore.inactiveCardList.slice(elementIndex, 1);
+      let cardIndex = this.pipelineStore.inactiveCardList.findIndex((obj) => obj.id_card === card.id_card);
+      await this.pipelineStore.inactiveCardList.splice(cardIndex, 1);
+
+      card.fixed = false;
       this.pipelineStore.newCard = card;
     },
 

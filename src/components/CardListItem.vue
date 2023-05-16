@@ -84,10 +84,7 @@
               {{ card.nome !== null ? card.nome : "Consumidor" }}
             </p>
             <transition name="fade">
-              <div
-                v-if="card.fixed"
-                v-tooltip="'Atualizando...'"
-              >
+              <div v-if="card.fixed" v-tooltip="'Atualizando...'">
                 <div class="half-circle-spinner">
                   <div
                     class="circle circle-1"
@@ -350,11 +347,12 @@ export default {
         corTextoCard: this.corTextoCard,
       };
       this.pipelineStore.isShowingModalEditCardComments = true;
-      if(this.inInactiveCardList) {
+      if (this.inInactiveCardList) {
         this.pipelineStore.isShowingModalInactiveCardList = false;
         this.pipelineStore.fromInactiveCardList = true;
       }
-      if(!this.inInactiveCardList) this.pipelineStore.fromInactiveCardList = false;
+      if (!this.inInactiveCardList)
+        this.pipelineStore.fromInactiveCardList = false;
     },
 
     onClickToActive() {
@@ -421,7 +419,7 @@ export default {
         id_status: this.card.id_status,
         posicao: this.card.posicao,
         ativo: 0,
-        comentarios: this.card.comentarios
+        comentarios: this.card.comentarios,
       };
 
       let card = { ...this.card, ativo: 0 };
@@ -430,16 +428,12 @@ export default {
 
       if (this.card.acao && this.card.acao === "added") return;
 
-      this.globalStore.addNewRequest(() => {
-        return this.axios
-          .put(`${window.API_V2}/pipeline/cards/${card.id_card}/edit`, body)
-          .then((res) => {
-            var data = {
-              card: card,
-            };
-            this.pipelineStore.triggerPusher("client-card-editado", data);
-          });
-      });
+      apiService.card.edit(card.id_card, body);
+
+      var data = {
+        card: card,
+      };
+      this.pipelineStore.triggerPusher("client-card-editado", data);
     },
 
     calculaInfosInInactiveCardList() {
