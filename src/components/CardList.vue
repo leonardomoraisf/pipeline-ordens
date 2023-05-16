@@ -21,6 +21,7 @@
           @change="onChange"
           tag="ul"
           ref="list"
+          :move="onMove"
         >
           <CardListItem
             v-for="card in cards"
@@ -28,7 +29,7 @@
             :card="card"
             :colorStatus="status.color"
             :corTextoCard="corTextoStatus"
-            :isToInative="false"
+            :isToInactive="false"
             @openModalEditComments="toggleModalEditComments"
           />
         </draggable>
@@ -41,11 +42,12 @@
 import draggable from "vuedraggable";
 import MovimentoModalCreate from "./MovimentoModalCreate.vue";
 import CardListItem from "./CardListItem.vue";
-import { ref, nextTick } from "vue";
+import { nextTick } from "vue";
 import StatusTimeline from "./StatusTimeline.vue";
 import ModalEditCardComments from "./ModalEditCardComments.vue";
 import { globalHelper } from "@/helpers/global";
 import { pipelineHelper } from "@/helpers/pipeline";
+import apiService from "@/services/apiService";
 
 export default {
   name: "CardList",
@@ -62,7 +64,12 @@ export default {
   },
   data() {
     return {
-      cards: ref(this.status.cards),
+      cards: this.status.cards.map((card) => {
+        return {
+          ...card,
+          fixed: false,
+        };
+      }),
       corTextoStatus: "",
       isShowingModalEditComments: false,
       cardIsEditing: {},
@@ -84,9 +91,17 @@ export default {
     this.corTextoStatus = globalHelper.ajustarCorTexto(this.status.color);
   },
   methods: {
+    onMove({ relatedContext, draggedContext }) {
+      const relatedElement = relatedContext.element;
+      const draggedElement = draggedContext.element;
+      return (
+        (!relatedElement || !relatedElement.fixed) && !draggedElement.fixed
+      );
+    },
+
     /**
      * Método chamado para abrir a modal de edição de comentários de um card que está na lista
-     * para transformar o card em inative
+     * para transformar o card em inativo
      * @param {Object} card
      */
     async toggleModalEditComments(card) {
@@ -110,7 +125,7 @@ export default {
       if (cardIndex !== -1) return;
 
       this.cards.push(novoCard);
-      this.organizaListaCards();
+      await this.organizaListaCards();
 
       await nextTick();
 
@@ -145,7 +160,7 @@ export default {
      * Método que é acionado quando acontece alguma mudança de status ou posição de cards do componente draggable
      * @param {Event} e
      */
-    onChange(e) {
+    async onChange(e) {
       const item = e.added || e.moved;
       if (!item) return;
 
@@ -162,6 +177,8 @@ export default {
       const nextCard = this.cards[index + 1];
       const card = this.cards[index];
 
+      let event = "client-card-editado";
+
       let result = this.verificaTimerCard(card);
       if (result === true) return;
 
@@ -175,33 +192,34 @@ export default {
         posicao = nextCard.posicao / 2;
       }
 
-      var event = "client-card-editado";
-
       if (card.id_status !== this.status.id_status) {
         card.data_hora_registro = `${this.globalStore.actualDateFormatted}T00:00:00`;
         event = "client-card-editado-status";
       }
+
       card.id_status = this.status.id_status;
       card.posicao = posicao;
+      card.fixed = true;
 
       const body = {
         id_status: this.status.id_status,
         posicao: posicao,
         ativo: 1,
         comentarios: card.comentarios,
-        pusherSessionID: this.pipelineStore.pusherSessionID,
       };
 
-      this.globalStore.addNewRequest(() => {
-        return this.axios
-          .put(`${window.API_V2}/pipeline/cards/${card.id_card}/edit`, body)
-          .then((res) => {
-            var data = {
-              card: card,
-            };
-            this.pipelineStore.pusherChannel.trigger(event, data);
-          });
-      });
+      var data = {
+        card: {
+          ...card,
+          fixed: true,
+        },
+      };
+      this.pipelineStore.triggerPusher(event, data);
+      await apiService.card.edit(card.id_card, body);
+
+      card.fixed = false;
+      data.card.fixed = false;
+      this.pipelineStore.triggerPusher("client-card-editado", data);
     },
 
     /**
@@ -250,14 +268,6 @@ export default {
 
         // Se alterou o status procura o element na lista, anima o sumiço e remove da lista
         if (editedCard.id_status !== card.id_status) {
-          ToastTopEnd5.fire(
-            "Opa!",
-            `O card ${this.pipelineStore.tiposMovimento[editedCard.tipo]}(${
-              editedCard.id_movimento
-            }) mudou de status!`,
-            "info"
-          );
-
           // anima o card sumindo
           const childrenList = await this.$refs.list.$children;
           const childrenIndex = await childrenList.findIndex(
@@ -288,14 +298,6 @@ export default {
 
       // Se existe e continua ativo apenas altera a informação e organiza a lista
       if (cardIndex !== -1 && editedCard.ativo === 1) {
-        ToastTopEnd5.fire(
-          "Opa!",
-          `O card ${this.pipelineStore.tiposMovimento[editedCard.tipo]}(${
-            editedCard.id_movimento
-          }) atualizado!`,
-          "info"
-        );
-
         await this.$set(this.cards, cardIndex, editedCard);
         await this.organizaListaCards();
         return;
@@ -374,8 +376,8 @@ export default {
     },
   },
   watch: {
-    "status.color": function(newValue, oldValue) {
-        this.corTextoStatus = globalHelper.ajustarCorTexto(newValue);
+    "status.color": function (newValue, oldValue) {
+      this.corTextoStatus = globalHelper.ajustarCorTexto(newValue);
     },
 
     /**
@@ -504,12 +506,5 @@ export default {
 
 .input-color::-moz-color-swatch {
   border-radius: 50%;
-}
-
-.flip-list-move {
-  transition: transform 0.5s;
-}
-.no-move {
-  transition: transform 0s;
 }
 </style>

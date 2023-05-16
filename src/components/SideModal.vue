@@ -492,8 +492,7 @@ export default {
         let body = {
           ...this.status,
           nome: this.editStatusName,
-          color: this.editStatusColor,
-          pusherSessionID: this.pipelineStore.pusherSessionID,
+          color: this.editStatusColor
         };
 
         delete body.cards;
@@ -536,7 +535,7 @@ export default {
             ...body,
           },
         };
-        this.pipelineStore.pusherChannel.trigger("client-status-editado", data);
+        this.pipelineStore.triggerPusher("client-status-editado", data);
 
         this.$emit("closeModal");
         this.backupEditStatusName = this.status.nome;
@@ -566,8 +565,7 @@ export default {
 
         let body = {
           nome: this.regStatusName,
-          color: this.regStatusColor,
-          pusherSessionID: this.pipelineStore.pusherSessionID,
+          color: this.regStatusColor
         };
 
         const response = await apiService.status.create(body);
@@ -588,7 +586,7 @@ export default {
             ...body,
           },
         };
-        this.pipelineStore.pusherChannel.trigger("client-status-criado", data);
+        this.pipelineStore.triggerPusher("client-status-criado", data);
 
         this.$refs.regStatusNameRef.value = "";
         this.regColor = {

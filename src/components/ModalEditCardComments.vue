@@ -106,8 +106,9 @@
 </template>
 
 <script>
-import { ref, nextTick } from "vue";
+import { ref } from "vue";
 import CardListItem from "./CardListItem.vue";
+import apiService from "@/services/apiService";
 
 export default {
   name: "ModalEditCardComments",
@@ -148,16 +149,18 @@ export default {
             } else {
               this.errorMessage = "";
               this.isShowingError = false;
-              this.pipelineStore.isShowingModalEditCardComments =
-                !this.pipelineStore.isShowingModalEditCardComments;
+              this.pipelineStore.isShowingModalEditCardComments = false;
+              if (this.pipelineStore.fromInactiveCardList)
+                this.pipelineStore.isShowingModalInactiveCardList = true;
             }
           },
         });
       } else {
         this.errorMessage = "";
         this.isShowingError = false;
-        this.pipelineStore.isShowingModalEditCardComments =
-          !this.pipelineStore.isShowingModalEditCardComments;
+        this.pipelineStore.isShowingModalEditCardComments = false;
+        if (this.pipelineStore.fromInactiveCardList)
+          this.pipelineStore.isShowingModalInactiveCardList = true;
       }
     },
 
@@ -186,8 +189,7 @@ export default {
         id_status: this.pipelineStore.editingCard.id_status,
         posicao: this.pipelineStore.editingCard.posicao,
         ativo: this.pipelineStore.editingCard.ativo,
-        comentarios: this.cardComentarios,
-        pusherSessionID: this.pipelineStore.pusherSessionID,
+        comentarios: this.cardComentarios
       };
 
       const card = {
@@ -196,28 +198,29 @@ export default {
       };
 
       this.globalStore.addNewRequest(() => {
-        return this.axios
-          .put(`${window.API_V2}/pipeline/cards/${card.id_card}/edit`, body)
-          .then((res) => {
-            let data = {
-              card: {
-                ...this.pipelineStore.editingCard,
-                comentarios: this.cardComentarios,
-              },
-            };
-            this.pipelineStore.pusherChannel.trigger(
-              "client-card-editado",
-              data
-            );
-          });
-      });
+        this.axios.put(`${window.API_V2}/pipeline/cards/${card.id_card}/edit`, body).then((res) => {
+          let data = {
+            card: {
+              ...this.pipelineStore.editingCard,
+              comentarios: this.cardComentarios,
+            },
+          };
+          this.pipelineStore.triggerPusher("client-card-editado", data);
 
-      this.isSubmiting = false;
-      Toast.fire("Sucesso!", "O comentário do seu card será salvo!", "success");
-      this.pipelineStore.lastEditedCard = {
-        ...card,
-      };
-      this.pipelineStore.isShowingModalEditCardComments = false;
+          this.isSubmiting = false;
+          Toast.fire(
+            "Sucesso!",
+            "O comentário do seu card foi salvo!",
+            "success"
+          );
+          this.pipelineStore.lastEditedCard = {
+            ...card,
+          };
+          this.pipelineStore.isShowingModalEditCardComments = false;
+          if (this.pipelineStore.fromInactiveCardList)
+            this.pipelineStore.isShowingModalInactiveCardList = true;
+        });
+      });
     },
   },
   watch: {

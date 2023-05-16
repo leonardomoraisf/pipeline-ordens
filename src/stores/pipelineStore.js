@@ -18,7 +18,7 @@ export const usePipelineStore = defineStore('pipeline', {
                 }
             ),
             pusherChannel: null,
-            pusherSessionID: null,
+            pusherUserChannelCount: 0,
             tiposMovimento: {
                 0: "Orçamento",
                 1: "Venda",
@@ -66,7 +66,8 @@ export const usePipelineStore = defineStore('pipeline', {
 
             updateListInactive: false,
 
-            editedCardWAction: {}
+            editedCardWAction: {},
+            fromInactiveCardList: false
         }
     },
     getters: {
@@ -84,10 +85,6 @@ export const usePipelineStore = defineStore('pipeline', {
 
         getIdEmpresa: (state) => {
             return state.idEmpresa;
-        },
-
-        getPusherSessionID: (state) => {
-            return state.pusherSessionID;
         }
     },
     actions: {
@@ -120,16 +117,12 @@ export const usePipelineStore = defineStore('pipeline', {
 
             if (this.listLength > 0) {
 
-                let ordem = 1;
-                this.list.forEach((status) => {
-
-                    if (status.cards !== null) {
-                        status.cards = JSON.parse(status.cards);
-                    } else if (status.cards === null) {
-                        status.cards = [];
+                this.list = this.list.map((status, index) => {
+                    return {
+                        ...status,
+                        ordem: index + 1,
+                        cards: status.cards !== null ? JSON.parse(status.cards) : [],
                     }
-                    status["ordem"] = ordem;
-                    ordem++;
                 });
             }
 
@@ -154,14 +147,13 @@ export const usePipelineStore = defineStore('pipeline', {
                 "private-company-" + this.idEmpresa
             );
 
-            this.pusherSessionID = this.pusher.sessionID;
-
             this.pusherChannel.bind("card-criado", (data) => {
                 if (!data[0]) return;
 
                 var newCard = data[0];
                 newCard.posicao = parseFloat(newCard.posicao);
                 newCard.valor = parseFloat(newCard.valor);
+                newCard.fixed = false;
 
                 this.newCard = newCard;
             });
@@ -215,14 +207,20 @@ export const usePipelineStore = defineStore('pipeline', {
                 });
             });
 
+            this.pusherChannel.bind("pusher:subscription_count", (data) => {
+                this.pusherUserChannelCount = data.subscription_count;
+            });
+
             this.isRequestingList = false;
         },
 
         async calculaOrdemLista() {
-            let ordem = 1;
-            this.list.forEach((status) => {
-                status.ordem = ordem;
-                ordem++;
+
+            this.list = this.list.map((status, index) => {
+                return {
+                    ...status,
+                    ordem: index + 1
+                }
             });
         },
 
@@ -303,6 +301,12 @@ export const usePipelineStore = defineStore('pipeline', {
             let index = this.cardsToInactive.findIndex((card) => card.id_card === idCard);
             if (index !== -1) return true;
             return false;
+        },
+
+        async triggerPusher(event, data) {
+            if (this.pusherUserChannelCount > 1) {
+                this.pusherChannel.trigger(event, data);
+            }
         }
     },
 })

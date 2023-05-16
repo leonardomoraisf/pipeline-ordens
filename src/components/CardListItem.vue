@@ -2,26 +2,26 @@
   <li
     class="drag-card flex-col md:flex-row"
     :class="{
-      'card-list': !inModalEditComments && !inInativeCardList,
-      flex: inInativeCardList,
+      'card-list': !inModalEditComments && !inInactiveCardList,
+      flex: inInactiveCardList,
     }"
   >
     <div
       :style="{ backgroundColor: colorStatus }"
       class="group relative p-2 shadow rounded-md text-left h-fit"
-      :class="{ 'md:w-3/5': inInativeCardList }"
+      :class="{ 'md:w-3/5': inInactiveCardList }"
     >
       <div
         class="h-fit flex flex-col justify-between"
         :class="{
-          'hover:cursor-grab': !inInativeCardList && !inModalEditComments,
+          'hover:cursor-grab': !inInactiveCardList && !inModalEditComments,
         }"
         :style="{ color: corTextoCard }"
       >
         <div
           class="absolute top-1 right-1"
           v-if="
-            inInativeCardList &&
+            inInactiveCardList &&
             existeStatus &&
             !statusInativo &&
             card.movimento_ativo === 1
@@ -38,7 +38,7 @@
 
         <div
           v-if="
-            (inInativeCardList && !existeStatus) ||
+            (inInactiveCardList && !existeStatus) ||
             (statusInativo && card.movimento_ativo === 1)
           "
           class="absolute top-1 right-1 flex flex-col gap-1"
@@ -73,15 +73,35 @@
         </div>
 
         <div class="space-y-1 overflow-hidden whitespace-nowrap text-ellipsis">
-          <p
-            class="md:text-base text-sm px-1 w-max rounded-md truncate"
-            :class="{
-              'bg-black/30': corTextoCard === '#FFFFFF',
-              'bg-white/30': corTextoCard === '#000000',
-            }"
-          >
-            {{ card.nome !== null ? card.nome : "Consumidor" }}
-          </p>
+          <div class="flex items-center justify-between">
+            <p
+              class="md:text-base text-sm px-1 w-max rounded-md truncate"
+              :class="{
+                'bg-black/30': corTextoCard === '#FFFFFF',
+                'bg-white/30': corTextoCard === '#000000',
+              }"
+            >
+              {{ card.nome !== null ? card.nome : "Consumidor" }}
+            </p>
+            <transition name="fade">
+              <div
+                v-if="card.fixed"
+                v-tooltip="'Atualizando...'"
+              >
+                <div class="half-circle-spinner">
+                  <div
+                    class="circle circle-1"
+                    :style="{ borderTopColor: corTextoCard }"
+                  ></div>
+                  <div
+                    class="circle circle-2"
+                    :style="{ borderBottomColor: corTextoCard }"
+                  ></div>
+                </div>
+              </div>
+            </transition>
+          </div>
+
           <p
             class="md:text-xs text-xs px-1 w-max rounded-md truncate"
             :class="{
@@ -103,7 +123,7 @@
             }})
           </p>
           <p
-            v-if="inInativeCardList"
+            v-if="inInactiveCardList"
             class="md:text-base font-normal truncate text-sm"
           >
             <b>Status<span v-if="statusInativo"> inativo</span>:</b>
@@ -112,7 +132,7 @@
         </div>
 
         <div
-          v-if="isToInative"
+          v-if="isToInactive"
           class="absolute top-0 right-1 text-sm font-semibold flex flex-col items-center"
           v-tooltip="'Quando o tempo acabar, o card será finalizado!'"
         >
@@ -146,7 +166,7 @@
               </button>
             </div>
 
-            <div v-if="!inInativeCardList">
+            <div v-if="!inInactiveCardList">
               <div
                 v-if="diferencaDias !== 0 || diferencaDiasTotal !== 0"
                 class="w-12 h-6 rounded-md text-center"
@@ -173,7 +193,7 @@
             </div>
 
             <div
-              v-if="inInativeCardList"
+              v-if="inInactiveCardList"
               class="w-fit rounded-md text-center md:text-base text-sm"
               v-tooltip.bottom="'Dias no pipeline'"
             >
@@ -197,7 +217,7 @@
           <p class="text-black font-semibold text-xl">
             O movimento deste card está inativo!
           </p>
-          <div v-if="inInativeCardList" class="absolute top-2 right-2">
+          <div v-if="inInactiveCardList" class="absolute top-2 right-2">
             <button
               @click="deleteCard"
               class="bg-rose-500 rounded-md hover:bg-rose-400 hover:scale-105 p-2 transition-all text-white font-semibold"
@@ -209,7 +229,7 @@
       </div>
     </div>
 
-    <div v-if="inInativeCardList" class="mt-1 md:mt-0">
+    <div v-if="inInactiveCardList" class="mt-1 md:mt-0">
       <div
         class="flex flex-col md:pl-2 pl-1 justify-center text-left h-full overflow-hidden"
       >
@@ -258,7 +278,7 @@
     </div>
 
     <div
-      v-if="inInativeCardList"
+      v-if="inInactiveCardList"
       class="block md:hidden border border-gray-500 mb-2 mt-1"
     ></div>
   </li>
@@ -276,7 +296,7 @@ export default {
     card: Object,
     colorStatus: String,
     corTextoCard: String,
-    isToInative: {
+    isToInactive: {
       type: Boolean,
       default: false,
     },
@@ -284,7 +304,7 @@ export default {
       type: Boolean,
       default: false,
     },
-    inInativeCardList: {
+    inInactiveCardList: {
       type: Boolean,
       default: false,
     },
@@ -330,6 +350,11 @@ export default {
         corTextoCard: this.corTextoCard,
       };
       this.pipelineStore.isShowingModalEditCardComments = true;
+      if(this.inInactiveCardList) {
+        this.pipelineStore.isShowingModalInactiveCardList = false;
+        this.pipelineStore.fromInactiveCardList = true;
+      }
+      if(!this.inInactiveCardList) this.pipelineStore.fromInactiveCardList = false;
     },
 
     onClickToActive() {
@@ -396,8 +421,7 @@ export default {
         id_status: this.card.id_status,
         posicao: this.card.posicao,
         ativo: 0,
-        comentarios: this.card.comentarios,
-        pusherSessionID: this.pipelineStore.pusherSessionID,
+        comentarios: this.card.comentarios
       };
 
       let card = { ...this.card, ativo: 0 };
@@ -413,15 +437,12 @@ export default {
             var data = {
               card: card,
             };
-            this.pipelineStore.pusherChannel.trigger(
-              "client-card-editado",
-              data
-            );
+            this.pipelineStore.triggerPusher("client-card-editado", data);
           });
       });
     },
 
-    calculaInfosInInativeCardList() {
+    calculaInfosInInactiveCardList() {
       let diasDaSemana = ["Dom", "Seg", "Terç", "Qua", "Qui", "Sex", "Sáb"];
 
       var dataHoraLog = new Date(this.cardLog.data_hora_cadastro);
@@ -477,25 +498,25 @@ export default {
     }
 
     // Se o card foi montado na lista de para inativo, começa a contar 60 segundos
-    if (this.isToInative) {
-      this.intervalInativeCard = setInterval(() => {
+    if (this.isToInactive) {
+      this.intervalInactiveCard = setInterval(() => {
         this.card.timer -= 1;
         this.$forceUpdate();
         if (this.card.timer <= 0) {
           this.cardToInactive();
-          clearInterval(this.intervalInativeCard);
+          clearInterval(this.intervalInactiveCard);
         }
       }, 1000);
     }
 
     // Se estiver na lista de cards inativos, calcula qual o dia da semana que ele foi finalizado
-    if (this.inInativeCardList) {
-      this.calculaInfosInInativeCardList();
+    if (this.inInactiveCardList) {
+      this.calculaInfosInInactiveCardList();
     }
   },
   beforeDestroy() {
     // Limpa o interval se ele foi colocado como inativo ou retirado da lista para inativo
-    clearInterval(this.intervalInativeCard);
+    clearInterval(this.intervalInactiveCard);
   },
   watch: {
     /**
@@ -554,8 +575,8 @@ export default {
 }
 
 .half-circle-spinner {
-  width: 60px;
-  height: 60px;
+  width: 20px;
+  height: 20px;
   border-radius: 100%;
   position: relative;
 }
@@ -566,16 +587,14 @@ export default {
   width: 100%;
   height: 100%;
   border-radius: 100%;
-  border: calc(60px / 10) solid transparent;
+  border: calc(20px / 10) solid transparent;
 }
 
 .half-circle-spinner .circle.circle-1 {
-  border-top-color: white;
   animation: half-circle-spinner-animation 1s infinite;
 }
 
 .half-circle-spinner .circle.circle-2 {
-  border-bottom-color: white;
   animation: half-circle-spinner-animation 1s infinite alternate;
 }
 

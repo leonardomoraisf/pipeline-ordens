@@ -73,7 +73,7 @@
             :card="card"
             :colorStatus="'#71717A'"
             :corTextoCard="'#FFFFFF'"
-            :isToInative="true"
+            :isToInactive="true"
             @cardToInactive="onCardToInactive"
             @deleteCard="onDeleteCard"
           />
@@ -184,7 +184,7 @@ export default {
       var card = item.element;
       if (e.added) {
         card.timer = 60;
-        card.indexInative = e.added.newIndex;
+        card.indexInactive = e.added.newIndex;
 
         let data = {
           card: {
@@ -192,10 +192,10 @@ export default {
             acao: "added",
           },
         };
-        this.pipelineStore.pusherChannel.trigger("client-card-inativo", data);
+        this.pipelineStore.triggerPusher("client-card-inativo", data);
       }
       if (e.moved) {
-        card.indexInative = e.moved.newIndex;
+        card.indexInactive = e.moved.newIndex;
 
         if (card.timer <= 0) {
           this.pipelineStore.cardsToInactive.forEach((card, index) => {
@@ -214,18 +214,20 @@ export default {
             acao: "removed",
           },
         };
-        this.pipelineStore.pusherChannel.trigger("client-card-inativo", data);
+        this.pipelineStore.triggerPusher("client-card-inativo", data);
       }
     },
 
     async onDeleteCard(idCard, msg) {
-      let index = this.pipelineStore.inactiveCardList.findIndex((cardObj) => {
-        cardObj.id_card === idCard;
-      });
+      this.pipelineStore.addNewFunc(async () => {
+        let index = this.pipelineStore.inactiveCardList.findIndex((cardObj) => {
+          cardObj.id_card === idCard;
+        });
 
-      await pipelineHelper.animaElementSumindo(element, async () => {
-        await this.pipelineStore.inactiveCardList.splice(index, 1);
-        ToastTopStart5.fire("Sucesso!", msg, "success");
+        await pipelineHelper.animaElementSumindo(element, async () => {
+          await this.pipelineStore.inactiveCardList.splice(index, 1);
+          ToastTopStart5.fire("Sucesso!", msg, "success");
+        });
       });
     },
 

@@ -166,16 +166,17 @@
               <div class="w-full py-2">
                 <ul class="space-y-3 px-2" v-if="!isRequesting">
                   <CardListItem
-                    ref="list"
                     v-for="card in pipelineStore.inactiveCardList"
                     :key="card.id_card"
                     :card="card"
-                    :inInativeCardList="true"
+                    :inInactiveCardList="true"
                     :colorStatus="card.colorStatus"
                     :corTextoCard="card.corTextoCard"
                     :existeStatus="card.existeStatus"
                     :statusInativo="card.statusInativo"
                     @turnCardActive="onTurnCardActive"
+                    @deleteCard="onDeleteCard"
+                    ref="listInactive"
                   ></CardListItem>
 
                   <div
@@ -257,7 +258,7 @@ export default {
       dataRequest: {},
       isRequesting: ref(false),
       isRequestingMore: ref(false),
-      dataRequestInativeCardList: [],
+      dataRequestInactiveCardList: [],
       qtdRequests: 1,
       arrayURL: [],
       alreadyRequestedAllInactiveStatus: ref(false),
@@ -276,37 +277,39 @@ export default {
      * Método assíncrono para remover o card da lista quando deletado
      * @param {Object} card
      */
-    async onDeleteCard(card) {
-      const list = this.$refs.list;
+    async onDeleteCard(idCard, msg) {
+      const listInactive = this.$refs.listInactive;
 
-      var elementIndex = list.findIndex(
-        (obj) => obj.card.id_card === card.id_card
+      var elementIndex = listInactive.findIndex(
+        (obj) => obj.card.id_card === idCard
       );
-      let element = list[elementIndex].$el;
+      let element = listInactive[elementIndex].$el;
 
       await new Promise((resolve) => {
         pipelineHelper.animaElementSumindo(element, resolve, false);
       });
 
+      ToastTopStart5.fire("Sucesso!", msg, "success");
+
       // remove o card da lista atual
-      this.pipelineStore.inactiveCardList.splice(elementIndex, 1);
+      this.pipelineStore.inactiveCardList.slice(elementIndex, 1);
     },
 
     async animaCardToActiveSumindo(card) {
-      const list = this.$refs.list;
+      const listInactive = this.$refs.listInactive;
 
-      var elementIndex = list.findIndex(
+      var elementIndex = listInactive.findIndex(
         (obj) => obj.card.id_card === card.id_card
       );
       if (elementIndex === -1) return;
-      let element = list[elementIndex].$el;
+      let element = listInactive[elementIndex].$el;
 
       await new Promise((resolve) => {
         pipelineHelper.animaElementSumindo(element, resolve, false);
       });
 
       card.data_hora_registro = `${this.globalStore.actualDateFormatted}T00:00:00`;
-      await this.pipelineStore.inactiveCardList.splice(elementIndex, 1);
+      await this.pipelineStore.inactiveCardList.slice(elementIndex, 1);
       this.pipelineStore.newCard = card;
     },
 
@@ -322,7 +325,6 @@ export default {
           posicao: card.posicao,
           ativo: 1,
           comentarios: card.comentarios,
-          pusherSessionID: this.pipelineStore.pusherSessionID,
         };
 
         let statusIndex = this.pipelineStore.list.findIndex(
@@ -334,23 +336,19 @@ export default {
           card.id_status = firstListIdStatus;
         }
 
-        delete body.pusherSessionID;
+        let data = {
+          card: {
+            ...card,
+            ativo: 1,
+          },
+        };
+        this.pipelineStore.triggerPusher("client-card-editado", data);
 
         this.globalStore.addNewRequest(() => {
-          return this.axios
-            .put(`${window.API_V2}/pipeline/cards/${card.id_card}/edit`, body)
-            .then((res) => {
-              let data = {
-                card: {
-                  ...card,
-                  ativo: 1,
-                },
-              };
-              this.pipelineStore.pusherChannel.trigger(
-                "client-card-editado",
-                data
-              );
-            });
+          return this.axios.put(
+            `${window.API_V2}/pipeline/cards/${card.id_card}/edit`,
+            body
+          );
         });
       }
 
@@ -605,32 +603,18 @@ export default {
       this.pipelineStore.inactiveCardList.forEach((card) => {
         if (newCard.id_card === card.id_card) {
           card.comentarios = newCard.comentarios;
+
+          if(newCard.ativo === 1){
+            this.animaCardToActiveSumindo(newCard);
+          }
         }
       });
     },
 
-    /**
-     * Método que escuta um card que teve seu comentário editado, para alterar na lista atual
-     * @param {Object} newCard
-     * @param {Object} oldCard
-     */
-    "pipelineStore.editedCardStatus": function (newCard, oldCard) {
+    "pipelineStore.lastEditedCard": function (newCard, oldCard) {
       this.pipelineStore.inactiveCardList.forEach((card) => {
         if (newCard.id_card === card.id_card) {
           card.comentarios = newCard.comentarios;
-        }
-      });
-    },
-
-    /**
-     * Método que escuta se o card agora se tornou ativo do pusher
-     * @param {Object} newCard
-     * @param {Object} oldCard
-     */
-    "pipelineStore.newCard": function (newCard, oldCard) {
-      this.pipelineStore.inactiveCardList.forEach((card) => {
-        if (newCard.id_card === card.id_card) {
-          this.onTurnCardActive(newCard, true);
         }
       });
     },

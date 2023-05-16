@@ -23,7 +23,7 @@ export const pipelineHelper = {
     },
 
     async animaElementAparecendo(element) {
-        element.style.transition = "all 0.5s ease";
+        element.style.transition = "all 0.2s ease";
 
         element.style.transform = "scale(0)";
         element.style.opacity = "0";
@@ -31,7 +31,7 @@ export const pipelineHelper = {
         setTimeout(() => {
             element.style.transform = "scale(1.02)";
             element.style.opacity = "0.8";
-        }, 500);
+        }, 600);
 
         element.scrollIntoView({
             behavior: "smooth",
@@ -40,6 +40,6 @@ export const pipelineHelper = {
         setTimeout(() => {
             element.style.transform = "scale(1)";
             element.style.opacity = "1";
-        }, 1000);
+        }, 800);
     },
 }
