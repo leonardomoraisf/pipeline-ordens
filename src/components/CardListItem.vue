@@ -5,6 +5,7 @@
       'card-list': !inModalEditComments && !inInactiveCardList,
       flex: inInactiveCardList,
     }"
+    @click="openModalCard"
   >
     <div
       :style="{ backgroundColor: colorStatus }"
@@ -133,7 +134,7 @@
           class="absolute top-0 right-1 text-sm font-semibold flex flex-col items-center"
           v-tooltip="'Quando o tempo acabar, o card será finalizado!'"
         >
-          <span class="text-lg"> {{ card.timer }} </span>
+          <span class="text-lg"> {{ card.timer <= 0 ? 0 : card.timer }} </span>
           <span>segundos</span>
         </div>
 
@@ -479,6 +480,18 @@ export default {
       );
 
       this.diferencaDiasFinalizado = diasFinalizado;
+    },
+
+    openModalCard() {
+      if (!this.$device.mobile) return;
+      let cardObj = {
+        ...this.card,
+        colorStatus: this.colorStatus,
+        corTextoCard: this.corTextoCard,
+      };
+      this.pipelineStore.cardToChange = cardObj;
+      this.pipelineStore.isShowingModalCard =
+        !this.pipelineStore.isShowingModalCard;
     },
   },
   mounted() {

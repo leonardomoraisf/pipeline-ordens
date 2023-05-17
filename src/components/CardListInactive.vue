@@ -113,7 +113,7 @@ export default {
         group: "cards",
         ghostClass: "ghost",
         dragClass: "drag",
-        disabled: false,
+        disabled: this.$device.mobile,
         handle: ".drag-card",
       };
     },
@@ -130,8 +130,9 @@ export default {
   methods: {
     async onCardToInactive(card) {
       this.pipelineStore.addNewFunc(async () => {
-        let index = this.pipelineStore.cardsToInactive.findIndex((cardObj) => {
-          cardObj.id_card === card.id_card;
+        var cardIndex;
+        this.pipelineStore.cardsToInactive.forEach((cardObj, index) => {
+          if (cardObj.id_card === card.id_card) cardIndex = index;
         });
 
         const childrenList = this.$refs.listInactiveRef.$children;
@@ -140,9 +141,11 @@ export default {
         );
         const element = childrenList[childrenIndex].$el;
 
-        await pipelineHelper.animaElementSumindo(element, () => {
-          this.pipelineStore.cardsToInactive.splice(index, 1);
+        await new Promise((resolve) => {
+          pipelineHelper.animaElementSumindo(element, resolve);
         });
+
+        this.pipelineStore.cardsToInactive.splice(cardIndex, 1);
       });
     },
 
@@ -200,7 +203,7 @@ export default {
         if (card.timer <= 0) {
           this.pipelineStore.cardsToInactive.forEach((card, index) => {
             if (card === undefined) {
-              this.pipelineStore.cardsToInactive.slice(index, 1);
+              this.pipelineStore.cardsToInactive.splice(index, 1);
             }
           });
 
@@ -224,10 +227,11 @@ export default {
           cardObj.id_card === idCard;
         });
 
-        await pipelineHelper.animaElementSumindo(element, async () => {
-          await this.pipelineStore.inactiveCardList.splice(index, 1);
-          ToastTopStart5.fire("Sucesso!", msg, "success");
+        await new Promise((resolve) => {
+          pipelineHelper.animaElementSumindo(element, resolve);
         });
+
+        this.pipelineStore.inactiveCardList.splice(index, 1);
       });
     },
 
@@ -321,5 +325,4 @@ export default {
 .cards-scrollbar:hover::-webkit-scrollbar {
   width: 5px;
 }
-
 </style>

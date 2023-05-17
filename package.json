@@ -33,6 +33,7 @@
     "vue-circular-count-down-timer": "^2.0.0",
     "vue-color-gradient-picker": "^0.1.2",
     "vue-confirm-dialog": "^1.0.2",
+    "vue-device-detector": "^1.1.6",
     "vue-fragment": "1.5.1",
     "vue-pusher": "^1.1.0",
     "vue-router": "^3.5.1",

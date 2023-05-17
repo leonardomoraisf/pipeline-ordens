@@ -67,7 +67,23 @@ export const usePipelineStore = defineStore('pipeline', {
             updateListInactive: false,
 
             editedCardWAction: {},
-            fromInactiveCardList: false
+            fromInactiveCardList: false,
+
+            statusFilter: "",
+
+            isShowingModalCard: false,
+            cardToChange: {
+                celulares: null,
+                comentarios: "",
+                data_hora_cadastro: "0000-00-00T00:00:00",
+                data_hora_registro: "0000-00-00T00:00:00",
+                id_card: 0,
+                id_status: 0,
+                nome: "",
+                posicao: 0,
+                telefones: null,
+                valor: 0,
+            }
         }
     },
     getters: {
@@ -154,6 +170,7 @@ export const usePipelineStore = defineStore('pipeline', {
                 newCard.posicao = parseFloat(newCard.posicao);
                 newCard.valor = parseFloat(newCard.valor);
                 newCard.fixed = false;
+                newCard.timer = 60;
 
                 this.newCard = newCard;
             });

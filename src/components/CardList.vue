@@ -68,6 +68,7 @@ export default {
         return {
           ...card,
           fixed: false,
+          timer: 60,
         };
       }),
       corTextoStatus: "",
@@ -82,7 +83,7 @@ export default {
         group: "cards",
         ghostClass: "ghost",
         dragClass: "drag",
-        disabled: false,
+        disabled: this.$device.mobile,
         handle: ".drag-card",
       };
     },
@@ -164,7 +165,7 @@ export default {
       const item = e.added || e.moved;
       if (!item) return;
 
-      const index =
+      var index =
         item.newIndex !== -1
           ? item.newIndex
           : this.cards.findIndex((obj) => obj.id_card === item.element.id_card);
@@ -175,7 +176,7 @@ export default {
 
       const prevCard = this.cards[index - 1];
       const nextCard = this.cards[index + 1];
-      const card = this.cards[index];
+      var card = this.cards[index];
 
       let event = "client-card-editado";
 
@@ -292,14 +293,14 @@ export default {
      */
     async verificaEditedCard(editedCard) {
       // Procura card na lista pelo seu id
-      const cardIndex = await this.cards.findIndex(
+      var cardIndex = this.cards.findIndex(
         (obj) => obj.id_card === editedCard.id_card
       );
 
       // Se existe e continua ativo apenas altera a informação e organiza a lista
       if (cardIndex !== -1 && editedCard.ativo === 1) {
         await this.$set(this.cards, cardIndex, editedCard);
-        await this.organizaListaCards();
+        this.organizaListaCards();
         return;
       }
 
@@ -395,7 +396,9 @@ export default {
      * @param {Object} oldEditedCard
      */
     "pipelineStore.editedCard"(newEditedCard, oldEditedCard) {
-      this.verificaEditedCard(newEditedCard);
+      this.pipelineStore.addNewFunc(() => {
+        this.verificaEditedCard(newEditedCard);
+      });
     },
 
     /**

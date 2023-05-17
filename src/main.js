@@ -14,6 +14,7 @@ import { VTooltip, VPopover, VClosePopover } from 'v-tooltip';
 import VueConfirmDialog from 'vue-confirm-dialog';
 import CircularCountDownTimer from 'vue-circular-count-down-timer';
 import { createPinia, PiniaVuePlugin } from 'pinia';
+import VueDeviceDetector from 'vue-device-detector';
 
 library.add(fas);
 library.add(far);
@@ -35,22 +36,24 @@ Vue.component('vue-confirm-dialog', VueConfirmDialog.default);
 Vue.use(PiniaVuePlugin)
 const pinia = createPinia();
 
+Vue.use(VueDeviceDetector);
+
 import './assets/Toasts';
 import './assets/all.css';
 import './assets/tooltip.css';
 
 Vue.config.productionTip = false;
 
-if(process.env.NODE_ENV === 'development'){
-  window.APP_URL = 'http://localhost:8585';
+if (process.env.NODE_ENV === 'development') {
+    window.APP_URL = 'http://localhost:8585';
 
-  // A porta está 8080 pois em desenvolvimento, esse projeto está com proxy para a porta 8585
-  // Se estiver com o projeto em outra porta como 3030, apenas trocar e manter o proxy
-  window.API_V2 = 'http://localhost:8080/v2';
+    // A porta está 8080 pois em desenvolvimento, esse projeto está com proxy para a porta 8585
+    // Se estiver com o projeto em outra porta como 3030, apenas trocar e manter o proxy
+    window.API_V2 = 'http://localhost:8080/v2';
 }
 
 new Vue({
-  router,
-  pinia,
-  render: (h) => h(App),
+    router,
+    pinia,
+    render: (h) => h(App),
 }).$mount("#app");

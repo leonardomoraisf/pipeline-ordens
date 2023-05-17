@@ -331,6 +331,12 @@ export default {
         return;
       }
 
+      let data = {
+        status: {
+          ...body,
+        },
+      };
+      this.pipelineStore.triggerPusher("client-status-editado", data);
       this.pipelineStore.removeStatus(this.status.id_status);
 
       this.$emit("closeModal");
@@ -492,7 +498,7 @@ export default {
         let body = {
           ...this.status,
           nome: this.editStatusName,
-          color: this.editStatusColor
+          color: this.editStatusColor,
         };
 
         delete body.cards;
@@ -565,7 +571,7 @@ export default {
 
         let body = {
           nome: this.regStatusName,
-          color: this.regStatusColor
+          color: this.regStatusColor,
         };
 
         const response = await apiService.status.create(body);

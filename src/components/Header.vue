@@ -80,13 +80,11 @@
 </template>
 
 <script>
-import { useGlobalStore } from "@/stores/globalStore";
-
 export default {
   name: "Header",
+  inject: ["globalStore", "pipelineStore"],
   data() {
     return {
-      globalStore: useGlobalStore(),
       filter: "",
       toggleMenu: false,
     };
@@ -96,11 +94,7 @@ export default {
      * Método para avisar que a filtragem por status está inativa temporariamente
      */
     avisoInput() {
-      ToastTopStart5.fire(
-        "Opa!",
-        "A filtragem por status está inativa temporariamente!",
-        "info"
-      );
+      this.pipelineStore.statusFilter = this.filter;
     },
   },
 };
