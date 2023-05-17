@@ -216,11 +216,16 @@ export default {
         },
       };
       this.pipelineStore.triggerPusher(event, data);
-      await apiService.card.edit(card.id_card, body);
 
-      card.fixed = false;
-      data.card.fixed = false;
-      this.pipelineStore.triggerPusher("client-card-editado", data);
+      this.globalStore.addNewRequest(() => {
+        return this.axios
+          .put(`${window.API_V2}/pipeline/cards/${card.id_card}/edit`, body)
+          .then((res) => {
+            card.fixed = false;
+            data.card.fixed = false;
+            this.pipelineStore.triggerPusher("client-card-editado", data);
+          });
+      });
     },
 
     /**

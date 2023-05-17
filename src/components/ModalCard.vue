@@ -117,8 +117,7 @@ export default {
 
       this.pipelineStore.list.forEach((status) => {
         if (status.id_status === this.escolhaStatus) {
-          if (status.cards.length > 0)
-            posicao = status.cards[0].posicao / 2;
+          if (status.cards.length > 0) posicao = status.cards[0].posicao / 2;
 
           if (status.cards.length === 0) posicao = 60000;
         }
@@ -147,10 +146,14 @@ export default {
         this.pipelineStore.isShowingModalCard =
           !this.pipelineStore.isShowingModalCard;
 
-        await apiService.card.edit(this.card.id_card, body);
-
-        data.card.fixed = false;
-        this.pipelineStore.triggerPusher("client-card-editado", data);
+        this.globalStore.addNewRequest(() => {
+          return this.axios
+            .put(`${window.API_V2}/pipeline/cards/${this.card.id_card}/edit`, body)
+            .then((res) => {
+              data.card.fixed = false;
+              this.pipelineStore.triggerPusher("client-card-editado", data);
+            });
+        });
       } else {
         const body = {
           id_status: this.card.id_status,
@@ -170,10 +173,14 @@ export default {
         this.pipelineStore.isShowingModalCard =
           !this.pipelineStore.isShowingModalCard;
 
-        await apiService.card.edit(this.card.id_card, body);
-
-        data.card.fixed = false;
-        this.pipelineStore.triggerPusher("client-card-editado", data);
+        this.globalStore.addNewRequest(() => {
+          return this.axios
+            .put(`${window.API_V2}/pipeline/cards/${this.card.id_card}/edit`, body)
+            .then((res) => {
+              data.card.fixed = false;
+              this.pipelineStore.triggerPusher("client-card-editado", data);
+            });
+        });
       }
     },
   },
