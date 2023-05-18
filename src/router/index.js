@@ -14,7 +14,7 @@ const routes = [
 
 const router = new VueRouter({
   mode: "history",
-  base: '/app/extras/pipeline',
+  base: '/app/vendas/extras/pipeline',
   routes,
 });
 
