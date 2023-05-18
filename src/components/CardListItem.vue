@@ -46,13 +46,6 @@
         >
           <button
             v-if="!alreadyClickedToActive"
-            @click="deleteCard"
-            class="text-base text-black font-semibold bg-white hover:text-red-500 hover:scale-105 hover:bg-gray-200 p-1 rounded-md transition-all"
-          >
-            Deletar
-          </button>
-          <button
-            v-if="!alreadyClickedToActive"
             class="text-base text-black font-semibold bg-white hover:scale-105 hover:text-green-500 hover:bg-gray-200 p-1 rounded-md transition-all"
             @click="onClickToActive"
             v-tooltip.bottom="
@@ -60,6 +53,13 @@
             "
           >
             Reativar
+          </button>
+          <button
+            v-if="!alreadyClickedToActive"
+            @click="deleteCard"
+            class="text-base text-black font-semibold bg-white hover:text-red-500 hover:scale-105 hover:bg-gray-200 p-1 rounded-md transition-all"
+          >
+            Deletar
           </button>
         </div>
 
