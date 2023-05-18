@@ -230,6 +230,7 @@
     <div v-if="inInactiveCardList" class="mt-1 md:mt-0">
       <div
         class="flex flex-col md:pl-2 pl-1 justify-center text-left h-full overflow-hidden"
+        v-if="card.log !== null && card.log !== undefined"
       >
         <div>
           <div class="flex flex-wrap space-x-1 items-center">
@@ -271,6 +272,12 @@
           <span class="md:text-base text-xs truncate">{{
             cardLog.nome_pessoa
           }}</span>
+        </div>
+      </div>
+
+      <div v-else class="mt-1 md:mt-0">
+        <div class="md:pl-2 pl-1 text-left">
+          <span class="md:text-base text-sm">Sem resultados</span>
         </div>
       </div>
     </div>
@@ -416,9 +423,9 @@ export default {
         "success"
       );
 
-      if(this.$device.mobile){
-        if(this.pipelineStore.cardToChange.id_card === this.card.id_card){
-            this.pipelineStore.isShowingModalCard = false;
+      if (this.$device.mobile) {
+        if (this.pipelineStore.cardToChange.id_card === this.card.id_card) {
+          this.pipelineStore.isShowingModalCard = false;
         }
       }
 
@@ -444,6 +451,7 @@ export default {
     },
 
     calculaInfosInInactiveCardList() {
+      if (this.card.log === "") return;
       let diasDaSemana = ["Dom", "Seg", "Terç", "Qua", "Qui", "Sex", "Sáb"];
 
       var dataHoraLog = new Date(this.cardLog.data_hora_cadastro);
@@ -494,7 +502,7 @@ export default {
         ...this.card,
         colorStatus: this.colorStatus,
         corTextoCard: this.corTextoCard,
-        isToInactive: this.isToInactive ? true : false
+        isToInactive: this.isToInactive ? true : false,
       };
       this.pipelineStore.cardToChange = cardObj;
       this.pipelineStore.isShowingModalCard =
