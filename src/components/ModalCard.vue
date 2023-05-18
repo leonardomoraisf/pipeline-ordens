@@ -42,29 +42,36 @@
                 <label for="escolhaStatus">Para: </label>
                 <select
                   v-model="escolhaStatus"
-                  class="border py-4 pl-1 w-full 2xl:w-fit xl:w-fit l:w-fit rounded-full focus:outline-none hover:cursor-pointer hover:scale-105 transition-all"
+                  class="border py-4 pl-1 w-full 2xl:w-fit xl:w-fit l:w-fit rounded-full focus:outline-none hover:cursor-pointer hover:bg-gray-100 transition-all"
                   id="escolhaStatus"
                 >
                   <option
                     v-for="status in pipelineStore.list"
                     :key="status.id_status"
                     :value="status.id_status"
+                    v-show="
+                      (!card.isToInactive &&
+                        card.id_status !== status.id_status) ||
+                      card.isToInactive
+                    "
                   >
-                    {{ status.nome }}
+                    {{ status.ordem }} - {{ status.nome }}
+                  </option>
+                  <option :value="-1" v-show="!card.isToInactive">
+                    x - Finalizar
                   </option>
                 </select>
               </div>
               <div class="mt-10">
-                <div v-if="isShowingError">
-                  <p class="font-semibold text-red-500">{{ errorMessage }}</p>
-                </div>
-                <button
-                  @click="moverCard"
-                  v-if="escolhaStatus !== null"
-                  class="mt-2 mover px-6 py-2 ml-6 text-xl font-medium text-white salvar rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-green-300 focus:outline-none hover:scale-110"
-                >
-                  Mover
-                </button>
+                <transition name="fade">
+                  <button
+                    @click="moverCard"
+                    v-if="escolhaStatus !== null"
+                    class="mt-2 mover px-6 py-2 ml-6 text-xl font-medium text-white salvar rounded-md shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-green-300 focus:outline-none hover:scale-110"
+                  >
+                    Mover
+                  </button>
+                </transition>
               </div>
             </div>
           </div>
@@ -83,7 +90,6 @@
 
 <script>
 import CardListItem from "./CardListItem.vue";
-import apiService from "@/services/apiService";
 
 export default {
   name: "ModalCard",
@@ -95,19 +101,25 @@ export default {
     return {
       escolhaStatus: null,
       escolhaPosicao: null,
-      errorMessage: "",
-      isShowingError: false,
       card: this.pipelineStore.cardToChange,
     };
   },
   methods: {
     async moverCard() {
-      this.isShowingError = false;
+      if (this.escolhaStatus === -1) {
+        this.card.acao = "mobileAdded";
+        this.card.timer = 60;
+        this.pipelineStore.editedCardWAction = this.card;
 
-      if (this.escolhaStatus === this.card.id_status) {
-        this.errorMessage = "Este card já está nesse status!";
-        this.isShowingError = true;
-
+        let data = {
+          card: {
+            ...this.card,
+            acao: "added",
+          },
+        };
+        this.pipelineStore.triggerPusher("client-card-inativo", data);
+        this.pipelineStore.isShowingModalCard =
+          !this.pipelineStore.isShowingModalCard;
         return;
       }
 
@@ -124,64 +136,49 @@ export default {
       });
       this.card.posicao = posicao;
 
-      if (this.card.id_status !== this.escolhaStatus) {
-        event = "client-card-editado-status";
-        this.card.id_status = this.escolhaStatus;
+      event = "client-card-editado-status";
+      this.card.id_status = this.escolhaStatus;
 
-        const body = {
-          id_status: this.card.id_status,
-          posicao: this.card.posicao,
-          ativo: 1,
-          comentarios: this.card.comentarios,
-        };
+      const body = {
+        id_status: this.card.id_status,
+        posicao: this.card.posicao,
+        ativo: 1,
+        comentarios: this.card.comentarios,
+      };
 
-        var data = {
-          card: {
-            ...this.card,
-            fixed: true,
-          },
-        };
-        this.pipelineStore.triggerPusher(event, data);
-        this.pipelineStore.editedCardStatus = this.card;
-        this.pipelineStore.isShowingModalCard =
-          !this.pipelineStore.isShowingModalCard;
+      var data = {
+        card: {
+          ...this.card,
+          fixed: true,
+        },
+      };
+      let dataPusher = {
+        card: {
+          ...this.card,
+          acao: "removed",
+        },
+      };
+      this.pipelineStore.triggerPusher("client-card-inativo", dataPusher);
+      this.pipelineStore.triggerPusher(event, data);
+      this.card.timer = 60;
+      this.pipelineStore.editedCardStatus = this.card;
 
-        this.globalStore.addNewRequest(() => {
-          return this.axios
-            .put(`${window.API_V2}/pipeline/cards/${this.card.id_card}/edit`, body)
-            .then((res) => {
-              data.card.fixed = false;
-              this.pipelineStore.triggerPusher("client-card-editado", data);
-            });
-        });
-      } else {
-        const body = {
-          id_status: this.card.id_status,
-          posicao: this.card.posicao,
-          ativo: 1,
-          comentarios: this.card.comentarios,
-        };
+      this.card.acao = "mobileRemoved";
+      this.pipelineStore.editedCardWAction = this.card;
+      this.pipelineStore.isShowingModalCard =
+        !this.pipelineStore.isShowingModalCard;
 
-        var data = {
-          card: {
-            ...this.card,
-            fixed: true,
-          },
-        };
-        this.pipelineStore.triggerPusher(event, data);
-        this.pipelineStore.editedCard = this.card;
-        this.pipelineStore.isShowingModalCard =
-          !this.pipelineStore.isShowingModalCard;
-
-        this.globalStore.addNewRequest(() => {
-          return this.axios
-            .put(`${window.API_V2}/pipeline/cards/${this.card.id_card}/edit`, body)
-            .then((res) => {
-              data.card.fixed = false;
-              this.pipelineStore.triggerPusher("client-card-editado", data);
-            });
-        });
-      }
+      this.globalStore.addNewRequest(() => {
+        return this.axios
+          .put(
+            `${window.API_V2}/pipeline/cards/${this.card.id_card}/edit`,
+            body
+          )
+          .then((res) => {
+            data.card.fixed = false;
+            this.pipelineStore.triggerPusher("client-card-editado", data);
+          });
+      });
     },
   },
   watch: {

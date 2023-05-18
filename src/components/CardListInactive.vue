@@ -256,6 +256,7 @@ export default {
         const cardIndex = await this.pipelineStore.cardsToInactive.findIndex(
           (obj) => obj.id_card === card.id_card
         );
+        if (cardIndex === -1) return;
 
         // anima o card sumindo
         const childrenList = await this.$refs.listInactiveRef.$children;
@@ -282,6 +283,12 @@ export default {
       }
       if (newCard.acao === "added") {
         this.addCard(newCard);
+      }
+      if (newCard.acao === "mobileAdded") {
+        this.addCard(newCard);
+      }
+      if (newCard.acao === "mobileRemoved") {
+        this.removeCard(newCard);
       }
     },
 

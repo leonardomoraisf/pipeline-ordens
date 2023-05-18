@@ -5,7 +5,7 @@
       'card-list': !inModalEditComments && !inInactiveCardList,
       flex: inInactiveCardList,
     }"
-    @click="openModalCard"
+    @click.stop="openModalCard"
   >
     <div
       :style="{ backgroundColor: colorStatus }"
@@ -416,6 +416,12 @@ export default {
         "success"
       );
 
+      if(this.$device.mobile){
+        if(this.pipelineStore.cardToChange.id_card === this.card.id_card){
+            this.pipelineStore.isShowingModalCard = false;
+        }
+      }
+
       let body = {
         id_status: this.card.id_status,
         posicao: this.card.posicao,
@@ -483,11 +489,12 @@ export default {
     },
 
     openModalCard() {
-      if (!this.$device.mobile) return;
+      if (!this.$device.mobile || this.inInactiveCardList) return;
       let cardObj = {
         ...this.card,
         colorStatus: this.colorStatus,
         corTextoCard: this.corTextoCard,
+        isToInactive: this.isToInactive ? true : false
       };
       this.pipelineStore.cardToChange = cardObj;
       this.pipelineStore.isShowingModalCard =

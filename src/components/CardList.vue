@@ -427,14 +427,14 @@ export default {
     },
 
     "pipelineStore.editedCardWAction": async function (newCard, oldCard) {
-      if (newCard.acao === "removed") {
+      if (newCard.acao === "removed" || newCard.acao === "mobileRemoved") {
         if (newCard.id_status !== this.status.id_status) return;
 
         this.pipelineStore.addNewFunc(async () => {
           await this.onCardCreated(newCard);
         });
       }
-      if (newCard.acao === "added") {
+      if (newCard.acao === "added" || newCard.acao === "mobileAdded") {
         if (newCard.id_status !== this.status.id_status) return;
 
         this.pipelineStore.addNewFunc(async () => {
