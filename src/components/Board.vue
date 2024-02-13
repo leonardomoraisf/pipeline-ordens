@@ -6,14 +6,14 @@
 
     <main class="flex-1 overflow-hidden" v-else-if="!pipelineStore.isRequestingList">
       <div class="flex flex-col h-full">
-        <div class="flex-1 overflow-x-auto 2xl:mt-4 mt-2">
+        <div class="flex-1 overflow-x-auto 2xl:mt-2">
           <div class="inline-flex h-full items-start px-4">
             <CardList
               v-for="status in pipelineStore.list"
               v-show="pipelineStore.statusFilter.length === 0 || status.nome.toLowerCase().includes(pipelineStore.statusFilter.toLowerCase())"
               :key="status.id_status"
               :status="status"
-              class="w-72 flex flex-col rounded-md pt-2 max-h-full"
+              class="w-72 flex flex-col rounded-md max-h-full pt-2"
             />
 
             <CardListInactive></CardListInactive>
@@ -24,6 +24,7 @@
       <ModalEditCardComments></ModalEditCardComments>
       <ModalInactiveCardList></ModalInactiveCardList>
       <ModalCard></ModalCard>
+      <MovimentoModal></MovimentoModal>
     </main>
   </div>
 </template>
@@ -36,7 +37,8 @@ import CardListInactive from "./CardListInactive.vue";
 import LoadingSkeleton from "./LoadingSkeleton";
 import ModalEditCardComments from "./ModalEditCardComments.vue";
 import ModalInactiveCardList from "./ModalInactiveCardList.vue";
-import ModalCard from "./ModalCard.vue"
+import ModalCard from "./ModalCard.vue";
+import MovimentoModal from "./MovimentoModal.vue";
 
 export default {
   name: "Board",
@@ -49,7 +51,8 @@ export default {
     LoadingSkeleton,
     ModalEditCardComments,
     ModalInactiveCardList,
-    ModalCard
+    ModalCard,
+    MovimentoModal
   }
 };
 </script>

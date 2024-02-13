@@ -6,17 +6,28 @@
       :cards="cards"
     />
 
-    <div class="text-center">
-      <p class="text-xl font-semibold text-gray-500">{{ cards.length }}</p>
+    <div class="text-center flex space-x-2 justify-center text-xl font-semibold text-gray-500">
+      <p v-tooltip.bottom="'Quantidade total'">{{ cards.length }}</p>
+      <p>/</p>
+      <p v-tooltip.bottom="'Valor total'">$ {{ valorTotal }}</p>
     </div>
 
-    <MovimentoModalCreate :status="status" class="px-2" />
+    <div class="px-2">
+      <button
+        type="button"
+        @click="showModalMovimento"
+        class="mt-2 w-full flex justify-center items-center py-4 2xl:py-6 border-2 rounded-md border-dashed hover:cursor-pointer border-black/30 hover:border-black/50 text-black/30 hover:text-black/50 hover:scale-105 add-card"
+      >
+        <font-awesome-icon class="w-5 h-5" :icon="['fas', 'fa-plus']" />
+        <span class="font-semibold ml-1">Adicionar</span>
+      </button>
+    </div>
 
-    <div class="flex flex-col overflow-hidden mt-4 px-2">
+    <div class="flex flex-col overflow-hidden mt-2 px-2">
       <div class="px-2 flex-1 overflow-y-auto cards-scrollbar">
         <draggable
           v-model="cards"
-          class="pb-24 h-full draggable pt-2 space-y-3"
+          class="pb-24 h-full draggable pt-2 space-y-2 2xl:space-y-3"
           v-bind="dragOptions"
           @change="onChange"
           tag="ul"
@@ -40,24 +51,23 @@
 
 <script>
 import draggable from "vuedraggable";
-import MovimentoModalCreate from "./MovimentoModalCreate.vue";
 import CardListItem from "./CardListItem.vue";
 import { nextTick } from "vue";
 import StatusTimeline from "./StatusTimeline.vue";
 import ModalEditCardComments from "./ModalEditCardComments.vue";
 import { globalHelper } from "@/helpers/global";
 import { pipelineHelper } from "@/helpers/pipeline";
-import apiService from "@/services/apiService";
+import MovimentoModal from "./MovimentoModal.vue";
 
 export default {
   name: "CardList",
   inject: ["globalStore", "pipelineStore"],
   components: {
     draggable,
-    MovimentoModalCreate,
     CardListItem,
     StatusTimeline,
     ModalEditCardComments,
+    MovimentoModal,
   },
   props: {
     status: Object,
@@ -74,6 +84,7 @@ export default {
       corTextoStatus: "",
       isShowingModalEditComments: false,
       cardIsEditing: {},
+      valorTotal: 0
     };
   },
   computed: {
@@ -90,8 +101,30 @@ export default {
   },
   mounted() {
     this.corTextoStatus = globalHelper.ajustarCorTexto(this.status.color);
+    this.calculaValorTotal();
   },
   methods: {
+    calculaValorTotal() {
+        let valorTotal = this.cards.reduce((total, card) => {
+          return total + card.valor;
+        }, 0);
+
+        let formatted = valorTotal.toLocaleString('pt-BR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });;
+
+        this.valorTotal = formatted;
+    },
+
+    showModalMovimento() {
+      this.pipelineStore.movimentoModal.isCreate = true;
+      this.pipelineStore.movimentoModal.status = this.status;
+      this.pipelineStore.movimentoModal.url = `${window.APP_URL}/app/vendas/nova-venda?pipeline=1`;
+      this.pipelineStore.movimentoModal.isShowingMovimentoModal =
+        !this.pipelineStore.movimentoModal.isShowingMovimentoModal;
+    },
+
     onMove({ relatedContext, draggedContext }) {
       const relatedElement = relatedContext.element;
       const draggedElement = draggedContext.element;
@@ -198,16 +231,17 @@ export default {
         event = "client-card-editado-status";
       }
 
-      card.id_status = this.status.id_status;
-      card.posicao = posicao;
-      card.fixed = true;
-
       const body = {
         id_status: this.status.id_status,
         posicao: posicao,
-        ativo: 1,
-        comentarios: card.comentarios,
       };
+
+      if(card.id_status === this.status.id_status) delete body.id_status;
+      if(card.posicao === posicao) delete body.posicao;
+
+      card.id_status = this.status.id_status;
+      card.posicao = posicao;
+      card.fixed = true;
 
       var data = {
         card: {
@@ -306,6 +340,7 @@ export default {
       if (cardIndex !== -1 && editedCard.ativo === 1) {
         await this.$set(this.cards, cardIndex, editedCard);
         this.organizaListaCards();
+        this.calculaValorTotal();
         return;
       }
 
@@ -315,7 +350,7 @@ export default {
         ToastTopEnd5.fire(
           "Opa!",
           `O card ${this.pipelineStore.tiposMovimento[editedCard.tipo]}(${
-            editedCard.id_movimento
+            editedCard.codigo_movimento
           }) foi inativado!`,
           "info"
         );
@@ -332,6 +367,7 @@ export default {
         });
 
         await this.cards.splice(cardIndex, 1);
+        this.calculaValorTotal();
         return;
       }
 
@@ -345,18 +381,22 @@ export default {
         let result = await this.pipelineStore.verificaCardInToInactive(
           editedCard.id_card
         );
-        if (result) return;
+        if (result) {
+            this.calculaValorTotal();
+            return;
+        };
 
         ToastTopEnd5.fire(
           "Opa!",
           `O card ${this.pipelineStore.tiposMovimento[editedCard.tipo]}(${
-            editedCard.id_movimento
+            editedCard.codigo_movimento
           }) foi reativado!`,
           "info"
         );
 
         this.pipelineStore.newCard = editedCard;
         await this.verificaAdicionaCard(editedCard);
+        this.calculaValorTotal();
         return;
       }
     },
@@ -384,6 +424,10 @@ export default {
   watch: {
     "status.color": function (newValue, oldValue) {
       this.corTextoStatus = globalHelper.ajustarCorTexto(newValue);
+    },
+
+    "cards.length": function (newCards, oldCards) {
+        this.calculaValorTotal();
     },
 
     /**
@@ -514,5 +558,9 @@ export default {
 
 .input-color::-moz-color-swatch {
   border-radius: 50%;
+}
+
+.add-card {
+  transition: all 0.2s ease-in-out;
 }
 </style>

@@ -4,7 +4,7 @@ const axios = axiosService;
 
 var response = {};
 const throwError = (msg) => {
-    ToastTopStart5.fire("Erro!", msg, "error");
+    ToastTopEnd5.fire("Erro!", msg, "error");
 };
 
 const apiService = {

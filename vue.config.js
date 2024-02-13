@@ -2,7 +2,7 @@ const { defineConfig } = require("@vue/cli-service");
 const path = require('path');
 const NodePolyfillPlugin = require("node-polyfill-webpack-plugin");
 module.exports = defineConfig({
-  outputDir: '../../Blegon/dev_environment/core/public',
+  outputDir: '../../public',
 
   indexPath: '../app/v1/Views/pipeline-kanban-ordens.blade.php',
 

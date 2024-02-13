@@ -54,14 +54,14 @@
           !pipelineStore.isShowingModalInactiveCardList
       "
       v-if="pipelineStore.listLength > 0"
-      class="pb-3 hover:cursor-pointer relative h-screen flex flex-col overflow-hidden px-2 mt-36 border-2 rounded-md border-dashed border-black/30 hover:border-black/50 text-black/30 hover:text-black/50"
+      class="pb-3 hover:cursor-pointer relative h-screen flex flex-col overflow-hidden px-2 2xl:mt-32 mt-28 border-2 rounded-md border-dashed border-black/30 hover:border-black/50 text-black/30 hover:text-black/50"
       v-tooltip="'Clique para visualizar os cards finalizados'"
     >
       <div class="px-2 flex-1 overflow-y-auto cards-scrollbar">
         <draggable
           v-model="pipelineStore.cardsToInactive"
           v-bind="dragOptions"
-          class="space-y-3 pb-24 h-full draggable pt-2"
+          class="space-y-2 2xl:space-y-3 pb-24 h-full draggable pt-2"
           ref="listInactiveRef"
           tag="ul"
           @change="onChange"

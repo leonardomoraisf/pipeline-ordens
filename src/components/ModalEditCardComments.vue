@@ -108,7 +108,6 @@
 <script>
 import { ref } from "vue";
 import CardListItem from "./CardListItem.vue";
-import apiService from "@/services/apiService";
 
 export default {
   name: "ModalEditCardComments",
@@ -186,40 +185,38 @@ export default {
       }
 
       const body = {
-        id_status: this.pipelineStore.editingCard.id_status,
-        posicao: this.pipelineStore.editingCard.posicao,
-        ativo: this.pipelineStore.editingCard.ativo,
-        comentarios: this.cardComentarios
-      };
-
-      const card = {
-        id_card: this.pipelineStore.editingCard.id_card,
-        comentarios: this.cardComentarios,
+        comentarios: this.cardComentarios.length === 0 ? true : this.cardComentarios,
       };
 
       this.globalStore.addNewRequest(() => {
-        this.axios.put(`${window.API_V2}/pipeline/cards/${card.id_card}/edit`, body).then((res) => {
-          let data = {
-            card: {
+        this.axios
+          .put(
+            `${window.API_V2}/pipeline/cards/${this.pipelineStore.editingCard.id_card}/edit`,
+            body
+          )
+          .then((res) => {
+            let data = {
+              card: {
+                ...this.pipelineStore.editingCard,
+                comentarios: this.cardComentarios,
+              },
+            };
+            this.pipelineStore.triggerPusher("client-card-editado", data);
+
+            this.isSubmiting = false;
+            ToastTopStart3.fire(
+              "Sucesso!",
+              "O comentário do seu card foi salvo!",
+              "success"
+            );
+            this.pipelineStore.lastEditedCard = {
               ...this.pipelineStore.editingCard,
               comentarios: this.cardComentarios,
-            },
-          };
-          this.pipelineStore.triggerPusher("client-card-editado", data);
-
-          this.isSubmiting = false;
-          Toast.fire(
-            "Sucesso!",
-            "O comentário do seu card foi salvo!",
-            "success"
-          );
-          this.pipelineStore.lastEditedCard = {
-            ...card,
-          };
-          this.pipelineStore.isShowingModalEditCardComments = false;
-          if (this.pipelineStore.fromInactiveCardList)
-            this.pipelineStore.isShowingModalInactiveCardList = true;
-        });
+            };
+            this.pipelineStore.isShowingModalEditCardComments = false;
+            if (this.pipelineStore.fromInactiveCardList)
+              this.pipelineStore.isShowingModalInactiveCardList = true;
+          });
       });
     },
   },

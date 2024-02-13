@@ -9,6 +9,9 @@ de onde está aquele movimento.
 Um card é criado se, e somente se, a empresa possui ao menos um status ativo, e/ou setar o
 s_id_status_pipeline no back-end.
 
+Lembre-se: em desenvolvimento, crie um .env.development e coloque o NODE_ENV=development e
+VUE_APP_PUSHER_API_KEY=sua-chave-pusher
+
 Por: Leonardo Morais Franca
 
 **Tecnilogias usadas**

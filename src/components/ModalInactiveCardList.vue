@@ -117,7 +117,7 @@
                         v-model="date"
                         @change="setDate"
                         :format="'DD/MM/YYYY'"
-                        :placeholder="'Data inicial - Data final'"
+                        :placeholder="'Início - Fim'"
                         :input-class="'w-full 2xl:w-fit xl:w-fit l:w-fit py-4 px-2 focus:outline-none border rounded-full'"
                         range
                       ></date-picker>
@@ -125,8 +125,8 @@
 
                     <button
                       type="submit"
-                      class="transition-all rounded-full px-4 py-4 btn-buscar hover:scale-110 text-gray-700 w-full xl:w-min"
-                      :class="{ 'bg-color-gray-700': isRequesting }"
+                      class="transition-all rounded-full px-4 py-4 btn-buscar hover:scale-105 hover:cursor-pointer text-gray-700 w-full xl:w-min"
+                      :class="{ 'opacity-75': isRequesting }"
                       :disabled="isRequesting"
                     >
                       Buscar
@@ -325,10 +325,7 @@ export default {
     async onTurnCardActive(card, fromPusher = false) {
       if (!fromPusher) {
         var body = {
-          id_status: card.id_status,
-          posicao: card.posicao,
           ativo: 1,
-          comentarios: card.comentarios,
         };
 
         let statusIndex = this.pipelineStore.list.findIndex(
@@ -500,7 +497,6 @@ export default {
      */
     async getAllInactiveStatus() {
       this.isRequestingAllInactiveStatus = true;
-      this.alreadyRequestedAllInactiveStatus = true;
 
       const response = await apiService.status.getAllInactive();
 
@@ -582,6 +578,7 @@ export default {
         if (this.alreadyRequestedAllInactiveStatus === false) {
           await this.getAllInactiveStatus();
           this.adicionaInfos();
+          this.alreadyRequestedAllInactiveStatus = true;
         }
       }
     },

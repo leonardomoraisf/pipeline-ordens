@@ -9,6 +9,15 @@ const Toast = Swal.mixin({
 });
 window.Toast = Toast;
 
+const ToastTopStart3 = Swal.mixin({
+    toast: true,
+    position: "top-start",
+    timer: 3000,
+    timerProgressBar: true,
+    showConfirmButton: false
+  });
+  window.ToastTopStart3 = ToastTopStart3;
+
 const ToastTopEnd5 = Swal.mixin({
   toast: true,
   position: "top-end",

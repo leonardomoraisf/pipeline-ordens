@@ -1,8 +1,8 @@
-import { defineStore } from 'pinia';
-import apiService from '@/services/apiService';
-const Pusher = require('pusher-js');
+import { defineStore } from "pinia";
+import apiService from "@/services/apiService";
+const Pusher = require("pusher-js");
 
-export const usePipelineStore = defineStore('pipeline', {
+export const usePipelineStore = defineStore("pipeline", {
     state: () => {
         return {
             isRequestingList: true,
@@ -11,9 +11,14 @@ export const usePipelineStore = defineStore('pipeline', {
             idEmpresa: null,
             lastList: {},
             pusher: new Pusher(
-                process.env.NODE_ENV === 'development' ? process.env.VUE_APP_PUSHER_API_KEY : window.PUSHER_APP_KEY,
+                process.env.NODE_ENV === "development"
+                    ? process.env.VUE_APP_PUSHER_API_KEY
+                    : window.PUSHER_APP_KEY,
                 {
-                    cluster: process.env.NODE_ENV === 'development' ? 'sa1' : window.PUSHER_APP_CLUSTER,
+                    cluster:
+                        process.env.NODE_ENV === "development"
+                            ? "sa1"
+                            : window.PUSHER_APP_CLUSTER,
                     authEndpoint: "/api/pusher/auth",
                 }
             ),
@@ -39,7 +44,7 @@ export const usePipelineStore = defineStore('pipeline', {
                 telefones: null,
                 valor: 0,
                 colorStatus: null,
-                corTextoCard: null
+                corTextoCard: null,
             },
             lastEditedCard: {
                 celulares: null,
@@ -83,8 +88,15 @@ export const usePipelineStore = defineStore('pipeline', {
                 posicao: 0,
                 telefones: null,
                 valor: 0,
-            }
-        }
+            },
+
+            movimentoModal: {
+                isShowingMovimentoModal: false,
+                isCreate: false,
+                url: "",
+                status: {},
+            },
+        };
     },
     getters: {
         getIsRequestingList: (state) => {
@@ -101,11 +113,10 @@ export const usePipelineStore = defineStore('pipeline', {
 
         getIdEmpresa: (state) => {
             return state.idEmpresa;
-        }
+        },
     },
     actions: {
         async setList() {
-
             const response = await apiService.pipeline.list();
 
             this.list = response;
@@ -120,7 +131,6 @@ export const usePipelineStore = defineStore('pipeline', {
         },
 
         setIdEmpresa() {
-
             this.idEmpresa = this.list[this.listLength - 1].id_empresa;
             this.list.splice(this.listLength - 1, 1);
 
@@ -130,15 +140,16 @@ export const usePipelineStore = defineStore('pipeline', {
         },
 
         setAdditionalInfos() {
-
             if (this.listLength > 0) {
-
                 this.list = this.list.map((status, index) => {
                     return {
                         ...status,
                         ordem: index + 1,
-                        cards: status.cards !== null ? JSON.parse(status.cards) : [],
-                    }
+                        cards:
+                            status.cards !== null
+                                ? JSON.parse(status.cards)
+                                : [],
+                    };
                 });
             }
 
@@ -147,7 +158,6 @@ export const usePipelineStore = defineStore('pipeline', {
         },
 
         setLastList() {
-
             if (this.listLength === 0) {
                 this.lastList = {
                     ordem: 0,
@@ -158,7 +168,6 @@ export const usePipelineStore = defineStore('pipeline', {
         },
 
         async bindPusher() {
-
             this.pusherChannel = this.pusher.subscribe(
                 "private-company-" + this.idEmpresa
             );
@@ -173,6 +182,18 @@ export const usePipelineStore = defineStore('pipeline', {
                 newCard.timer = 60;
 
                 this.newCard = newCard;
+            });
+
+            this.pusherChannel.bind("card-editado", (data) => {
+                if (!data[0]) return;
+
+                var editedCard = data[0];
+                editedCard.posicao = parseFloat(editedCard.posicao);
+                editedCard.valor = parseFloat(editedCard.valor);
+                editedCard.fixed = false;
+                editedCard.timer = 60;
+
+                this.editedCard = editedCard;
             });
 
             this.pusherChannel.bind("client-card-editado", (data) => {
@@ -202,7 +223,11 @@ export const usePipelineStore = defineStore('pipeline', {
 
                 var newStatus = data.status;
                 this.addStatus(newStatus.id_status, newStatus);
-                ToastTopStart5.fire("Opa!", `O status ${newStatus.nome} foi criado!`, "info");
+                ToastTopEnd5.fire(
+                    "Opa!",
+                    `O status ${newStatus.nome} foi criado!`,
+                    "info"
+                );
             });
 
             this.pusherChannel.bind("client-status-editado", (data) => {
@@ -232,18 +257,17 @@ export const usePipelineStore = defineStore('pipeline', {
         },
 
         async calculaOrdemLista() {
-
             this.list = this.list.map((status, index) => {
                 return {
                     ...status,
-                    ordem: index + 1
-                }
+                    ordem: index + 1,
+                };
             });
         },
 
         async editStatus(data) {
             if (data.ativo === 0) {
-                ToastTopStart5.fire("Opa!", "Status inativado...", "info");
+                ToastTopEnd5.fire("Opa!", "Status inativado...", "info");
                 return this.removeStatus(data.id_status);
             }
 
@@ -253,7 +277,7 @@ export const usePipelineStore = defineStore('pipeline', {
                     status.color = data.color;
                 }
             });
-            ToastTopStart5.fire("Opa!", "Status editado...", "info");
+            ToastTopEnd5.fire("Opa!", "Status editado...", "info");
         },
 
         async addStatus(idStatus, data) {
@@ -261,7 +285,7 @@ export const usePipelineStore = defineStore('pipeline', {
                 id_status: idStatus,
                 ...data,
                 cards: [],
-                ordem: this.lastList.ordem + 1
+                ordem: this.lastList.ordem + 1,
             };
             this.list.push(statusFull);
 
@@ -270,7 +294,9 @@ export const usePipelineStore = defineStore('pipeline', {
         },
 
         async removeStatus(idStatus) {
-            let index = this.list.findIndex((status) => status.id_status === idStatus);
+            let index = this.list.findIndex(
+                (status) => status.id_status === idStatus
+            );
 
             this.list.splice(index, 1);
             await this.setListLength();
@@ -315,7 +341,9 @@ export const usePipelineStore = defineStore('pipeline', {
         },
 
         async verificaCardInToInactive(idCard) {
-            let index = this.cardsToInactive.findIndex((card) => card.id_card === idCard);
+            let index = this.cardsToInactive.findIndex(
+                (card) => card.id_card === idCard
+            );
             if (index !== -1) return true;
             return false;
         },
@@ -324,6 +352,6 @@ export const usePipelineStore = defineStore('pipeline', {
             if (this.pusherUserChannelCount > 1) {
                 this.pusherChannel.trigger(event, data);
             }
-        }
+        },
     },
-})
+});

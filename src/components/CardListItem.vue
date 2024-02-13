@@ -29,7 +29,7 @@
           "
         >
           <button
-            class="md:text-base text-sm text-black font-semibold bg-white hover:scale-105 hover:text-green-500 hover:bg-gray-200 p-1 rounded-md transition-all"
+            class="2xl:text-base text-sm text-black font-semibold bg-white hover:scale-105 hover:text-green-500 hover:bg-gray-200 p-1 rounded-md transition-all"
             @click="onClickToActive"
             v-if="!alreadyClickedToActive"
           >
@@ -73,10 +73,10 @@
           </div>
         </div>
 
-        <div class="space-y-1 overflow-hidden whitespace-nowrap text-ellipsis">
+        <div class="space-y-0 2xl:space-y-1 overflow-hidden whitespace-nowrap text-ellipsis">
           <div class="flex items-center justify-between">
             <p
-              class="md:text-base text-sm px-1 w-max rounded-md truncate"
+              class="2xl:text-base text-sm px-1 w-max rounded-md truncate"
               :class="{
                 'bg-black/30': corTextoCard === '#FFFFFF',
                 'bg-white/30': corTextoCard === '#000000',
@@ -109,20 +109,21 @@
           >
             {{ celular }}
           </p>
-          <p
-            class="text-xs px-1 w-max rounded-md truncate"
+          <a
+            @click="showModalMovimento"
+            class="text-xs px-1 w-max rounded-md truncate hover:bg-black/10 transition-all hover:cursor-pointer"
             :class="{
               'bg-black/30': corTextoCard === '#FFFFFF',
               'bg-white/30': corTextoCard === '#000000',
             }"
           >
             {{ pipelineStore.tiposMovimento[card.tipo] }}({{
-              card.id_movimento
+              card.codigo_movimento
             }})
-          </p>
+          </a>
           <p
             v-if="inInactiveCardList"
-            class="md:text-base font-normal truncate text-sm"
+            class="2xl:text-base font-normal truncate text-sm"
           >
             <b>Status<span v-if="statusInativo"> inativo</span>:</b>
             {{ card.statusName }}
@@ -164,10 +165,10 @@
               </button>
             </div>
 
-            <div v-if="!inInactiveCardList">
+            <div v-if="!inInactiveCardList" class="2xl:text-base text-sm">
               <div
                 v-if="diferencaDias !== 0 || diferencaDiasTotal !== 0"
-                class="w-12 h-6 rounded-md text-center"
+                class="w-fit h-fit rounded-md text-center px-1"
                 :class="{
                   'bg-green-600': diferencaDias >= 0 && diferencaDias < 3,
                   'bg-rose-600': diferencaDias >= 3,
@@ -184,7 +185,7 @@
 
               <div
                 v-if="diferencaDias === 0 && diferencaDiasTotal === 0"
-                class="w-12 h-6 rounded-md text-center bg-green-600"
+                class="w-fit h-fit rounded-md text-center bg-green-600 px-1"
               >
                 <span class="text-white font-semibold">Hoje</span>
               </div>
@@ -192,7 +193,7 @@
 
             <div
               v-if="inInactiveCardList"
-              class="w-fit rounded-md text-center md:text-base text-sm"
+              class="w-fit rounded-md text-center 2xl:text-base text-sm px-1"
               v-tooltip.bottom="'Dias no pipeline'"
             >
               <span class="font-semibold" :class="{ color: corTextoCard }">{{
@@ -202,23 +203,31 @@
           </div>
 
           <div class="text-ellipsis overflow-hidden">
-            <p class="font-normal truncate md:text-base text-sm">
-              R$ {{ valorFormatado }}
+            <p class="font-normal truncate 2xl:text-base text-sm">
+              $ {{ valorFormatado }}
             </p>
           </div>
         </div>
 
-        <div
-          v-if="card.movimento_ativo === 0"
-          class="invisible absolute inset-0 text-center flex items-center bg-white group-hover:visible p-3"
-        >
-          <p class="text-black font-semibold text-xl">
-            O movimento deste card está inativo!
-          </p>
-          <div v-if="inInactiveCardList" class="absolute top-2 right-2">
+        <div v-if="card.movimento_ativo === 0" :class="{'absolute inset-0 text-center': !inInactiveCardList}">
+          <div
+            v-if="!inInactiveCardList"
+            class="invisible bg-white/80 w-full h-full absolute group-hover:visible flex justify-center items-center"
+          >
+            <p class="font-semibold text-black text-xl">
+              O movimento deste card está inativo!
+            </p>
+          </div>
+          <div
+            v-if="inInactiveCardList"
+            class="absolute top-0 right-0 sm:top-2 sm:right-2 flex flex-col sm:flex-row sm:gap-1 gap-0 scale-75 sm:scale-100"
+          >
+            <p class="font-semibold" :style="{ color: corTextoCard }">
+              Movimento inativo!
+            </p>
             <button
               @click="deleteCard"
-              class="bg-rose-500 rounded-md hover:bg-rose-400 hover:scale-105 p-2 transition-all text-white font-semibold"
+              class="text-base text-black font-semibold bg-white hover:text-red-500 hover:scale-105 hover:bg-gray-200 p-1 rounded-md transition-all"
             >
               Deletar
             </button>
@@ -234,7 +243,7 @@
       >
         <div>
           <div class="flex flex-wrap space-x-1 items-center">
-            <span class="md:text-base text-sm">Finalizado em</span>
+            <span class="2xl:text-base text-sm">Finalizado em</span>
 
             <div
               class="px-1 rounded-md"
@@ -245,19 +254,19 @@
               }"
             >
               <span
-                class="text-white font-semibold md:text-base text-sm"
+                class="text-white font-semibold 2xl:text-base text-sm"
                 v-if="diferencaDiasFinalizado <= 1"
                 >{{ diferencaDiasFinalizado }} dia</span
               >
               <span
-                class="text-white font-semibold md:text-base text-sm"
+                class="text-white font-semibold 2xl:text-base text-sm"
                 v-if="diferencaDiasFinalizado > 1"
                 >{{ diferencaDiasFinalizado }} dias</span
               >
             </div>
           </div>
 
-          <table class="w-full truncate md:text-base text-xs">
+          <table class="w-full truncate 2xl:text-base text-xs">
             <tr>
               <td>Início:</td>
               <td>{{ diaCard }} {{ dataHoraCard }}</td>
@@ -269,7 +278,7 @@
           </table>
         </div>
         <div class="flex flex-wrap">
-          <span class="md:text-base text-xs truncate">{{
+          <span class="2xl:text-base text-xs truncate">{{
             cardLog.nome_pessoa
           }}</span>
         </div>
@@ -277,7 +286,7 @@
 
       <div v-else class="mt-1 md:mt-0">
         <div class="md:pl-2 pl-1 text-left">
-          <span class="md:text-base text-sm">Sem resultados</span>
+          <span class="2xl:text-base text-sm">Sem resultados</span>
         </div>
       </div>
     </div>
@@ -290,7 +299,7 @@
 </template>
 
 <script>
-import { ref, nextTick } from "vue";
+import { ref } from "vue";
 import apiService from "../services/apiService";
 
 export default {
@@ -344,10 +353,30 @@ export default {
       diaCard: "",
       dataHoraCard: "",
       diferencaDiasFinalizado: 0,
-      alreadyClickedToActive: false,
+      alreadyClickedToActive: false
     };
   },
   methods: {
+    showModalMovimento() {
+      if (this.isToInactive)
+        return ToastTopStart5.fire(
+          "Opa!",
+          "Retire o card da lista de remoção para acessar a tela de edição!",
+          "info"
+        );
+
+      if (this.inInactiveCardList) {
+        this.pipelineStore.isShowingModalInactiveCardList = false;
+        this.pipelineStore.fromInactiveCardList = true;
+      } else {
+        this.pipelineStore.fromInactiveCardList = false;
+      }
+      this.pipelineStore.movimentoModal.isCreate = false;
+      this.pipelineStore.movimentoModal.url = `${window.APP_URL}/app/vendas/${this.card.id_movimento}/editar?pipeline=1`;
+      this.pipelineStore.movimentoModal.isShowingMovimentoModal =
+        !this.pipelineStore.movimentoModal.isShowingMovimentoModal;
+    },
+
     toggleModalEditCardComments() {
       this.pipelineStore.editingCard = {
         ...this.card,
@@ -418,7 +447,7 @@ export default {
         "O card " +
           this.pipelineStore.tiposMovimento[this.card.tipo] +
           "(" +
-          this.card.id_movimento +
+          this.card.codigo_movimento +
           ") será colocado como inativo.",
         "success"
       );
@@ -430,10 +459,7 @@ export default {
       }
 
       let body = {
-        id_status: this.card.id_status,
-        posicao: this.card.posicao,
-        ativo: 0,
-        comentarios: this.card.comentarios,
+        ativo: 0
       };
 
       let card = { ...this.card, ativo: 0 };
@@ -508,6 +534,13 @@ export default {
       this.pipelineStore.isShowingModalCard =
         !this.pipelineStore.isShowingModalCard;
     },
+
+    formataValorCard() {
+        this.valorFormatado = String(parseFloat(this.card.valor.toFixed(2))).replace(
+        ".",
+        ","
+      )
+    }
   },
   mounted() {
     this.calculaDiferencaDias();
@@ -548,6 +581,10 @@ export default {
      */
     card(newCard, oldCard) {
       this.calculaDiferencaDias();
+    },
+
+    "card.valor": function (newValue, oldValue){
+        this.formataValorCard();
     },
 
     /**

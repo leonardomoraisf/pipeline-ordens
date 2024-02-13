@@ -141,9 +141,7 @@ export default {
 
       const body = {
         id_status: this.card.id_status,
-        posicao: this.card.posicao,
-        ativo: 1,
-        comentarios: this.card.comentarios,
+        posicao: this.card.posicao
       };
 
       var data = {

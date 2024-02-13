@@ -313,7 +313,6 @@ export default {
       this.isDeletingStatus = !this.isDeletingStatus;
 
       let body = {
-        ...this.status,
         ativo: 0,
       };
 
@@ -331,13 +330,15 @@ export default {
         return;
       }
 
+      this.pipelineStore.removeStatus(this.status.id_status);
+
       let data = {
         status: {
+          ...this.status,
           ...body,
         },
       };
       this.pipelineStore.triggerPusher("client-status-editado", data);
-      this.pipelineStore.removeStatus(this.status.id_status);
 
       this.$emit("closeModal");
       Toast.fire(response.message, "Atualizando pipeline...", "success");
@@ -496,14 +497,13 @@ export default {
         }
 
         let body = {
-          ...this.status,
           nome: this.editStatusName,
           color: this.editStatusColor,
         };
 
-        delete body.cards;
-        delete body.id_status;
-        delete body.ordem;
+        if (this.editStatusName === this.backupEditStatusName) delete body.nome;
+        if (this.editStatusColor === this.backupEditStatusColor)
+          delete body.color;
 
         if (
           this.editStatusName === this.backupEditStatusName &&
@@ -529,15 +529,14 @@ export default {
           return;
         }
 
-        this.pipelineStore.editStatus({
-          id_status: this.status.id_status,
-          nome: body.nome,
-          color: body.color,
+        await this.pipelineStore.editStatus({
+          ...this.status,
+          ...body,
         });
 
         let data = {
           status: {
-            id_status: this.status.id_status,
+            ...this.status,
             ...body,
           },
         };
@@ -584,12 +583,14 @@ export default {
           return;
         }
 
+        body.ativo = 1;
         this.pipelineStore.addStatus(response.id_status, body);
 
         let data = {
           status: {
             id_status: response.id_status,
             ...body,
+            ativo: 1,
           },
         };
         this.pipelineStore.triggerPusher("client-status-criado", data);

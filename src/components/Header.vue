@@ -1,5 +1,5 @@
 <template>
-  <div class="shrink-0 2xl:p-4 p-2 flex justify-between space-x-1 2xl:block">
+  <div class="shrink-0 px-2 pt-1 flex justify-between space-x-1 2xl:block">
     <button
       class="hover:scale-125 transition-all lg:float-left"
       v-tooltip.bottom="'Voltar'"
@@ -10,7 +10,7 @@
     </button>
 
     <div class="flex flex-col align-middle items-center">
-      <h1 class="text-2xl text-black font-bold">
+      <h1 class="text-xl 2xl:text-2xl text-black font-bold">
         Pipeline - Fluxo de trabalho
       </h1>
     </div>
@@ -20,7 +20,7 @@
       @click="toggleMenu = !toggleMenu"
       :class="{ invisible: toggleMenu }"
     >
-      <font-awesome-icon class="w-10 h-10" :icon="['fas', 'fa-bars']" />
+      <font-awesome-icon class="w-8 h-8" :icon="['fas', 'fa-bars']" />
     </button>
 
     <transition name="menu">
